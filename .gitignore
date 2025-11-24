@@ -1,0 +1,66 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### IDE ###
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+*.swp
+*.swo
+*~
+
+### Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### OS Files ###
+.DS_Store
+Thumbs.db
+
+### Package Files ###
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+### Logs ###
+*.log
+logs/
+
+### Temporary files ###
+*.tmp
+*.bak
+*.backup
+
+### Environment files ###
+.env
+.env.local
+.env.*.local
+
+### JaCoCo ###
+jacoco.exec
+
+### OWASP Dependency Check ###
+dependency-check-report.*
