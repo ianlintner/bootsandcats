@@ -6,8 +6,15 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 /**
  * Main Spring Boot Application for OAuth2 Authorization Server.
  *
- * <p>This server provides: - OAuth2 Authorization with PKCE support - OpenID Connect (OIDC) -
- * JWT-based tokens - OpenTelemetry metrics and tracing - Prometheus metrics endpoint
+ * <p>This server provides:
+ *
+ * <ul>
+ *   <li>OAuth2 Authorization with PKCE support
+ *   <li>OpenID Connect (OIDC)
+ *   <li>JWT-based tokens
+ *   <li>OpenTelemetry metrics and tracing
+ *   <li>Prometheus metrics endpoint
+ * </ul>
  */
 @SpringBootApplication
 public class OAuth2AuthorizationServerApplication {

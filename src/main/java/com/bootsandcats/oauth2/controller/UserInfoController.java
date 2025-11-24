@@ -5,18 +5,13 @@ import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import io.micrometer.core.annotation.Timed;
 
-/**
- * User Info Controller for OIDC userinfo endpoint.
- *
- * <p>Provides user information for authenticated OAuth2 clients.
- */
+/** User Info Controller for OIDC userinfo endpoint. */
 @RestController
 public class UserInfoController {
 
@@ -47,20 +42,5 @@ public class UserInfoController {
         }
 
         return ResponseEntity.ok(claims);
-    }
-
-    /**
-     * Build OIDC user info from claims.
-     *
-     * @param claims Map of claims
-     * @return OidcUserInfo object
-     */
-    private OidcUserInfo buildUserInfo(Map<String, Object> claims) {
-        return OidcUserInfo.builder()
-                .subject((String) claims.get("sub"))
-                .name((String) claims.getOrDefault("name", ""))
-                .email((String) claims.getOrDefault("email", ""))
-                .preferredUsername((String) claims.getOrDefault("preferred_username", ""))
-                .build();
     }
 }

@@ -15,10 +15,14 @@ import io.micrometer.core.instrument.MeterRegistry;
 public class OpenTelemetryConfig {
 
     /**
-     * TimedAspect for @Timed annotation support.
+     * Creates a TimedAspect bean that enables @Timed annotation support across the application.
      *
-     * @param registry MeterRegistry for metrics
-     * @return TimedAspect
+     * <p>This aspect enables method-level metrics collection when methods are annotated with
+     * {@code @Timed}. Metrics include execution time, invocation count, and can be exported to
+     * monitoring systems like Prometheus.
+     *
+     * @param registry MeterRegistry for metrics registration
+     * @return TimedAspect configured with the provided MeterRegistry
      */
     @Bean
     public TimedAspect timedAspect(MeterRegistry registry) {
