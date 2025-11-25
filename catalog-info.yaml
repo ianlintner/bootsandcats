@@ -1,0 +1,380 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: oauth2-authorization-server
+  title: OAuth2 Authorization Server
+  description: |
+    Production-ready Spring Boot OAuth2 Authorization Server with OpenID Connect (OIDC), 
+    PKCE support, JWT tokens, and comprehensive observability features.
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+    github.com/project-slug: ianlintner/bootsandcats
+    github.com/team-slug: ianlintner
+    prometheus.io/rule: |
+      - record: oauth2_server:availability
+        expr: avg_over_time(up{job="oauth2-server"}[5m])
+      - record: oauth2_server:token_rate
+        expr: rate(oauth2_tokens_issued_total[5m])
+    sonarqube.org/project-key: bootsandcats-oauth2-server
+    pagerduty.com/service-id: oauth2-authorization-server
+  tags:
+    - oauth2
+    - oidc
+    - authentication
+    - authorization
+    - spring-boot
+    - java
+    - security
+    - jwt
+    - pkce
+  links:
+    - url: https://github.com/ianlintner/bootsandcats
+      title: GitHub Repository
+      icon: github
+    - url: https://ianlintner.github.io/bootsandcats/
+      title: Documentation
+      icon: docs
+    - url: http://localhost:9000/.well-known/openid-configuration
+      title: OIDC Discovery (Local)
+      icon: web
+    - url: http://localhost:9000/actuator/health
+      title: Health Check (Local)
+      icon: dashboard
+    - url: http://localhost:3000
+      title: Grafana Dashboard (Local)
+      icon: dashboard
+spec:
+  type: service
+  lifecycle: production
+  owner: platform-team
+  system: identity-platform
+  providesApis:
+    - oauth2-authorization-api
+    - oidc-api
+  dependsOn:
+    - resource:postgresql-database
+    - resource:redis-cache
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: oauth2-authorization-api
+  title: OAuth2 Authorization API
+  description: |
+    OAuth2 2.1 compliant authorization API with support for Authorization Code (with PKCE), 
+    Client Credentials, and Refresh Token grant types.
+  tags:
+    - oauth2
+    - rest
+    - authentication
+spec:
+  type: openapi
+  lifecycle: production
+  owner: platform-team
+  system: identity-platform
+  definition: |
+    openapi: "3.0.0"
+    info:
+      title: OAuth2 Authorization API
+      version: "1.0.0"
+      description: OAuth2 2.1 compliant authorization endpoints
+    servers:
+      - url: https://auth.example.com
+        description: Production server
+      - url: http://localhost:9000
+        description: Development server
+    paths:
+      /oauth2/authorize:
+        get:
+          summary: Authorization Endpoint
+          description: Initiates the OAuth2 authorization flow
+          tags:
+            - OAuth2
+          parameters:
+            - name: response_type
+              in: query
+              required: true
+              schema:
+                type: string
+                enum: [code]
+            - name: client_id
+              in: query
+              required: true
+              schema:
+                type: string
+            - name: redirect_uri
+              in: query
+              required: true
+              schema:
+                type: string
+                format: uri
+            - name: scope
+              in: query
+              schema:
+                type: string
+            - name: state
+              in: query
+              schema:
+                type: string
+            - name: code_challenge
+              in: query
+              schema:
+                type: string
+            - name: code_challenge_method
+              in: query
+              schema:
+                type: string
+                enum: [S256, plain]
+          responses:
+            '302':
+              description: Redirect to login or consent page
+            '400':
+              description: Invalid request
+      /oauth2/token:
+        post:
+          summary: Token Endpoint
+          description: Exchange authorization code for tokens or request tokens directly
+          tags:
+            - OAuth2
+          requestBody:
+            required: true
+            content:
+              application/x-www-form-urlencoded:
+                schema:
+                  type: object
+                  properties:
+                    grant_type:
+                      type: string
+                      enum: [authorization_code, client_credentials, refresh_token]
+                    code:
+                      type: string
+                    redirect_uri:
+                      type: string
+                    client_id:
+                      type: string
+                    client_secret:
+                      type: string
+                    code_verifier:
+                      type: string
+                    refresh_token:
+                      type: string
+                    scope:
+                      type: string
+          responses:
+            '200':
+              description: Token response
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      access_token:
+                        type: string
+                      token_type:
+                        type: string
+                      expires_in:
+                        type: integer
+                      refresh_token:
+                        type: string
+                      scope:
+                        type: string
+                      id_token:
+                        type: string
+            '400':
+              description: Invalid request
+            '401':
+              description: Invalid client credentials
+      /oauth2/jwks:
+        get:
+          summary: JSON Web Key Set
+          description: Public keys for JWT verification
+          tags:
+            - OAuth2
+          responses:
+            '200':
+              description: JWK Set
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      keys:
+                        type: array
+                        items:
+                          type: object
+      /oauth2/introspect:
+        post:
+          summary: Token Introspection
+          description: Introspect an access token
+          tags:
+            - OAuth2
+          security:
+            - basicAuth: []
+          requestBody:
+            required: true
+            content:
+              application/x-www-form-urlencoded:
+                schema:
+                  type: object
+                  properties:
+                    token:
+                      type: string
+          responses:
+            '200':
+              description: Token information
+      /oauth2/revoke:
+        post:
+          summary: Token Revocation
+          description: Revoke an access or refresh token
+          tags:
+            - OAuth2
+          security:
+            - basicAuth: []
+          requestBody:
+            required: true
+            content:
+              application/x-www-form-urlencoded:
+                schema:
+                  type: object
+                  properties:
+                    token:
+                      type: string
+                    token_type_hint:
+                      type: string
+                      enum: [access_token, refresh_token]
+          responses:
+            '200':
+              description: Token revoked successfully
+    components:
+      securitySchemes:
+        basicAuth:
+          type: http
+          scheme: basic
+        bearerAuth:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: oidc-api
+  title: OpenID Connect API
+  description: OpenID Connect 1.0 compliant identity layer API
+  tags:
+    - oidc
+    - openid
+    - identity
+spec:
+  type: openapi
+  lifecycle: production
+  owner: platform-team
+  system: identity-platform
+  definition: |
+    openapi: "3.0.0"
+    info:
+      title: OpenID Connect API
+      version: "1.0.0"
+      description: OpenID Connect 1.0 compliant endpoints
+    paths:
+      /.well-known/openid-configuration:
+        get:
+          summary: OIDC Discovery
+          description: OpenID Connect Provider Configuration
+          tags:
+            - OIDC
+          responses:
+            '200':
+              description: Provider configuration
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      issuer:
+                        type: string
+                      authorization_endpoint:
+                        type: string
+                      token_endpoint:
+                        type: string
+                      userinfo_endpoint:
+                        type: string
+                      jwks_uri:
+                        type: string
+                      scopes_supported:
+                        type: array
+                        items:
+                          type: string
+      /userinfo:
+        get:
+          summary: UserInfo Endpoint
+          description: Get claims about the authenticated user
+          tags:
+            - OIDC
+          security:
+            - bearerAuth: []
+          responses:
+            '200':
+              description: User claims
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      sub:
+                        type: string
+                      name:
+                        type: string
+                      email:
+                        type: string
+                      email_verified:
+                        type: boolean
+            '401':
+              description: Invalid or missing access token
+    components:
+      securitySchemes:
+        bearerAuth:
+          type: http
+          scheme: bearer
+          bearerFormat: JWT
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: postgresql-database
+  title: PostgreSQL Database
+  description: PostgreSQL database for OAuth2 authorization data persistence
+  tags:
+    - database
+    - postgresql
+spec:
+  type: database
+  owner: platform-team
+  system: identity-platform
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: redis-cache
+  title: Redis Cache
+  description: Redis cache for session management and token caching (optional)
+  tags:
+    - cache
+    - redis
+spec:
+  type: cache
+  owner: platform-team
+  system: identity-platform
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: identity-platform
+  title: Identity Platform
+  description: Enterprise identity and access management platform
+  tags:
+    - identity
+    - security
+    - platform
+spec:
+  owner: platform-team

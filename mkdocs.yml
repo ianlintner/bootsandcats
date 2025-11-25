@@ -1,0 +1,122 @@
+site_name: OAuth2 Authorization Server
+site_description: Production-ready Spring Boot OAuth2 Authorization Server with OIDC, PKCE, and JWT support
+site_author: Bootsandcats Team
+site_url: https://ianlintner.github.io/bootsandcats/
+
+repo_name: ianlintner/bootsandcats
+repo_url: https://github.com/ianlintner/bootsandcats
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.copy
+    - content.code.annotate
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - mermaid2
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: ianlintner
+      repo: bootsandcats
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Architecture:
+    - Overview: architecture/overview.md
+    - Security Architecture: architecture/security.md
+    - Data Flow: architecture/data-flow.md
+  - Deployment:
+    - Overview: deployment/overview.md
+    - Azure (AKS): deployment/azure.md
+    - Google Cloud (GKE): deployment/gcp.md
+    - AWS (EKS): deployment/aws.md
+  - API Reference:
+    - OAuth2 Endpoints: api/oauth2-endpoints.md
+    - OIDC Endpoints: api/oidc-endpoints.md
+    - Actuator Endpoints: api/actuator-endpoints.md
+  - Observability:
+    - Overview: observability/overview.md
+    - Metrics: observability/metrics.md
+    - Distributed Tracing: observability/tracing.md
+    - Logging: observability/logging.md
+    - Dashboards: observability/dashboards.md
+  - Operations:
+    - Service Level Objectives: operations/slos.md
+    - Incident Response: operations/incident-response.md
+    - Runbooks:
+      - Common Issues: operations/runbooks/common-issues.md
+      - Scaling: operations/runbooks/scaling.md
+      - Backup & Restore: operations/runbooks/backup-restore.md
+      - Certificate Rotation: operations/runbooks/certificate-rotation.md
+  - Configuration: configuration.md
+  - Security: security.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/ianlintner/bootsandcats
+  version:
+    provider: mike
