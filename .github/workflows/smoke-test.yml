@@ -6,13 +6,30 @@ on:
   pull_request:
     branches: [main, develop]
   workflow_dispatch:
+    inputs:
+      load_test_users:
+        description: 'Number of concurrent users for load test'
+        required: false
+        default: '50'
+      load_test_ramp_up:
+        description: 'Ramp-up time in seconds for load test'
+        required: false
+        default: '30'
 
 env:
   JAVA_VERSION: '17'
+  # Default load test configuration (can be overridden via workflow_dispatch inputs)
+  LOAD_TEST_USERS: ${{ github.event.inputs.load_test_users || '50' }}
+  LOAD_TEST_RAMP_UP: ${{ github.event.inputs.load_test_ramp_up || '30' }}
+  # Test client credentials (these are demo/test values already present in the codebase)
+  TEST_CLIENT_ID: 'm2m-client'
+  TEST_CLIENT_SECRET: 'm2m-secret'
 
 jobs:
   smoke-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
@@ -134,7 +151,7 @@ jobs:
           echo "Test 6: Client Credentials Token Request" >> target/smoke-test-results/smoke-test-report.txt
           if TOKEN_RESPONSE=$(curl -sf -X POST http://localhost:9000/oauth2/token \
             -H "Content-Type: application/x-www-form-urlencoded" \
-            -u "m2m-client:m2m-secret" \
+            -u "$TEST_CLIENT_ID:$TEST_CLIENT_SECRET" \
             -d "grant_type=client_credentials&scope=api:read"); then
             echo "  Status: PASSED" >> target/smoke-test-results/smoke-test-report.txt
             TOKEN_TYPE=$(echo $TOKEN_RESPONSE | jq -r '.token_type')
@@ -156,7 +173,7 @@ jobs:
           if [ -n "$ACCESS_TOKEN" ]; then
             if INTROSPECT_RESPONSE=$(curl -sf -X POST http://localhost:9000/oauth2/introspect \
               -H "Content-Type: application/x-www-form-urlencoded" \
-              -u "m2m-client:m2m-secret" \
+              -u "$TEST_CLIENT_ID:$TEST_CLIENT_SECRET" \
               -d "token=$ACCESS_TOKEN"); then
               ACTIVE=$(echo $INTROSPECT_RESPONSE | jq -r '.active')
               if [ "$ACTIVE" = "true" ]; then
@@ -213,8 +230,8 @@ jobs:
           mvn -B gatling:test -Pload-test \
             -Dgatling.simulationClass=com.bootsandcats.oauth2.load.OAuth2LoadSimulation \
             -DbaseUrl=http://localhost:9000 \
-            -Dusers=50 \
-            -DrampUp=30
+            -Dusers=${{ env.LOAD_TEST_USERS }} \
+            -DrampUp=${{ env.LOAD_TEST_RAMP_UP }}
 
       - name: Collect Docker logs
         if: always()
