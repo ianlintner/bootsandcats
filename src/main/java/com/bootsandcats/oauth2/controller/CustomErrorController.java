@@ -10,6 +10,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -19,6 +20,7 @@ import jakarta.servlet.http.HttpServletRequest;
  * <p>Provides consistent error responses without exposing sensitive information.
  */
 @Controller
+@Hidden
 public class CustomErrorController implements ErrorController {
 
     /**

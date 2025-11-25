@@ -94,6 +94,8 @@ nav:
     - Google Cloud (GKE): deployment/gcp.md
     - AWS (EKS): deployment/aws.md
   - API Reference:
+    - OpenAPI Documentation: api/openapi.md
+    - Client Onboarding: api/client-onboarding.md
     - OAuth2 Endpoints: api/oauth2-endpoints.md
     - OIDC Endpoints: api/oidc-endpoints.md
     - Actuator Endpoints: api/actuator-endpoints.md

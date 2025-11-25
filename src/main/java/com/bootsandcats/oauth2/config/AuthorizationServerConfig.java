@@ -121,7 +121,10 @@ public class AuthorizationServerConfig {
                                                 "/error",
                                                 "/favicon.ico",
                                                 "/css/**",
-                                                "/js/**")
+                                                "/js/**",
+                                                "/v3/api-docs/**",
+                                                "/swagger-ui/**",
+                                                "/swagger-ui.html")
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated())
