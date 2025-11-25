@@ -11,6 +11,14 @@ services:
       - DATABASE_USERNAME=${POSTGRES_USER:-postgres}
       - DATABASE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - OTEL_EXPORTER_ENDPOINT=http://otel-collector:4317
+      # OAuth2 configuration for CI/testing (use secrets in real production)
+      - OAUTH2_ISSUER_URL=http://localhost:9000
+      - OAUTH2_DEMO_CLIENT_SECRET=demo-secret
+      - OAUTH2_M2M_CLIENT_SECRET=m2m-secret
+      - OAUTH2_DEMO_USER_PASSWORD=password
+      - OAUTH2_ADMIN_USER_PASSWORD=admin
+      # Override ddl-auto for CI (creates schema automatically)
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
     depends_on:
       postgres:
         condition: service_healthy
