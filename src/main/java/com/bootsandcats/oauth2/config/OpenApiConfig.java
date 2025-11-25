@@ -24,10 +24,19 @@ import io.swagger.v3.oas.models.servers.Server;
  *
  * <p>This configuration provides interactive API documentation at /swagger-ui.html and the OpenAPI
  * specification at /v3/api-docs.
+ *
+ * <p>WARNING: The default issuer URL uses HTTP and is intended for local development only.
+ * Production deployments must configure HTTPS via the oauth2.issuer-url property.
  */
 @Configuration
 public class OpenApiConfig {
 
+    /**
+     * The OAuth2 issuer URL used for configuring OAuth2 security schemes.
+     *
+     * <p>WARNING: Default value (http://localhost:9000) is for development only. In production,
+     * configure this via the OAUTH2_ISSUER_URL environment variable with an HTTPS URL.
+     */
     @Value("${oauth2.issuer-url:http://localhost:9000}")
     private String issuerUrl;
 

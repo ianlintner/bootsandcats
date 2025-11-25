@@ -2,6 +2,7 @@ package com.bootsandcats.oauth2.config;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
@@ -31,11 +32,16 @@ class OpenApiConfigTest {
     void openApiDocsContainsServerInfo() throws Exception {
         mockMvc.perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
-                .andExpect(
-                        content()
-                                .string(
-                                        org.hamcrest.Matchers.containsString(
-                                                "OAuth2 Authorization Server API")));
+                .andExpect(jsonPath("$.info.title").value("OAuth2 Authorization Server API"))
+                .andExpect(jsonPath("$.info.version").value("1.0.0"));
+    }
+
+    @Test
+    void openApiDocsContainsSecuritySchemes() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.components.securitySchemes.oauth2").exists())
+                .andExpect(jsonPath("$.components.securitySchemes.bearerAuth").exists());
     }
 
     @Test
