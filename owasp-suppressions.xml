@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!-- 
+    OWASP Dependency Check Suppressions
+    Add false positive suppressions here.
+    Documentation: https://jeremylong.github.io/DependencyCheck/general/suppression.html
+    -->
+
+    <!-- Example suppression (uncomment and modify as needed):
+    <suppress>
+        <notes><![CDATA[
+        This is a false positive because the vulnerability affects a different usage pattern.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.example/.*$</packageUrl>
+        <cve>CVE-XXXX-XXXXX</cve>
+    </suppress>
+    -->
+</suppressions>
