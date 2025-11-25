@@ -12,6 +12,7 @@ A production-ready Spring Boot OAuth2 Authorization Server with OpenID Connect (
   - Authorization Code (with PKCE)
   - Client Credentials
   - Refresh Token
+- **OpenAPI Documentation** - Interactive Swagger UI and OpenAPI 3.0 specification
 - **OpenTelemetry Integration** - Distributed tracing and metrics
 - **Prometheus Metrics** - Ready for Grafana dashboards
 - **OWASP Security** - Security best practices implemented
@@ -92,6 +93,14 @@ docker run -p 9000:9000 oauth2-server
 | Endpoint | Description |
 |----------|-------------|
 | `/.well-known/openid-configuration` | OIDC Discovery |
+
+### API Documentation Endpoints
+
+| Endpoint | Description |
+|----------|-------------|
+| `/swagger-ui.html` | Interactive API documentation (Swagger UI) |
+| `/v3/api-docs` | OpenAPI specification (JSON) |
+| `/v3/api-docs.yaml` | OpenAPI specification (YAML) |
 
 ### Actuator Endpoints
 
