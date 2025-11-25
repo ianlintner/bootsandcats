@@ -30,8 +30,20 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
       - name: Build JAR with Maven
         run: mvn -B package -DskipTests --file pom.xml
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        if: github.event_name != 'pull_request'
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -56,11 +68,26 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha
 
-      - name: Build and push Docker image
+      # For PRs: Build only for amd64 and load locally (faster validation)
+      - name: Build Docker image (PR)
+        if: github.event_name == 'pull_request'
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: ${{ github.event_name != 'pull_request' }}
+          load: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      # For main/tags: Build for multiple platforms and push
+      - name: Build and push Docker image
+        if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha

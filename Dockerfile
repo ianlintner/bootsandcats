@@ -1,5 +1,5 @@
 # Build stage
-FROM eclipse-temurin:17-jdk-alpine AS builder
+FROM eclipse-temurin:17-jdk AS builder
 
 WORKDIR /app
 
@@ -21,11 +21,11 @@ RUN ./mvnw package -DskipTests -B
 RUN java -Djarmode=layertools -jar target/oauth2-server-*.jar extract
 
 # Runtime stage
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre
 
 # Security: Create non-root user
-RUN addgroup -g 1001 -S appgroup && \
-    adduser -u 1001 -S appuser -G appgroup
+RUN groupadd -g 1001 appgroup && \
+    useradd -u 1001 -g appgroup -s /bin/bash appuser
 
 WORKDIR /app
 
@@ -46,7 +46,7 @@ EXPOSE 9000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:9000/actuator/health || exit 1
+    CMD curl -f http://localhost:9000/actuator/health || exit 1
 
 # JVM options for containers
 ENV JAVA_OPTS="-XX:+UseContainerSupport \

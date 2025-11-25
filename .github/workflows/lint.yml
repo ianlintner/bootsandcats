@@ -10,7 +10,7 @@ env:
   JAVA_VERSION: '17'
 
 jobs:
-  lint:
+  lint-and-format:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,6 +23,14 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
           cache: 'maven'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
 
       - name: Check code formatting with Spotless
         run: mvn -B spotless:check --file pom.xml
@@ -41,6 +49,14 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
       - name: Run SpotBugs analysis
         run: mvn -B compile spotbugs:check --file pom.xml
         continue-on-error: true
@@ -51,28 +67,3 @@ jobs:
         with:
           name: spotbugs-report
           path: target/spotbugsXml.xml
-
-  format:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-          cache: 'maven'
-
-      - name: Apply code formatting
-        run: mvn -B spotless:apply --file pom.xml
-
-      - name: Check for formatting changes
-        run: |
-          if [[ -n $(git status --porcelain) ]]; then
-            echo "Code formatting changes detected. Please run 'mvn spotless:apply' locally."
-            git diff
-            exit 1
-          fi
