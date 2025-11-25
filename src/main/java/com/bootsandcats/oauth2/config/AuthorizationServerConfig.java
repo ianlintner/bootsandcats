@@ -7,6 +7,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -46,10 +47,29 @@ import com.nimbusds.jose.proc.SecurityContext;
  * OAuth2 Authorization Server Security Configuration.
  *
  * <p>Configures OAuth2 authorization server with PKCE, OIDC, and JWT support.
+ *
+ * <p>WARNING: The default users and client secrets in this configuration are for demonstration
+ * purposes only. In production environments, replace these with proper user management and load
+ * secrets from environment variables or a secrets management system.
  */
 @Configuration
 @EnableWebSecurity
 public class AuthorizationServerConfig {
+
+    @Value("${oauth2.issuer-url:http://localhost:9000}")
+    private String issuerUrl;
+
+    @Value("${oauth2.demo-client-secret:demo-secret}")
+    private String demoClientSecret;
+
+    @Value("${oauth2.m2m-client-secret:m2m-secret}")
+    private String m2mClientSecret;
+
+    @Value("${oauth2.demo-user-password:password}")
+    private String demoUserPassword;
+
+    @Value("${oauth2.admin-user-password:admin}")
+    private String adminUserPassword;
 
     /**
      * Security filter chain for OAuth2 Authorization Server endpoints.
@@ -117,6 +137,9 @@ public class AuthorizationServerConfig {
     /**
      * User details service for form login authentication.
      *
+     * <p>WARNING: These are demo credentials only. In production, implement proper user management
+     * with credentials loaded from a secure source (database, LDAP, etc.).
+     *
      * @return UserDetailsService with default users
      */
     @Bean
@@ -124,14 +147,14 @@ public class AuthorizationServerConfig {
         UserDetails userDetails =
                 User.builder()
                         .username("user")
-                        .password(passwordEncoder.encode("password"))
+                        .password(passwordEncoder.encode(demoUserPassword))
                         .roles("USER")
                         .build();
 
         UserDetails adminDetails =
                 User.builder()
                         .username("admin")
-                        .password(passwordEncoder.encode("admin"))
+                        .password(passwordEncoder.encode(adminUserPassword))
                         .roles("USER", "ADMIN")
                         .build();
 
@@ -151,6 +174,9 @@ public class AuthorizationServerConfig {
     /**
      * Registered OAuth2 client repository.
      *
+     * <p>WARNING: Client secrets shown here are defaults for demonstration. In production, load
+     * secrets from environment variables (e.g., DEMO_CLIENT_SECRET, M2M_CLIENT_SECRET).
+     *
      * @return RegisteredClientRepository with demo clients
      */
     @Bean
@@ -159,7 +185,7 @@ public class AuthorizationServerConfig {
         RegisteredClient confidentialClient =
                 RegisteredClient.withId(UUID.randomUUID().toString())
                         .clientId("demo-client")
-                        .clientSecret(passwordEncoder.encode("demo-secret"))
+                        .clientSecret(passwordEncoder.encode(demoClientSecret))
                         .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                         .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
                         .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
@@ -217,7 +243,7 @@ public class AuthorizationServerConfig {
         RegisteredClient m2mClient =
                 RegisteredClient.withId(UUID.randomUUID().toString())
                         .clientId("m2m-client")
-                        .clientSecret(passwordEncoder.encode("m2m-secret"))
+                        .clientSecret(passwordEncoder.encode(m2mClientSecret))
                         .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                         .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
                         .scope("api:read")
@@ -233,6 +259,11 @@ public class AuthorizationServerConfig {
 
     /**
      * JWK Source for JWT signing/verification.
+     *
+     * <p>WARNING: The RSA key pair is generated dynamically on each server startup, which means
+     * tokens issued before a restart will become invalid after restart. For production use,
+     * consider persisting the JWK to a database or loading from a keystore to maintain token
+     * validity across restarts.
      *
      * @return JWKSource with RSA key pair
      */
@@ -281,7 +312,7 @@ public class AuthorizationServerConfig {
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
         return AuthorizationServerSettings.builder()
-                .issuer("http://localhost:9000")
+                .issuer(issuerUrl)
                 .authorizationEndpoint("/oauth2/authorize")
                 .deviceAuthorizationEndpoint("/oauth2/device_authorization")
                 .deviceVerificationEndpoint("/oauth2/device_verification")

@@ -36,7 +36,18 @@ jobs:
       - name: Start OAuth2 server
         run: |
           java -jar target/oauth2-server-1.0.0-SNAPSHOT.jar &
-          sleep 30  # Wait for server to start
+          # Wait for server to be healthy (timeout: 60s)
+          for i in {1..60}; do
+            if curl -sf http://localhost:9000/actuator/health > /dev/null; then
+              echo "Server is up!"
+              break
+            fi
+            sleep 1
+          done
+          if ! curl -sf http://localhost:9000/actuator/health > /dev/null; then
+            echo "Server failed to start within 60 seconds."
+            exit 1
+          fi
 
       - name: Run Gatling load tests
         run: |

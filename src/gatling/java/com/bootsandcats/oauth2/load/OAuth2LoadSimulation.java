@@ -18,9 +18,21 @@ import static io.gatling.javaapi.http.HttpDsl.*;
  */
 public class OAuth2LoadSimulation extends Simulation {
 
+    /**
+     * Safely parse an integer system property, falling back to a default value if parsing fails.
+     */
+    private static int safeParseInt(String value, int defaultValue) {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            System.err.println("Invalid integer value: '" + value + "'. Using fallback: " + defaultValue);
+            return defaultValue;
+        }
+    }
+
     private final String baseUrl = System.getProperty("baseUrl", "http://localhost:9000");
-    private final int users = Integer.parseInt(System.getProperty("users", "100"));
-    private final int rampUpSeconds = Integer.parseInt(System.getProperty("rampUp", "30"));
+    private final int users = safeParseInt(System.getProperty("users", "100"), 100);
+    private final int rampUpSeconds = safeParseInt(System.getProperty("rampUp", "30"), 30);
 
     // HTTP Protocol Configuration
     private final HttpProtocolBuilder httpProtocol =

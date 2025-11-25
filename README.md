@@ -57,6 +57,8 @@ docker run -p 9000:9000 oauth2-server
 
 ### Default Clients
 
+> **⚠️ WARNING**: The credentials shown below are for demonstration purposes only. In production, these should be replaced with secure values loaded from environment variables or a secrets management system.
+
 | Client ID | Client Secret | Type | Description |
 |-----------|---------------|------|-------------|
 | `demo-client` | `demo-secret` | Confidential | Full OAuth2 client with authorization code and refresh token grants |
@@ -64,6 +66,8 @@ docker run -p 9000:9000 oauth2-server
 | `m2m-client` | `m2m-secret` | Confidential | Machine-to-machine client for service-to-service auth |
 
 ### Default Users
+
+> **⚠️ WARNING**: These are demo credentials only. In production, implement proper user management.
 
 | Username | Password | Roles |
 |----------|----------|-------|
@@ -100,6 +104,8 @@ docker run -p 9000:9000 oauth2-server
 | `/actuator/info` | Application info |
 
 ## Usage Examples
+
+> **Note**: The credentials shown in these examples are demo values. Replace them with your own secure credentials in production.
 
 ### Client Credentials Flow
 
