@@ -230,7 +230,7 @@ echo -n "$(openssl rand -base64 32)" | gcloud secrets create oauth2-m2m-client-s
   --replication-policy="automatic" \
   --data-file=-
 
-echo -n "jdbc:postgresql:///$DATABASE_NAME?cloudSqlInstance=$SQL_CONNECTION_NAME&socketFactory=com.google.cloud.sql.postgres.SocketFactory" | gcloud secrets create database-url \
+echo -n "jdbc:postgresql:///oauth2db?cloudSqlInstance=$SQL_CONNECTION_NAME&socketFactory=com.google.cloud.sql.postgres.SocketFactory" | gcloud secrets create database-url \
   --replication-policy="automatic" \
   --data-file=-
 ```

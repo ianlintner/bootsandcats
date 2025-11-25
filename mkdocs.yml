@@ -103,6 +103,8 @@ nav:
     - Distributed Tracing: observability/tracing.md
     - Logging: observability/logging.md
     - Dashboards: observability/dashboards.md
+  - Configuration: configuration.md
+  - Security: security.md
   - Operations:
     - Service Level Objectives: operations/slos.md
     - Incident Response: operations/incident-response.md
@@ -111,8 +113,6 @@ nav:
       - Scaling: operations/runbooks/scaling.md
       - Backup & Restore: operations/runbooks/backup-restore.md
       - Certificate Rotation: operations/runbooks/certificate-rotation.md
-  - Configuration: configuration.md
-  - Security: security.md
 
 extra:
   social:
