@@ -55,26 +55,13 @@ jobs:
 
       - name: Start Docker Compose environment
         run: |
-          docker compose up -d --build
-          echo "Waiting for services to be healthy..."
+          docker compose up -d --build --wait
+          echo "All services are healthy."
 
-      - name: Wait for OAuth2 server to be ready
+      - name: Show OAuth2 server health status
         run: |
-          echo "Waiting for OAuth2 server health check..."
-          for i in {1..60}; do
-            if curl -sf http://localhost:9000/actuator/health > /dev/null 2>&1; then
-              echo "OAuth2 server is healthy!"
-              curl -s http://localhost:9000/actuator/health | jq .
-              break
-            fi
-            echo "Attempt $i/60 - waiting..."
-            sleep 5
-          done
-          if ! curl -sf http://localhost:9000/actuator/health > /dev/null 2>&1; then
-            echo "OAuth2 server failed to start within 5 minutes"
-            docker compose logs oauth2-server
-            exit 1
-          fi
+          echo "OAuth2 server health status:"
+          curl -s http://localhost:9000/actuator/health | jq .
 
       - name: Run smoke tests
         id: smoke-tests
@@ -225,7 +212,6 @@ jobs:
           fi
 
       - name: Run load tests
-        if: success()
         run: |
           mvn -B gatling:test -Pload-test \
             -Dgatling.simulationClass=com.bootsandcats.oauth2.load.OAuth2LoadSimulation \

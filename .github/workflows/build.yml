@@ -43,7 +43,7 @@ jobs:
         if: always()
         with:
           name: Unit & Integration Tests
-          path: 'target/surefire-reports/*.xml,target/failsafe-reports/*.xml'
+          path: 'target/surefire-reports/TEST-*.xml,target/failsafe-reports/TEST-*.xml'
           reporter: java-junit
 
       - name: Upload test results
