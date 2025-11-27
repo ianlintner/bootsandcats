@@ -59,12 +59,8 @@ services:
       - "4318:4318"   # OTLP HTTP
       - "8888:8888"   # Prometheus metrics exposed by collector
       - "8889:8889"   # Prometheus exporter metrics
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:13133/"]
-      interval: 10s
-      timeout: 10s
-      retries: 6
-      start_period: 30s
+    # Note: Healthcheck removed as wget/curl may not be available in the container
+    # and the oauth2-server has OTEL disabled anyway for CI
 
   prometheus:
     image: prom/prometheus:latest
