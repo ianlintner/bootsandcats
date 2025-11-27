@@ -11,6 +11,8 @@ services:
       - DATABASE_USERNAME=${POSTGRES_USER:-postgres}
       - DATABASE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - OTEL_EXPORTER_ENDPOINT=http://otel-collector:4317
+      # Disable OpenTelemetry SDK to avoid dependency issues in CI
+      - OTEL_SDK_DISABLED=true
       # OAuth2 configuration for CI/testing (use secrets in real production)
       - OAUTH2_ISSUER_URL=http://localhost:9000
       - OAUTH2_DEMO_CLIENT_SECRET=demo-secret
