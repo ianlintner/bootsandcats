@@ -80,10 +80,10 @@ jobs:
           if HEALTH_RESPONSE=$(curl -sf http://localhost:9000/actuator/health); then
             echo "  Status: PASSED" >> target/smoke-test-results/smoke-test-report.txt
             echo "  Response: $HEALTH_RESPONSE" >> target/smoke-test-results/smoke-test-report.txt
-            ((TESTS_PASSED++))
+            ((TESTS_PASSED++)) || true
           else
             echo "  Status: FAILED" >> target/smoke-test-results/smoke-test-report.txt
-            ((TESTS_FAILED++))
+            ((TESTS_FAILED++)) || true
           fi
           echo "" >> target/smoke-test-results/smoke-test-report.txt
           
@@ -91,10 +91,10 @@ jobs:
           echo "Test 2: Liveness Probe" >> target/smoke-test-results/smoke-test-report.txt
           if curl -sf http://localhost:9000/actuator/health/liveness > /dev/null; then
             echo "  Status: PASSED" >> target/smoke-test-results/smoke-test-report.txt
-            ((TESTS_PASSED++))
+            ((TESTS_PASSED++)) || true
           else
             echo "  Status: FAILED" >> target/smoke-test-results/smoke-test-report.txt
-            ((TESTS_FAILED++))
+            ((TESTS_FAILED++)) || true
           fi
           echo "" >> target/smoke-test-results/smoke-test-report.txt
           
@@ -102,10 +102,10 @@ jobs:
           echo "Test 3: Readiness Probe" >> target/smoke-test-results/smoke-test-report.txt
           if curl -sf http://localhost:9000/actuator/health/readiness > /dev/null; then
             echo "  Status: PASSED" >> target/smoke-test-results/smoke-test-report.txt
-            ((TESTS_PASSED++))
+            ((TESTS_PASSED++)) || true
           else
             echo "  Status: FAILED" >> target/smoke-test-results/smoke-test-report.txt
-            ((TESTS_FAILED++))
+            ((TESTS_FAILED++)) || true
           fi
           echo "" >> target/smoke-test-results/smoke-test-report.txt
           
@@ -114,10 +114,10 @@ jobs:
           if OIDC_RESPONSE=$(curl -sf http://localhost:9000/.well-known/openid-configuration); then
             echo "  Status: PASSED" >> target/smoke-test-results/smoke-test-report.txt
             echo "  Issuer: $(echo $OIDC_RESPONSE | jq -r '.issuer')" >> target/smoke-test-results/smoke-test-report.txt
-            ((TESTS_PASSED++))
+            ((TESTS_PASSED++)) || true
           else
             echo "  Status: FAILED" >> target/smoke-test-results/smoke-test-report.txt
-            ((TESTS_FAILED++))
+            ((TESTS_FAILED++)) || true
           fi
           echo "" >> target/smoke-test-results/smoke-test-report.txt
           
@@ -127,10 +127,10 @@ jobs:
             echo "  Status: PASSED" >> target/smoke-test-results/smoke-test-report.txt
             KEYS_COUNT=$(echo $JWKS_RESPONSE | jq '.keys | length')
             echo "  Keys count: $KEYS_COUNT" >> target/smoke-test-results/smoke-test-report.txt
-            ((TESTS_PASSED++))
+            ((TESTS_PASSED++)) || true
           else
             echo "  Status: FAILED" >> target/smoke-test-results/smoke-test-report.txt
-            ((TESTS_FAILED++))
+            ((TESTS_FAILED++)) || true
           fi
           echo "" >> target/smoke-test-results/smoke-test-report.txt
           
@@ -148,10 +148,10 @@ jobs:
             
             # Save access token for introspection test
             ACCESS_TOKEN=$(echo $TOKEN_RESPONSE | jq -r '.access_token')
-            ((TESTS_PASSED++))
+            ((TESTS_PASSED++)) || true
           else
             echo "  Status: FAILED" >> target/smoke-test-results/smoke-test-report.txt
-            ((TESTS_FAILED++))
+            ((TESTS_FAILED++)) || true
           fi
           echo "" >> target/smoke-test-results/smoke-test-report.txt
           
@@ -166,14 +166,14 @@ jobs:
               if [ "$ACTIVE" = "true" ]; then
                 echo "  Status: PASSED" >> target/smoke-test-results/smoke-test-report.txt
                 echo "  Token active: $ACTIVE" >> target/smoke-test-results/smoke-test-report.txt
-                ((TESTS_PASSED++))
+                ((TESTS_PASSED++)) || true
               else
                 echo "  Status: FAILED (token not active)" >> target/smoke-test-results/smoke-test-report.txt
-                ((TESTS_FAILED++))
+                ((TESTS_FAILED++)) || true
               fi
             else
               echo "  Status: FAILED" >> target/smoke-test-results/smoke-test-report.txt
-              ((TESTS_FAILED++))
+              ((TESTS_FAILED++)) || true
             fi
           else
             echo "  Status: SKIPPED (no token available)" >> target/smoke-test-results/smoke-test-report.txt
@@ -184,10 +184,10 @@ jobs:
           echo "Test 8: Prometheus Metrics Endpoint" >> target/smoke-test-results/smoke-test-report.txt
           if curl -sf http://localhost:9000/actuator/prometheus > /dev/null; then
             echo "  Status: PASSED" >> target/smoke-test-results/smoke-test-report.txt
-            ((TESTS_PASSED++))
+            ((TESTS_PASSED++)) || true
           else
             echo "  Status: FAILED" >> target/smoke-test-results/smoke-test-report.txt
-            ((TESTS_FAILED++))
+            ((TESTS_FAILED++)) || true
           fi
           echo "" >> target/smoke-test-results/smoke-test-report.txt
           
