@@ -13,6 +13,8 @@ services:
       - OTEL_EXPORTER_ENDPOINT=http://otel-collector:4317
       # Disable OpenTelemetry SDK to avoid dependency issues in CI
       - OTEL_SDK_DISABLED=true
+      # Override otel.resource.attributes to empty to avoid Map binding error
+      - OTEL_RESOURCE_ATTRIBUTES=
       # OAuth2 configuration for CI/testing (use secrets in real production)
       - OAUTH2_ISSUER_URL=http://localhost:9000
       - OAUTH2_DEMO_CLIENT_SECRET=demo-secret
