@@ -211,6 +211,10 @@ jobs:
             exit 1
           fi
 
+      - name: Compile Gatling tests
+        run: |
+          mvn -B test-compile -Pload-test
+
       - name: Run load tests
         run: |
           mvn -B gatling:test -Pload-test \
