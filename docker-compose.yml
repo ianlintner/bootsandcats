@@ -11,10 +11,9 @@ services:
       - DATABASE_USERNAME=${POSTGRES_USER:-postgres}
       - DATABASE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - OTEL_EXPORTER_ENDPOINT=http://otel-collector:4317
-      # Disable OpenTelemetry SDK to avoid dependency issues in CI
+      # Disable OpenTelemetry SDK and exclude its autoconfiguration to avoid dependency/binding issues in CI
       - OTEL_SDK_DISABLED=true
-      # Override otel.resource.attributes to empty to avoid Map binding error
-      - OTEL_RESOURCE_ATTRIBUTES=
+      - SPRING_AUTOCONFIGURE_EXCLUDE=io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration
       # OAuth2 configuration for CI/testing (use secrets in real production)
       - OAUTH2_ISSUER_URL=http://localhost:9000
       - OAUTH2_DEMO_CLIENT_SECRET=demo-secret
