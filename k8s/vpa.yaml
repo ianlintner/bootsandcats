@@ -1,0 +1,62 @@
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: oauth2-server-vpa
+  namespace: default
+spec:
+  targetRef:
+    apiVersion: "apps/v1"
+    kind: Deployment
+    name: oauth2-server
+  updatePolicy:
+    updateMode: Auto
+  resourcePolicy:
+    containerPolicies:
+      - containerName: oauth2-server
+        minAllowed:
+          cpu: 50m
+          memory: 256Mi
+        maxAllowed:
+          cpu: 500m
+          memory: 1024Mi
+        controlledResources: ["cpu", "memory"]
+      - containerName: istio-proxy
+        minAllowed:
+          cpu: 20m
+          memory: 64Mi
+        maxAllowed:
+          cpu: 200m
+          memory: 256Mi
+        controlledResources: ["cpu", "memory"]
+---
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: postgres-vpa
+  namespace: default
+spec:
+  targetRef:
+    apiVersion: "apps/v1"
+    kind: Deployment
+    name: postgres
+  updatePolicy:
+    updateMode: Auto
+  resourcePolicy:
+    containerPolicies:
+      - containerName: postgres
+        minAllowed:
+          cpu: 100m
+          memory: 256Mi
+        maxAllowed:
+          cpu: 1000m
+          memory: 2048Mi
+        controlledResources: ["cpu", "memory"]
+      - containerName: istio-proxy
+        minAllowed:
+          cpu: 20m
+          memory: 64Mi
+        maxAllowed:
+          cpu: 200m
+          memory: 256Mi
+        controlledResources: ["cpu", "memory"]
+
