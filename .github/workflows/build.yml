@@ -12,6 +12,9 @@ env:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
 
     steps:
       - name: Checkout code
@@ -34,6 +37,14 @@ jobs:
 
       - name: Build and run all tests
         run: mvn -B verify --file pom.xml
+
+      - name: Publish Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Unit & Integration Tests
+          path: 'target/surefire-reports/TEST-*.xml,target/failsafe-reports/TEST-*.xml'
+          reporter: java-junit
 
       - name: Upload test results
         uses: actions/upload-artifact@v4

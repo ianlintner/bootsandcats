@@ -8,14 +8,21 @@ COPY mvnw ./
 COPY .mvn .mvn
 COPY pom.xml ./
 
-# Make mvnw executable and download dependencies
-RUN chmod +x mvnw && ./mvnw dependency:go-offline -B
+# Make mvnw executable and download dependencies with retry logic for transient network failures
+RUN chmod +x mvnw && \
+    for i in 1 2 3; do \
+        ./mvnw dependency:go-offline -B && break || \
+        { echo "Attempt $i failed, retrying in 10s..."; sleep 10; }; \
+    done
 
 # Copy source code
 COPY src ./src
 
-# Build the application
-RUN ./mvnw package -DskipTests -B
+# Build the application with retry logic
+RUN for i in 1 2 3; do \
+        ./mvnw package -DskipTests -B && break || \
+        { echo "Attempt $i failed, retrying in 10s..."; sleep 10; }; \
+    done
 
 # Extract layers for optimized Docker image
 RUN java -Djarmode=layertools -jar target/oauth2-server-*.jar extract
