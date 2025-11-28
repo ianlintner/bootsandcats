@@ -49,29 +49,57 @@ Admin: admin / CHANGEME
 
 ## 🧪 Quick Tests
 
-### 1. Health Check
+### Automated Smoke Test Suite ✅
 ```bash
-curl http://localhost:9000/actuator/health/readiness
+# Run comprehensive smoke tests
+./scripts/smoke-test.sh
 ```
 
-### 2. OIDC Discovery
+**Last Test Results**: ✅ All tests passed (6/6)  
+**Full Report**: `docs/deployment/smoke-test-results.md`
+
+### Manual Tests
+
+#### 1. Health Check
+```bash
+curl http://localhost:9000/actuator/health/readiness
+# Expected: {"status":"UP"}
+```
+
+#### 2. OIDC Discovery
 ```bash
 curl http://localhost:9000/.well-known/openid-configuration | jq
 ```
 
-### 3. Get Access Token
+#### 3. Get Access Token
 ```bash
 curl -X POST http://localhost:9000/oauth2/token \
   -u m2m-client:CHANGEME \
   -d "grant_type=client_credentials" \
   -d "scope=api:read"
+# Expected: {"access_token":"eyJ...", "token_type":"Bearer", "expires_in":3600}
 ```
 
-### 4. Introspect Token
+#### 4. Introspect Token
 ```bash
+TOKEN="your_token_here"
 curl -X POST http://localhost:9000/oauth2/introspect \
   -u m2m-client:CHANGEME \
-  -d "token=YOUR_ACCESS_TOKEN"
+  -d "token=$TOKEN"
+# Expected: {"active":true, "client_id":"m2m-client", "scope":"api:read"}
+```
+
+#### 5. Complete Flow Test
+```bash
+# Get token and introspect in one command
+TOKEN=$(curl -s -X POST http://localhost:9000/oauth2/token \
+  -u m2m-client:CHANGEME \
+  -d "grant_type=client_credentials" \
+  -d "scope=api:read" | jq -r '.access_token')
+
+curl -X POST http://localhost:9000/oauth2/introspect \
+  -u m2m-client:CHANGEME \
+  -d "token=$TOKEN" | jq
 ```
 
 ## 🐛 Troubleshooting
