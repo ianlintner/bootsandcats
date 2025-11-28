@@ -184,3 +184,60 @@ jobs:
             app.log
             discovery.json
           if-no-files-found: ignore
+
+  deploy:
+    name: Build Docker & Deploy to AKS
+    runs-on: ubuntu-latest
+    needs: [smoke]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download packaged JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: app-jar
+          path: target
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Login to ACR
+        run: |
+          az acr login --name gabby
+
+      - name: Build and push Docker image
+        run: |
+          IMAGE_TAG="gabby.azurecr.io/oauth2-server:${{ github.sha }}"
+          IMAGE_LATEST="gabby.azurecr.io/oauth2-server:latest"
+          
+          docker build -t $IMAGE_TAG -t $IMAGE_LATEST .
+          docker push $IMAGE_TAG
+          docker push $IMAGE_LATEST
+          
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+      - name: Set AKS context
+        uses: azure/aks-set-context@v4
+        with:
+          resource-group: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          cluster-name: bigboy
+
+      - name: Deploy to AKS
+        run: |
+          kubectl set image deployment/oauth2-server oauth2-server=${{ env.IMAGE_TAG }} -n default
+          kubectl rollout status deployment/oauth2-server -n default --timeout=5m
+
+      - name: Verify deployment
+        run: |
+          kubectl get pods -n default -l app=oauth2-server
+          kubectl get service oauth2-server -n default

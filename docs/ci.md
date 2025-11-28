@@ -25,6 +25,13 @@ This project uses GitHub Actions. The pipeline is optimized for fast feedback an
        - Verifies `/actuator/health` is `UP`
        - Fetches and validates OIDC discovery document
        - Uploads: app logs and discovery JSON
+    5. Deploy to AKS (main branch only)
+       - Downloads packaged JAR from build job
+       - Builds Docker image (reuses JAR, no recompile)
+       - Pushes to Azure Container Registry (gabby.azurecr.io)
+       - Tags: `latest` and git SHA
+       - Deploys to AKS cluster "bigboy" via kubectl
+       - Verifies rollout status and pod health
 
 - Manual Load Test (`.github/workflows/load-test.yml`)
   - Trigger: manual (workflow_dispatch)
@@ -39,9 +46,39 @@ This project uses GitHub Actions. The pipeline is optimized for fast feedback an
 ## Performance Optimizations
 - Maven dependency caching via setup-java
 - Multi-threaded Maven (`-T 1C`) where safe
-- Artifact reuse (JAR built once; smoke job reuses it)
+- Artifact reuse (JAR built once; smoke and deploy jobs reuse it)
+- Docker build reuses packaged JAR (no rebuild in container)
 - Concurrency control cancels superseded runs for same ref
 - Path filters skip docs-only edits
+
+## Deployment Flow (main branch)
+
+```
+Push to main
+    ↓
+Build & Unit Tests → package JAR → upload artifact
+    ↓
+Integration Tests (parallel with Static Analysis)
+    ↓
+Smoke Test (validates app boots and serves OIDC)
+    ↓
+Deploy (main only):
+  - Download JAR artifact
+  - Build Docker image
+  - Push to ACR (gabby.azurecr.io/oauth2-server)
+  - Deploy to AKS (bigboy cluster)
+  - Verify rollout
+```
+
+## Required GitHub Secrets
+
+For Azure deployment:
+- `AZURE_CLIENT_ID` - Service principal client ID (federated identity)
+- `AZURE_TENANT_ID` - Azure tenant ID
+- `AZURE_SUBSCRIPTION_ID` - Azure subscription ID
+- `AZURE_RESOURCE_GROUP` - Resource group containing AKS cluster
+
+See `k8s/README.md` for detailed Azure/AKS setup instructions.
 
 ## Local Smoke Test (optional)
 
@@ -70,4 +107,3 @@ gh run list -L 10 -R ianlintner/bootsandcats --workflow ci.yml
 ```
 
 The summary script prints workflow-level pass/fail breakdowns and the slowest runs.
-

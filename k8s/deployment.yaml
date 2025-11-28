@@ -1,0 +1,146 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oauth2-server
+  namespace: default
+  labels:
+    app: oauth2-server
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: oauth2-server
+  template:
+    metadata:
+      labels:
+        app: oauth2-server
+        version: v1
+    spec:
+      containers:
+      - name: oauth2-server
+        image: gabby.azurecr.io/oauth2-server:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 9000
+          name: http
+          protocol: TCP
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        - name: OTEL_SDK_DISABLED
+          value: "false"
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://otel-collector:4317"
+        - name: OAUTH2_ISSUER_URL
+          valueFrom:
+            configMapKeyRef:
+              name: oauth2-config
+              key: issuer-url
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-secrets
+              key: database-url
+        - name: DATABASE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-secrets
+              key: database-username
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-secrets
+              key: database-password
+        - name: OAUTH2_DEMO_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-secrets
+              key: demo-client-secret
+        - name: OAUTH2_M2M_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-secrets
+              key: m2m-client-secret
+        - name: OAUTH2_DEMO_USER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-secrets
+              key: demo-user-password
+        - name: OAUTH2_ADMIN_USER_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-secrets
+              key: admin-user-password
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 9000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 9000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          capabilities:
+            drop:
+            - ALL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oauth2-server
+  namespace: default
+  labels:
+    app: oauth2-server
+spec:
+  type: ClusterIP
+  ports:
+  - port: 9000
+    targetPort: 9000
+    protocol: TCP
+    name: http
+  selector:
+    app: oauth2-server
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oauth2-config
+  namespace: default
+data:
+  issuer-url: "https://oauth.bigboy.example.com"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: oauth2-secrets
+  namespace: default
+type: Opaque
+stringData:
+  database-url: "jdbc:postgresql://postgres:5432/oauth2db"
+  database-username: "oauth2user"
+  database-password: "CHANGEME"
+  demo-client-secret: "CHANGEME"
+  m2m-client-secret: "CHANGEME"
+  demo-user-password: "CHANGEME"
+  admin-user-password: "CHANGEME"
+
