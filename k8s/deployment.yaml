@@ -29,7 +29,7 @@ spec:
         - name: SPRING_PROFILES_ACTIVE
           value: "prod"
         - name: OTEL_SDK_DISABLED
-          value: "false"
+          value: "true"
         - name: OTEL_EXPORTER_OTLP_ENDPOINT
           value: "http://otel-collector:4317"
         - name: OAUTH2_ISSUER_URL
@@ -75,7 +75,7 @@ spec:
         resources:
           requests:
             memory: "512Mi"
-            cpu: "250m"
+            cpu: "100m"
           limits:
             memory: "1Gi"
             cpu: "1000m"
