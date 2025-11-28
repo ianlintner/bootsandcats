@@ -1,10 +1,8 @@
 name: Smoke Test
 
 on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
+  schedule:
+    - cron: '0 4 * * 1' # Mondays at 05:00 UTC
   workflow_dispatch:
     inputs:
       load_test_users:

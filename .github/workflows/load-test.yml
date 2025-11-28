@@ -1,6 +1,8 @@
 name: Manual Load Test
 
 on:
+  schedule:
+    - cron: '0 8 * * 1' # Mondays at 05:00 UTC
   workflow_dispatch:
     inputs:
       users:
