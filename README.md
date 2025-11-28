@@ -226,15 +226,15 @@ Metrics are exposed at `/actuator/prometheus`. Key metrics include:
 
 Use the provided `prometheus.yml` and `docker-compose.yml` to set up a complete observability stack.
 
-## CI/CD
+## Workflows
 
-GitHub Actions workflows included:
+Status badges:
 
-- **build.yml** - Build and unit tests
-- **lint.yml** - Code formatting and static analysis
-- **docker.yml** - Docker image build and push
-- **security.yml** - Security scanning (OWASP, CodeQL, Trivy)
-- **load-test.yml** - Performance testing with Gatling
+- CI: ![CI](https://github.com/ianlintner/bootsandcats/actions/workflows/ci.yml/badge.svg)
+- Security Scan: ![Security Scan](https://github.com/ianlintner/bootsandcats/actions/workflows/security.yml/badge.svg)
+- Manual Load Test: ![Manual Load Test](https://github.com/ianlintner/bootsandcats/actions/workflows/load-test.yml/badge.svg)
+
+See `docs/ci.md` for a full pipeline overview.
 
 ## Project Structure
 
@@ -267,9 +267,7 @@ bootsandcats/
 │       └── resources/
 │           └── application-test.properties
 ├── .github/workflows/
-│   ├── build.yml
-│   ├── lint.yml
-│   ├── docker.yml
+│   ├── ci.yml
 │   ├── security.yml
 │   └── load-test.yml
 ├── Dockerfile

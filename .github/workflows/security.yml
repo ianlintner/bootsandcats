@@ -1,119 +1,53 @@
 name: Security Scan
 
 on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
   schedule:
-    - cron: '0 0 * * 0'  # Weekly scan on Sundays
+    - cron: '0 5 * * 1' # Mondays at 05:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
   JAVA_VERSION: '17'
 
 jobs:
-  dependency-check:
+  owasp-dep-check:
+    name: OWASP Dependency-Check
     runs-on: ubuntu-latest
-
+    timeout-minutes: 60
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
-          java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
           cache: 'maven'
 
-      - name: Cache Maven packages
+      - name: Cache OWASP NVD database
         uses: actions/cache@v4
         with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          path: |
+            ~/.m2/repository/org/owasp/dependency-check-data
+          key: ${{ runner.os }}-owasp-nvd-cache-v1
           restore-keys: |
-            ${{ runner.os }}-maven-
+            ${{ runner.os }}-owasp-nvd-cache-
 
-      - name: Cache OWASP Dependency Check data
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository/org/owasp/dependency-check-data
-          key: ${{ runner.os }}-owasp-${{ github.run_id }}
-          restore-keys: |
-            ${{ runner.os }}-owasp-
+      - name: Run OWASP Dependency-Check
+        run: ./mvnw --batch-mode org.owasp:dependency-check-maven:check
 
-      - name: Run OWASP Dependency Check
-        run: mvn -B org.owasp:dependency-check-maven:check --file pom.xml
-        continue-on-error: true
-
-      - name: Upload Dependency Check Report
+      - name: Upload OWASP report (always)
+        if: always()
         uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: dependency-check-report
-          path: target/dependency-check-report.html
-
-  codeql:
-    runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: java
-
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
-          cache: 'maven'
-
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
-
-      - name: Build for CodeQL analysis
-        run: mvn -B compile --file pom.xml
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:java"
-
-  trivy-scan:
-    runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request'
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Run Trivy vulnerability scanner (filesystem)
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH'
-
-      - name: Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: 'trivy-results.sarif'
+          name: owasp-dependency-check-report
+          path: |
+            target/dependency-check-report.*
+          if-no-files-found: ignore

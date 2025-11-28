@@ -1,64 +1,50 @@
-name: Load Test
+name: Manual Load Test
 
 on:
   workflow_dispatch:
     inputs:
       users:
-        description: 'Number of concurrent users'
-        required: true
-        default: '100'
-      rampUp:
-        description: 'Ramp-up time in seconds'
-        required: true
-        default: '30'
+        description: 'Concurrent users'
+        required: false
+        default: '50'
+      durationSeconds:
+        description: 'Test duration in seconds'
+        required: false
+        default: '60'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: load-test-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
   JAVA_VERSION: '17'
 
 jobs:
-  load-test:
+  gatling:
+    name: Gatling Load Test
     runs-on: ubuntu-latest
-
+    timeout-minutes: 60
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
-          java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
           cache: 'maven'
 
-      - name: Build application
-        run: mvn -B package -DskipTests --file pom.xml
-
-      - name: Start OAuth2 server
+      - name: Run Gatling with profile
         run: |
-          java -jar target/oauth2-server-1.0.0-SNAPSHOT.jar &
-          # Wait for server to be healthy (timeout: 60s)
-          for i in {1..60}; do
-            if curl -sf http://localhost:9000/actuator/health > /dev/null; then
-              echo "Server is up!"
-              break
-            fi
-            sleep 1
-          done
-          if ! curl -sf http://localhost:9000/actuator/health > /dev/null; then
-            echo "Server failed to start within 60 seconds."
-            exit 1
-          fi
+          ./mvnw --batch-mode -Pload-test -Dgatling.users=${{ inputs.users }} -Dgatling.durationSeconds=${{ inputs.durationSeconds }} gatling:test
 
-      - name: Run Gatling load tests
-        run: |
-          mvn -B gatling:test -Pload-test \
-            -Dgatling.simulationClass=com.bootsandcats.oauth2.load.OAuth2LoadSimulation \
-            -Dusers=${{ github.event.inputs.users }} \
-            -DrampUp=${{ github.event.inputs.rampUp }}
-
-      - name: Upload Gatling report
+      - name: Upload Gatling results
         uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: gatling-report
-          path: target/gatling/
+          name: gatling-results
+          path: target/gatling/**
+          if-no-files-found: ignore
