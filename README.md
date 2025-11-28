@@ -236,6 +236,31 @@ Status badges:
 
 See `docs/ci.md` for a full pipeline overview.
 
+## Deployment
+
+### Azure & GitHub Setup
+
+Automated setup (recommended):
+
+```bash
+./scripts/setup-now.sh
+```
+
+This configures:
+- Azure service principal with OIDC federated identity
+- GitHub repository secrets
+- Kubernetes resources (secrets, ConfigMap)
+- Deploys to AKS cluster "bigboy"
+
+See `SETUP.md` for detailed instructions and manual setup steps.
+
+### Deployment Architecture
+
+- **Container Registry**: Azure Container Registry (gabby.azurecr.io)
+- **Kubernetes**: AKS cluster "bigboy"
+- **CI/CD**: GitHub Actions with automatic deployment on main branch
+- **Authentication**: OIDC federated identity (no long-lived secrets)
+
 ## Project Structure
 
 ```
