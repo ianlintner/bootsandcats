@@ -11,6 +11,17 @@ services:
       - DATABASE_USERNAME=${POSTGRES_USER:-postgres}
       - DATABASE_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - OTEL_EXPORTER_ENDPOINT=http://otel-collector:4317
+      # Disable OpenTelemetry SDK and exclude its autoconfiguration to avoid dependency/binding issues in CI
+      - OTEL_SDK_DISABLED=true
+      - SPRING_AUTOCONFIGURE_EXCLUDE=io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration
+      # OAuth2 configuration for CI/testing (use secrets in real production)
+      - OAUTH2_ISSUER_URL=http://localhost:9000
+      - OAUTH2_DEMO_CLIENT_SECRET=demo-secret
+      - OAUTH2_M2M_CLIENT_SECRET=m2m-secret
+      - OAUTH2_DEMO_USER_PASSWORD=password
+      - OAUTH2_ADMIN_USER_PASSWORD=admin
+      # Override ddl-auto for CI (creates schema automatically)
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
     depends_on:
       postgres:
         condition: service_healthy
@@ -48,6 +59,8 @@ services:
       - "4318:4318"   # OTLP HTTP
       - "8888:8888"   # Prometheus metrics exposed by collector
       - "8889:8889"   # Prometheus exporter metrics
+    # Note: Healthcheck removed as wget/curl may not be available in the container
+    # and the oauth2-server has OTEL disabled anyway for CI
 
   prometheus:
     image: prom/prometheus:latest
