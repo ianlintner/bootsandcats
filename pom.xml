@@ -29,6 +29,8 @@
         <owasp.version>9.0.10</owasp.version>
         <jacoco.version>0.8.14</jacoco.version>
         <springdoc-openapi.version>2.3.0</springdoc-openapi.version>
+        <azure-keyvault.version>4.8.2</azure-keyvault.version>
+        <azure-identity.version>1.11.4</azure-identity.version>
     </properties>
 
     <dependencies>
@@ -123,10 +125,12 @@
         <dependency>
             <groupId>com.azure</groupId>
             <artifactId>azure-security-keyvault-secrets</artifactId>
+            <version>${azure-keyvault.version}</version>
         </dependency>
         <dependency>
             <groupId>com.azure</groupId>
             <artifactId>azure-identity</artifactId>
+            <version>${azure-identity.version}</version>
         </dependency>
 
         <!-- OpenAPI Documentation -->
