@@ -4,7 +4,7 @@ This guide will help you get the OAuth2 Authorization Server up and running quic
 
 ## Prerequisites
 
-- **Java 17** or higher
+- **Java 21 (LTS)** or higher
 - **Maven 3.8+** (or use the included Maven wrapper)
 - **Docker** (optional, for containerized deployment)
 - **PostgreSQL 15** (for production, H2 is used for development)
