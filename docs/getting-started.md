@@ -203,6 +203,38 @@ curl -X POST http://localhost:9000/oauth2/revoke \
   -d "token_type_hint=refresh_token"
 ```
 
+## JWT Signing Keys (ES256)
+
+The authorization server now signs all tokens with an **elliptic-curve (P-256) key** using the `ES256`
+algorithm. For local development, a transient key is generated on startup. For production we recommend
+loading the JSON Web Key (JWK) from **Azure Key Vault**:
+
+1. Generate a new EC JWK (includes private key):
+
+    ```bash
+    ./mvnw -q exec:java -Dexec.mainClass=com.bootsandcats.oauth2.tools.EcJwkGenerator > jwk.json
+    ```
+
+2. Upload the JWK set to Key Vault (replace `KEY_VAULT_NAME` with your vault):
+
+    ```bash
+    az keyvault secret set \
+      --vault-name "$KEY_VAULT_NAME" \
+      --name oauth2-jwk \
+      --file jwk.json
+    ```
+
+3. Configure the application to read from Key Vault:
+
+    ```bash
+    export AZURE_KEYVAULT_ENABLED=true
+    export AZURE_KEYVAULT_URI="https://$KEY_VAULT_NAME.vault.azure.net/"
+    export AZURE_JWK_SECRET_NAME=oauth2-jwk
+    ```
+
+4. Restart the service. The JWKS endpoint (`/oauth2/jwks`) will now expose the uploaded key (public
+   material only) while the private key remains in Key Vault.
+
 ## Next Steps
 
 1. **[Architecture Overview](architecture/overview.md)** - Understand the system design
