@@ -277,6 +277,28 @@ server.ssl.key-alias=oauth2-server
 
 ---
 
+## Key Management (JWT Signing)
+
+Tokens are signed with **ES256 (P-256 elliptic curve)** keys. In production, store the JSON Web Key Set
+inside Azure Key Vault so the private key never resides on disk.
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `azure.keyvault.enabled` | `false` | Enable Azure Key Vault integration for JWT keys |
+| `azure.keyvault.vault-uri` | - | Vault URI (e.g., `https://my-vault.vault.azure.net/`) |
+| `azure.keyvault.jwk-secret-name` | `oauth2-jwk` | Secret name containing the JWK Set |
+| `azure.keyvault.cache-ttl` | `PT10M` | How long to cache the fetched JWK Set before reloading |
+
+```properties
+# Azure Key Vault backed EC key
+azure.keyvault.enabled=${AZURE_KEYVAULT_ENABLED:false}
+azure.keyvault.vault-uri=${AZURE_KEYVAULT_URI:}
+azure.keyvault.jwk-secret-name=${AZURE_JWK_SECRET_NAME:oauth2-jwk}
+azure.keyvault.cache-ttl=${AZURE_JWK_CACHE_TTL:PT10M}
+```
+
+---
+
 ## Environment Variables
 
 ### Required (Production)
@@ -289,6 +311,9 @@ server.ssl.key-alias=oauth2-server
 | `OAUTH2_ISSUER_URL` | Public issuer URL |
 | `OAUTH2_DEMO_CLIENT_SECRET` | Demo client secret |
 | `OAUTH2_M2M_CLIENT_SECRET` | M2M client secret |
+| `AZURE_KEYVAULT_ENABLED` | Set to `true` to load the EC JWK from Azure Key Vault |
+| `AZURE_KEYVAULT_URI` | Vault URI (required when Key Vault is enabled) |
+| `AZURE_JWK_SECRET_NAME` | Secret name containing the EC JWK set (defaults to `oauth2-jwk`) |
 
 ### Optional
 
@@ -298,6 +323,10 @@ server.ssl.key-alias=oauth2-server
 | `SERVER_PORT` | `9000` | Server port |
 | `OTEL_EXPORTER_ENDPOINT` | `http://localhost:4317` | OpenTelemetry endpoint |
 | `JAVA_OPTS` | - | JVM options |
+| `AZURE_JWK_CACHE_TTL` | `PT10M` | Overrides cache duration for the JWK Set |
+| `AZURE_TENANT_ID` | - | Tenant used by `DefaultAzureCredential` when running outside Azure |
+| `AZURE_CLIENT_ID` | - | Client/Managed Identity ID for Key Vault access |
+| `AZURE_CLIENT_SECRET` | - | Client secret when using an app registration |
 
 ---
 

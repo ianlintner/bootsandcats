@@ -216,6 +216,11 @@ az keyvault secret set --vault-name $KEY_VAULT_NAME --name database-password --v
 az keyvault secret set --vault-name $KEY_VAULT_NAME --name oauth2-demo-client-secret --value "$(openssl rand -base64 32)"
 az keyvault secret set --vault-name $KEY_VAULT_NAME --name oauth2-m2m-client-secret --value "$(openssl rand -base64 32)"
 az keyvault secret set --vault-name $KEY_VAULT_NAME --name redis-password --value "$REDIS_KEY"
+
+# Generate and store the EC JWK used for ES256 token signing
+./mvnw -q exec:java -Dexec.mainClass=com.bootsandcats.oauth2.tools.EcJwkGenerator > jwk.json
+az keyvault secret set --vault-name $KEY_VAULT_NAME --name oauth2-jwk --file jwk.json
+rm jwk.json
 ```
 
 ### 6. Install Prerequisites in AKS
