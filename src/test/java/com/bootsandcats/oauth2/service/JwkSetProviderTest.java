@@ -16,6 +16,7 @@ import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
 import com.bootsandcats.oauth2.config.AzureKeyVaultProperties;
 import com.bootsandcats.oauth2.crypto.JwkSupport;
 import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.util.JSONObjectUtils;
 
 class JwkSetProviderTest {
 
@@ -46,7 +47,8 @@ class JwkSetProviderTest {
         properties.setEnabled(true);
         SecretClient secretClient = mock(SecretClient.class);
         JWKSet expected = new JWKSet(JwkSupport.generateEcSigningKey());
-        KeyVaultSecret secret = new KeyVaultSecret("oauth2-jwk", expected.toJSONObject(true).toJSONString());
+        String jwkJson = JSONObjectUtils.toJSONString(expected.toJSONObject(true));
+        KeyVaultSecret secret = new KeyVaultSecret("oauth2-jwk", jwkJson);
         when(secretClient.getSecret("oauth2-jwk")).thenReturn(secret);
 
         JwkSetProvider provider = new JwkSetProvider(properties, secretClient);
