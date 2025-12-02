@@ -311,9 +311,6 @@ azure.keyvault.cache-ttl=${AZURE_JWK_CACHE_TTL:PT10M}
 | `OAUTH2_ISSUER_URL` | Public issuer URL |
 | `OAUTH2_DEMO_CLIENT_SECRET` | Demo client secret |
 | `OAUTH2_M2M_CLIENT_SECRET` | M2M client secret |
-| `AZURE_KEYVAULT_ENABLED` | Set to `true` to load the EC JWK from Azure Key Vault |
-| `AZURE_KEYVAULT_URI` | Vault URI (required when Key Vault is enabled) |
-| `AZURE_JWK_SECRET_NAME` | Secret name containing the EC JWK set (defaults to `oauth2-jwk`) |
 
 ### Optional
 
@@ -323,10 +320,18 @@ azure.keyvault.cache-ttl=${AZURE_JWK_CACHE_TTL:PT10M}
 | `SERVER_PORT` | `9000` | Server port |
 | `OTEL_EXPORTER_ENDPOINT` | `http://localhost:4317` | OpenTelemetry endpoint |
 | `JAVA_OPTS` | - | JVM options |
-| `AZURE_JWK_CACHE_TTL` | `PT10M` | Overrides cache duration for the JWK Set |
-| `AZURE_TENANT_ID` | - | Tenant used by `DefaultAzureCredential` when running outside Azure |
-| `AZURE_CLIENT_ID` | - | Client/Managed Identity ID for Key Vault access |
-| `AZURE_CLIENT_SECRET` | - | Client secret when using an app registration |
+
+### Azure Key Vault (Optional)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `AZURE_KEYVAULT_ENABLED` | `false` | Enable loading the EC JWK from Key Vault |
+| `AZURE_KEYVAULT_URI` | - | Vault URI (required when enabling Key Vault) |
+| `AZURE_JWK_SECRET_NAME` | `oauth2-jwk` | Secret name that contains the EC JWK set |
+| `AZURE_JWK_CACHE_TTL` | `PT10M` | Cache duration before reloading the secret |
+| `AZURE_TENANT_ID` | - | Tenant used by `DefaultAzureCredential` |
+| `AZURE_CLIENT_ID` | - | Client/Managed Identity ID |
+| `AZURE_CLIENT_SECRET` | - | Client secret for app registrations |
 
 ---
 
