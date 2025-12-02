@@ -23,11 +23,20 @@ spec:
           name: postgres
         env:
         - name: POSTGRES_DB
-          value: oauth2db
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-secrets
+              key: database-name
         - name: POSTGRES_USER
-          value: oauth2user
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-secrets
+              key: database-username
         - name: POSTGRES_PASSWORD
-          value: CHANGEME
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-secrets
+              key: database-password
         resources:
           requests:
             memory: "256Mi"

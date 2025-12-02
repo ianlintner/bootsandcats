@@ -34,44 +34,55 @@ spec:
           value: "http://otel-collector:4317"
         - name: OAUTH2_ISSUER_URL
           valueFrom:
-            configMapKeyRef:
-              name: oauth2-config
+            secretKeyRef:
+              name: oauth2-app-secrets
               key: issuer-url
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
-              name: oauth2-secrets
+              name: oauth2-app-secrets
               key: database-url
         - name: DATABASE_USERNAME
           valueFrom:
             secretKeyRef:
-              name: oauth2-secrets
+              name: oauth2-app-secrets
               key: database-username
         - name: DATABASE_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: oauth2-secrets
+              name: oauth2-app-secrets
               key: database-password
         - name: OAUTH2_DEMO_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
-              name: oauth2-secrets
+              name: oauth2-app-secrets
               key: demo-client-secret
         - name: OAUTH2_M2M_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
-              name: oauth2-secrets
+              name: oauth2-app-secrets
               key: m2m-client-secret
         - name: OAUTH2_DEMO_USER_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: oauth2-secrets
+              name: oauth2-app-secrets
               key: demo-user-password
         - name: OAUTH2_ADMIN_USER_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: oauth2-secrets
+              name: oauth2-app-secrets
               key: admin-user-password
+        - name: SSL_KEYSTORE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: keystore.password
+        - name: SERVER_SSL_ENABLED
+          value: "true"
+        volumeMounts:
+        - name: keystore-volume
+          mountPath: "/mnt/keystore"
+          readOnly: true
         resources:
           requests:
             memory: "512Mi"
@@ -103,6 +114,13 @@ spec:
           capabilities:
             drop:
             - ALL
+      volumes:
+      - name: keystore-volume
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: oauth2-secrets-provider
 ---
 apiVersion: v1
 kind: Service
@@ -120,27 +138,4 @@ spec:
     name: http
   selector:
     app: oauth2-server
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: oauth2-config
-  namespace: default
-data:
-  issuer-url: "https://oauth.bigboy.example.com"
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: oauth2-secrets
-  namespace: default
-type: Opaque
-stringData:
-  database-url: "jdbc:postgresql://postgres:5432/oauth2db"
-  database-username: "oauth2user"
-  database-password: "CHANGEME"
-  demo-client-secret: "CHANGEME"
-  m2m-client-secret: "CHANGEME"
-  demo-user-password: "CHANGEME"
-  admin-user-password: "CHANGEME"
 

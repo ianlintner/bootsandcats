@@ -7,6 +7,8 @@ This directory contains Kubernetes manifests for deploying the OAuth2 Authorizat
 - AKS cluster "bigboy" configured and accessible
 - Azure Container Registry "gabby" with push permissions
 - kubectl configured with AKS context
+- **Secrets Store CSI Driver** and **Azure Key Vault Provider** installed (for keystore mounting)
+- **Managed Identity** with access to Azure Key Vault `oauth2-kv`
 
 ## Manifests
 
@@ -17,6 +19,16 @@ Contains:
 - **Service**: ClusterIP service on port 9000
 - **ConfigMap**: oauth2-config with issuer URL
 - **Secret**: oauth2-secrets with database credentials and OAuth2 secrets
+- **Volume Mount**: CSI driver for mounting TLS keystore from Azure Key Vault
+
+### secret-provider-class.yaml
+
+Defines how to fetch TLS keystore and password from Azure Key Vault `oauth2-kv`:
+- Mounts `oauth2-tls-keystore` (base64-encoded PKCS12)
+- Mounts `oauth2-tls-keystore-password`
+- Creates Kubernetes secret `oauth2-keystore-secret`
+
+For detailed keystore setup, see [Keystore Setup Guide](../docs/deployment/keystore-setup.md).
 
 ## Initial Setup
 
