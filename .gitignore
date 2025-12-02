@@ -65,3 +65,4 @@ jacoco.exec
 ### OWASP Dependency Check ###
 dependency-check-report.*
 *.p12
+*.p12.*
