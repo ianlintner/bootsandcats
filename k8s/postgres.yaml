@@ -25,17 +25,17 @@ spec:
         - name: POSTGRES_DB
           valueFrom:
             secretKeyRef:
-              name: oauth2-secrets
+              name: oauth2-app-secrets
               key: database-name
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
-              name: oauth2-secrets
+              name: oauth2-app-secrets
               key: database-username
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: oauth2-secrets
+              name: oauth2-app-secrets
               key: database-password
         resources:
           requests:
