@@ -121,7 +121,14 @@ public class AuthorizationServerConfig {
                                                 "/js/**",
                                                 "/v3/api-docs/**",
                                                 "/swagger-ui/**",
-                                                "/swagger-ui.html")
+                                                "/swagger-ui.html",
+                                                "/admin/**",
+                                                "/assets/**",
+                                                "/login",
+                                                "/instances",
+                                                "/instances/**",
+                                                "/applications",
+                                                "/applications/**")
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated())

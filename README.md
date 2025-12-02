@@ -102,6 +102,12 @@ docker run -p 9000:9000 oauth2-server
 | `/v3/api-docs` | OpenAPI specification (JSON) |
 | `/v3/api-docs.yaml` | OpenAPI specification (YAML) |
 
+### Admin Console
+
+| Endpoint | Description |
+|----------|-------------|
+| `/admin` | Spring Boot Admin UI - Application monitoring and management |
+
 ### Actuator Endpoints
 
 | Endpoint | Description |
