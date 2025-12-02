@@ -85,10 +85,11 @@ class OAuth2FlowIntegrationTest {
         assertThat(jwks.get("keys").size()).isGreaterThan(0);
 
         JsonNode key = jwks.get("keys").get(0);
-        assertThat(key.get("kty").asText()).isEqualTo("RSA");
+        assertThat(key.get("kty").asText()).isEqualTo("EC");
         assertThat(key.has("kid")).isTrue();
-        assertThat(key.has("n")).isTrue();
-        assertThat(key.has("e")).isTrue();
+        assertThat(key.has("crv")).isTrue();
+        assertThat(key.has("x")).isTrue();
+        assertThat(key.has("y")).isTrue();
     }
 
     @Test
