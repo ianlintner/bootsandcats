@@ -29,6 +29,8 @@ import org.springframework.security.oauth2.server.authorization.config.annotatio
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
+import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
+import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
@@ -199,7 +201,6 @@ public class AuthorizationServerConfig {
                         .scope("write")
                         .tokenSettings(
                                 TokenSettings.builder()
-                                        .accessTokenSignatureAlgorithm(SignatureAlgorithm.ES256)
                                         .accessTokenTimeToLive(Duration.ofMinutes(15))
                                         .refreshTokenTimeToLive(Duration.ofDays(7))
                                         .reuseRefreshTokens(false)
@@ -227,7 +228,6 @@ public class AuthorizationServerConfig {
                         .scope("read")
                         .tokenSettings(
                                 TokenSettings.builder()
-                                        .accessTokenSignatureAlgorithm(SignatureAlgorithm.ES256)
                                         .accessTokenTimeToLive(Duration.ofMinutes(15))
                                         .refreshTokenTimeToLive(Duration.ofHours(24))
                                         .reuseRefreshTokens(false)
@@ -250,7 +250,6 @@ public class AuthorizationServerConfig {
                         .scope("api:write")
                         .tokenSettings(
                                 TokenSettings.builder()
-                                        .accessTokenSignatureAlgorithm(SignatureAlgorithm.ES256)
                                         .accessTokenTimeToLive(Duration.ofHours(1))
                                         .build())
                         .build();
@@ -272,6 +271,11 @@ public class AuthorizationServerConfig {
         public JWKSource<SecurityContext> jwkSource(JwkSetProvider jwkSetProvider) {
                 return (selector, securityContext) -> selector.select(jwkSetProvider.getJwkSet());
         }
+
+    @Bean
+        public OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer() {
+                return context -> context.getJwsHeader().algorithm(SignatureAlgorithm.ES256);
+    }
 
     /**
      * JWT Decoder for validating access tokens.
