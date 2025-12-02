@@ -11,9 +11,7 @@ import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.security.keyvault.secrets.SecretClient;
 import com.azure.security.keyvault.secrets.SecretClientBuilder;
 
-/**
- * Shared configuration for key management concerns such as Azure Key Vault.
- */
+/** Shared configuration for key management concerns such as Azure Key Vault. */
 @Configuration
 @EnableConfigurationProperties(AzureKeyVaultProperties.class)
 public class KeyManagementConfig {

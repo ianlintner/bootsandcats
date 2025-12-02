@@ -64,7 +64,7 @@ class JwkSetProviderTest {
         properties.setEnabled(true);
         SecretClient secretClient = mock(SecretClient.class);
         when(secretClient.getSecret("oauth2-jwk"))
-            .thenThrow(new RuntimeException("Secret not found"));
+                .thenThrow(new RuntimeException("Secret not found"));
 
         JwkSetProvider provider = new JwkSetProvider(properties, secretClient);
 

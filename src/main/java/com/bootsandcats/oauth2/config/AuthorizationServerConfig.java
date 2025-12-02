@@ -19,8 +19,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
@@ -267,15 +267,15 @@ public class AuthorizationServerConfig {
      *
      * @return JWKSource with RSA key pair
      */
-        @Bean
-        public JWKSource<SecurityContext> jwkSource(JwkSetProvider jwkSetProvider) {
-                return (selector, securityContext) -> selector.select(jwkSetProvider.getJwkSet());
-        }
+    @Bean
+    public JWKSource<SecurityContext> jwkSource(JwkSetProvider jwkSetProvider) {
+        return (selector, securityContext) -> selector.select(jwkSetProvider.getJwkSet());
+    }
 
-        @Bean
-        public OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer() {
-                return context -> context.getJwsHeader().algorithm(SignatureAlgorithm.ES256);
-        }
+    @Bean
+    public OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer() {
+        return context -> context.getJwsHeader().algorithm(SignatureAlgorithm.ES256);
+    }
 
     /**
      * JWT Decoder for validating access tokens.

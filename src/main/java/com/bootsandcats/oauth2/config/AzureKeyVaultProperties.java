@@ -4,9 +4,7 @@ import java.time.Duration;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/**
- * Configuration properties for Azure Key Vault backed JWK management.
- */
+/** Configuration properties for Azure Key Vault backed JWK management. */
 @ConfigurationProperties(prefix = "azure.keyvault")
 public class AzureKeyVaultProperties {
 

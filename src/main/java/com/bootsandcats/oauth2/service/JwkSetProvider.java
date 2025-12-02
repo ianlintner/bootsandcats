@@ -10,16 +10,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
-import com.bootsandcats.oauth2.config.AzureKeyVaultProperties;
-import com.bootsandcats.oauth2.crypto.JwkSupport;
 import com.azure.core.exception.ResourceNotFoundException;
 import com.azure.security.keyvault.secrets.SecretClient;
 import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
+import com.bootsandcats.oauth2.config.AzureKeyVaultProperties;
+import com.bootsandcats.oauth2.crypto.JwkSupport;
 import com.nimbusds.jose.jwk.JWKSet;
 
-/**
- * Loads JSON Web Keys from Azure Key Vault or falls back to an in-memory EC key.
- */
+/** Loads JSON Web Keys from Azure Key Vault or falls back to an in-memory EC key. */
 @Component
 public class JwkSetProvider {
 

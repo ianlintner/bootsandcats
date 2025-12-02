@@ -4,9 +4,7 @@ import com.bootsandcats.oauth2.crypto.JwkSupport;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.util.JSONObjectUtils;
 
-/**
- * Simple CLI utility that prints a newly generated EC JWK Set (including private key material).
- */
+/** Simple CLI utility that prints a newly generated EC JWK Set (including private key material). */
 public final class EcJwkGenerator {
 
     private EcJwkGenerator() {

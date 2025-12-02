@@ -13,9 +13,7 @@ import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.KeyUse;
 
-/**
- * Helper utilities for generating EC-based JSON Web Keys.
- */
+/** Helper utilities for generating EC-based JSON Web Keys. */
 public final class JwkSupport {
 
     private JwkSupport() {
