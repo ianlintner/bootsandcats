@@ -51,6 +51,11 @@ spec:
       volumes:
       - name: postgres-storage
         emptyDir: {}
+      tolerations:
+      - key: "preemptible"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
 ---
 apiVersion: v1
 kind: Service
