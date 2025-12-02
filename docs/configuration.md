@@ -268,11 +268,13 @@ server.error.include-binding-errors=never
 
 ```properties
 # SSL configuration
-server.ssl.enabled=true
+server.ssl.enabled=${SERVER_SSL_ENABLED:true}
 server.ssl.key-store=classpath:keystore.p12
 server.ssl.key-store-password=${SSL_KEYSTORE_PASSWORD}
 server.ssl.key-store-type=PKCS12
-server.ssl.key-alias=oauth2-server
+server.ssl.key-alias=oauth2
+
+> **Note:** The bundled `keystore.p12` uses alias `oauth2` and the password `gabbycat`. Provide this value via the `SSL_KEYSTORE_PASSWORD` environment variable (preferably through a Kubernetes Secret) and rotate it before production if possible.
 ```
 
 ---
@@ -311,6 +313,7 @@ azure.keyvault.cache-ttl=${AZURE_JWK_CACHE_TTL:PT10M}
 | `OAUTH2_ISSUER_URL` | Public issuer URL |
 | `OAUTH2_DEMO_CLIENT_SECRET` | Demo client secret |
 | `OAUTH2_M2M_CLIENT_SECRET` | M2M client secret |
+| `SSL_KEYSTORE_PASSWORD` | Password protecting the bundled TLS keystore |
 
 ### Optional
 
@@ -320,6 +323,7 @@ azure.keyvault.cache-ttl=${AZURE_JWK_CACHE_TTL:PT10M}
 | `SERVER_PORT` | `9000` | Server port |
 | `OTEL_EXPORTER_ENDPOINT` | `http://localhost:4317` | OpenTelemetry endpoint |
 | `JAVA_OPTS` | - | JVM options |
+| `SERVER_SSL_ENABLED` | `true` | Toggle embedded Tomcat TLS |
 
 ### Azure Key Vault (Optional)
 
