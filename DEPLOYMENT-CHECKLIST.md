@@ -190,7 +190,7 @@ After pushing to main:
 
 1. **GitHub Actions starts** (~1 min)
    - Checks out code
-   - Sets up Java 17
+   - Sets up Java 21
    - Validates formatting
 
 2. **Build & Unit Tests** (~3-5 min)

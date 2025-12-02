@@ -8,7 +8,7 @@ This project uses GitHub Actions. The pipeline is optimized for fast feedback an
   - Triggers: push to `main` and `feature/**`, and pull requests to `main` (docs-only changes are ignored)
   - Jobs (in order):
     1. Build & Unit Tests
-       - Java 17 via Temurin
+       - Java 21 via Temurin
        - Caching: Maven dependencies (actions/setup-java cache=maven)
        - Formatting check (spotless:check)
        - Unit tests with JaCoCo coverage and rule (>=70%)

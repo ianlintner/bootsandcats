@@ -195,8 +195,8 @@ Host: auth.example.com
         "time": "2024-01-15T10:30:00.000Z"
     },
     "java": {
-        "version": "17.0.9",
-        "vendor": "Eclipse Adoptium"
+      "version": "21.0.3",
+      "vendor": "Eclipse Adoptium"
     }
 }
 ```

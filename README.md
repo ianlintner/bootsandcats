@@ -22,7 +22,7 @@ A production-ready Spring Boot OAuth2 Authorization Server with OpenID Connect (
 
 ### Prerequisites
 
-- Java 17 or higher
+- Java 21 (LTS) or higher
 - Maven 3.8+
 - Docker (optional)
 

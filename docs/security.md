@@ -181,7 +181,7 @@ spec:
 
 ```dockerfile
 # Use minimal base image
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:21-jre-alpine
 
 # Run as non-root
 RUN addgroup -g 1001 appgroup && \

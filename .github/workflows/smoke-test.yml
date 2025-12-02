@@ -15,7 +15,7 @@ on:
         default: '30'
 
 env:
-  JAVA_VERSION: '17'
+  JAVA_VERSION: '21'
   # Default load test configuration (can be overridden via workflow_dispatch inputs)
   LOAD_TEST_USERS: ${{ github.event.inputs.load_test_users || '50' }}
   LOAD_TEST_RAMP_UP: ${{ github.event.inputs.load_test_ramp_up || '30' }}

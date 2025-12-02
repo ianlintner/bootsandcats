@@ -1,5 +1,5 @@
 # Build stage
-FROM eclipse-temurin:17-jdk AS builder
+FROM eclipse-temurin:21-jdk AS builder
 
 WORKDIR /app
 
@@ -28,7 +28,7 @@ RUN for i in 1 2 3; do \
 RUN java -Djarmode=layertools -jar target/oauth2-server-*.jar extract
 
 # Runtime stage
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:21-jre
 
 # Security: Create non-root user
 RUN groupadd -g 1001 appgroup && \
