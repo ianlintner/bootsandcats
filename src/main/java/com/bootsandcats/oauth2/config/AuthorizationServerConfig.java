@@ -272,10 +272,10 @@ public class AuthorizationServerConfig {
                 return (selector, securityContext) -> selector.select(jwkSetProvider.getJwkSet());
         }
 
-    @Bean
+        @Bean
         public OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer() {
                 return context -> context.getJwsHeader().algorithm(SignatureAlgorithm.ES256);
-    }
+        }
 
     /**
      * JWT Decoder for validating access tokens.
