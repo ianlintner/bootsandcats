@@ -41,7 +41,7 @@ class OAuth2SecurityTest {
         mockMvc.perform(get("/oauth2/jwks"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.keys").isArray())
-                .andExpect(jsonPath("$.keys[0].kty").value("RSA"));
+                .andExpect(jsonPath("$.keys[0].kty").value("EC"));
     }
 
     @Test

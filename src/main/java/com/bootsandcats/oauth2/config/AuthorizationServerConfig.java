@@ -20,6 +20,7 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
@@ -198,6 +199,7 @@ public class AuthorizationServerConfig {
                         .scope("write")
                         .tokenSettings(
                                 TokenSettings.builder()
+                                        .accessTokenSignatureAlgorithm(SignatureAlgorithm.ES256)
                                         .accessTokenTimeToLive(Duration.ofMinutes(15))
                                         .refreshTokenTimeToLive(Duration.ofDays(7))
                                         .reuseRefreshTokens(false)
@@ -225,6 +227,7 @@ public class AuthorizationServerConfig {
                         .scope("read")
                         .tokenSettings(
                                 TokenSettings.builder()
+                                        .accessTokenSignatureAlgorithm(SignatureAlgorithm.ES256)
                                         .accessTokenTimeToLive(Duration.ofMinutes(15))
                                         .refreshTokenTimeToLive(Duration.ofHours(24))
                                         .reuseRefreshTokens(false)
@@ -247,6 +250,7 @@ public class AuthorizationServerConfig {
                         .scope("api:write")
                         .tokenSettings(
                                 TokenSettings.builder()
+                                        .accessTokenSignatureAlgorithm(SignatureAlgorithm.ES256)
                                         .accessTokenTimeToLive(Duration.ofHours(1))
                                         .build())
                         .build();
