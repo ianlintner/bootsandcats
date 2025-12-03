@@ -14,22 +14,22 @@ fi
 
 cd "${REPO_ROOT}"
 
-MVNW="${REPO_ROOT}/mvnw"
-if [[ ! -x "${MVNW}" ]]; then
-  echo "Maven wrapper (${MVNW}) is missing or not executable." >&2
+GRADLEW="${REPO_ROOT}/gradlew"
+if [[ ! -x "${GRADLEW}" ]]; then
+  echo "Gradle wrapper (${GRADLEW}) is missing or not executable." >&2
   exit 1
 fi
 
-# Ordered list of Maven goals that act as commit gates.
-declare -a GOALS=(
-  "spotless:check"     # formatting guard
-  "spotbugs:check"     # static analysis / lint
-  "verify"             # build + unit/integration tests
+# Ordered list of Gradle tasks that act as commit gates.
+declare -a TASKS=(
+  "spotlessCheck"      # formatting guard
+  "spotbugsMain"       # static analysis / lint
+  "build"              # build + unit/integration tests
 )
 
-for goal in "${GOALS[@]}"; do
-  printf '\n➡️  Running ./mvnw %s\n' "${goal}"
-  "${MVNW}" ${goal}
+for task in "${TASKS[@]}"; do
+  printf '\n➡️  Running ./gradlew %s\n' "${task}"
+  "${GRADLEW}" ${task}
 done
 
 printf '\n✅ All pre-commit checks passed.\n'
