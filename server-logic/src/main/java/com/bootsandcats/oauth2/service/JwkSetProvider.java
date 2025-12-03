@@ -32,8 +32,7 @@ public class JwkSetProvider {
     private volatile Instant cacheExpiresAt = Instant.EPOCH;
 
     public JwkSetProvider(
-            AzureKeyVaultProperties properties,
-            ObjectProvider<SecretClient> secretClientProvider) {
+            AzureKeyVaultProperties properties, ObjectProvider<SecretClient> secretClientProvider) {
         this.keyVaultSettings = KeyVaultSettings.from(properties);
         this.secretClientProvider = secretClientProvider;
         this.cacheTtl = keyVaultSettings.cacheTtl();

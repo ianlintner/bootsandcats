@@ -22,9 +22,9 @@ public class SecurityHeadersConfig {
                                 .xssProtection(
                                         xss ->
                                                 xss.headerValue(
-                                                        org.springframework.security.web.header.writers
-                                                                .XXssProtectionHeaderWriter.HeaderValue
-                                                                .ENABLED_MODE_BLOCK))
+                                                        org.springframework.security.web.header
+                                                                .writers.XXssProtectionHeaderWriter
+                                                                .HeaderValue.ENABLED_MODE_BLOCK))
                                 .contentSecurityPolicy(
                                         csp ->
                                                 csp.policyDirectives(
@@ -55,7 +55,8 @@ public class SecurityHeadersConfig {
         configuration.setAllowedOrigins(
                 Arrays.asList("http://localhost:8080", "http://localhost:3000"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
+        configuration.setAllowedHeaders(
+                List.of("Authorization", "Content-Type", "X-Requested-With"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 

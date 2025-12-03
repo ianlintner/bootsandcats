@@ -10,9 +10,9 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
 @Entity
-@Table(name = "app_users", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"provider", "providerId"})
-})
+@Table(
+        name = "app_users",
+        uniqueConstraints = {@UniqueConstraint(columnNames = {"provider", "providerId"})})
 public class User {
 
     @Id

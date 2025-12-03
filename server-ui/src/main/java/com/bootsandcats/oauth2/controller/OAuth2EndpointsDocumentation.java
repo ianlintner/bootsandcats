@@ -3,14 +3,12 @@ package com.bootsandcats.oauth2.controller;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -51,21 +49,21 @@ public class OAuth2EndpointsDocumentation {
             description =
                     """
             Exchange authorization code, refresh token, or client credentials for access tokens.
-            
+
             ### Grant Types:
-            
+
             **Authorization Code:**
             - Exchange authorization code for access token
             - Requires: code, redirect_uri, code_verifier (for PKCE)
-            
+
             **Refresh Token:**
             - Obtain new access token using refresh token
             - Requires: refresh_token
-            
+
             **Client Credentials:**
             - Machine-to-machine authentication
             - Requires: client credentials in Authorization header
-            
+
             ### Authentication:
             - Confidential clients: Use HTTP Basic Auth with client_id:client_secret
             - Public clients: Send client_id in request body
@@ -171,7 +169,7 @@ public class OAuth2EndpointsDocumentation {
             description =
                     """
             Validate and retrieve information about an access token.
-            
+
             Returns token metadata including:
             - Active status
             - Expiration time
@@ -179,7 +177,7 @@ public class OAuth2EndpointsDocumentation {
             - Scopes
             - Subject (user)
             - Client ID
-            
+
             ### Authentication:
             Requires client credentials in Authorization header (HTTP Basic Auth).
             """,
@@ -216,15 +214,13 @@ public class OAuth2EndpointsDocumentation {
                                 {
                                   "active": false
                                 }
-                                """
-                                            )
+                                """)
                                         })),
                 @ApiResponse(responseCode = "401", description = "Invalid client credentials")
             })
     @PostMapping("/oauth2/introspect")
     public void introspect(
-            @Parameter(description = "Access token to introspect", required = true)
-                    @RequestParam
+            @Parameter(description = "Access token to introspect", required = true) @RequestParam
                     String token) {
         // Implementation provided by Spring Authorization Server
         throw new UnsupportedOperationException("This method is for documentation only");
@@ -241,12 +237,12 @@ public class OAuth2EndpointsDocumentation {
             description =
                     """
             Revoke an access token or refresh token.
-            
+
             Once revoked, the token can no longer be used for authentication or authorization.
-            
+
             ### Authentication:
             Requires client credentials in Authorization header (HTTP Basic Auth).
-            
+
             ### Token Type Hint:
             Optional parameter to indicate the type of token being revoked:
             - access_token
@@ -265,9 +261,7 @@ public class OAuth2EndpointsDocumentation {
             @Parameter(description = "Token to revoke", required = true) @RequestParam String token,
             @Parameter(
                             description = "Hint about the type of token",
-                            schema =
-                                    @Schema(
-                                            allowableValues = {"access_token", "refresh_token"}))
+                            schema = @Schema(allowableValues = {"access_token", "refresh_token"}))
                     @RequestParam(value = "token_type_hint", required = false)
                     String tokenTypeHint) {
         // Implementation provided by Spring Authorization Server
@@ -277,7 +271,9 @@ public class OAuth2EndpointsDocumentation {
     /** Response schema for token endpoint. */
     @Schema(description = "OAuth2 token response")
     public static class TokenResponse {
-        @Schema(description = "The access token", example = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...")
+        @Schema(
+                description = "The access token",
+                example = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...")
         public String access_token;
 
         @Schema(description = "Token type", example = "Bearer")
@@ -294,7 +290,9 @@ public class OAuth2EndpointsDocumentation {
         @Schema(description = "Granted scopes", example = "openid profile email")
         public String scope;
 
-        @Schema(description = "ID token (for OpenID Connect)", example = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...")
+        @Schema(
+                description = "ID token (for OpenID Connect)",
+                example = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...")
         public String id_token;
     }
 }

@@ -10,5 +10,6 @@ import com.bootsandcats.oauth2.model.User;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByProviderAndProviderId(String provider, String providerId);
+
     Optional<User> findByUsername(String username);
 }

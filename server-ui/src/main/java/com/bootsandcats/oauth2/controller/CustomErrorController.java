@@ -30,7 +30,9 @@ public class CustomErrorController implements ErrorController {
      * @param request HTTP request
      * @return Error response
      */
-    @RequestMapping(value = "/error", method = {RequestMethod.GET, RequestMethod.HEAD})
+    @RequestMapping(
+            value = "/error",
+            method = {RequestMethod.GET, RequestMethod.HEAD})
     @ResponseBody
     public ResponseEntity<Map<String, Object>> handleError(HttpServletRequest request) {
         Object status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);

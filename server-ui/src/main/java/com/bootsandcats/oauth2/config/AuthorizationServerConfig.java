@@ -105,12 +105,13 @@ public class AuthorizationServerConfig {
      * @param http HttpSecurity builder
      * @return Configured SecurityFilterChain
      */
-        @Bean
-        @Order(2)
-        public SecurityFilterChain defaultSecurityFilterChain(
-                        HttpSecurity http,
-                        FederatedIdentityAuthenticationSuccessHandler federatedIdentityAuthenticationSuccessHandler)
-                        throws Exception {
+    @Bean
+    @Order(2)
+    public SecurityFilterChain defaultSecurityFilterChain(
+            HttpSecurity http,
+            FederatedIdentityAuthenticationSuccessHandler
+                    federatedIdentityAuthenticationSuccessHandler)
+            throws Exception {
         http.authorizeHttpRequests(
                         (authorize) ->
                                 authorize
@@ -137,15 +138,17 @@ public class AuthorizationServerConfig {
                                         .anyRequest()
                                         .authenticated())
                 .formLogin(Customizer.withDefaults())
-                .oauth2Login(oauth2 -> oauth2
-                        .successHandler(federatedIdentityAuthenticationSuccessHandler))
+                .oauth2Login(
+                        oauth2 ->
+                                oauth2.successHandler(
+                                        federatedIdentityAuthenticationSuccessHandler))
                 .csrf(
                         csrf ->
                                 csrf.ignoringRequestMatchers(
                                         "/oauth2/token", "/oauth2/introspect", "/oauth2/revoke"));
 
-                return http.build();
-        }
+        return http.build();
+    }
 
     /**
      * User details service for form login authentication.

@@ -49,7 +49,11 @@ public class OpenApiConfig {
                         new ExternalDocumentation()
                                 .description("Full Documentation")
                                 .url("https://ianlintner.github.io/bootsandcats/"))
-                .servers(List.of(new Server().url(issuerUrl).description("OAuth2 Authorization Server")))
+                .servers(
+                        List.of(
+                                new Server()
+                                        .url(issuerUrl)
+                                        .description("OAuth2 Authorization Server")))
                 .components(
                         new Components()
                                 .addSecuritySchemes(
@@ -61,22 +65,42 @@ public class OpenApiConfig {
                                                         new OAuthFlows()
                                                                 .authorizationCode(
                                                                         new OAuthFlow()
-                                                                                .authorizationUrl(issuerUrl + "/oauth2/authorize")
-                                                                                .tokenUrl(issuerUrl + "/oauth2/token")
+                                                                                .authorizationUrl(
+                                                                                        issuerUrl
+                                                                                                + "/oauth2/authorize")
+                                                                                .tokenUrl(
+                                                                                        issuerUrl
+                                                                                                + "/oauth2/token")
                                                                                 .scopes(
                                                                                         new Scopes()
-                                                                                                .addString("openid", "OpenID Connect scope")
-                                                                                                .addString("profile", "Access user profile")
-                                                                                                .addString("email", "Access user email")
-                                                                                                .addString("read", "Read access")
-                                                                                                .addString("write", "Write access")))
+                                                                                                .addString(
+                                                                                                        "openid",
+                                                                                                        "OpenID Connect scope")
+                                                                                                .addString(
+                                                                                                        "profile",
+                                                                                                        "Access user profile")
+                                                                                                .addString(
+                                                                                                        "email",
+                                                                                                        "Access user email")
+                                                                                                .addString(
+                                                                                                        "read",
+                                                                                                        "Read access")
+                                                                                                .addString(
+                                                                                                        "write",
+                                                                                                        "Write access")))
                                                                 .clientCredentials(
                                                                         new OAuthFlow()
-                                                                                .tokenUrl(issuerUrl + "/oauth2/token")
+                                                                                .tokenUrl(
+                                                                                        issuerUrl
+                                                                                                + "/oauth2/token")
                                                                                 .scopes(
                                                                                         new Scopes()
-                                                                                                .addString("api:read", "API read access")
-                                                                                                .addString("api:write", "API write access")))))
+                                                                                                .addString(
+                                                                                                        "api:read",
+                                                                                                        "API read access")
+                                                                                                .addString(
+                                                                                                        "api:write",
+                                                                                                        "API write access")))))
                                 .addSecuritySchemes(
                                         "bearerAuth",
                                         new SecurityScheme()
