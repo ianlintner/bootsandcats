@@ -6,33 +6,30 @@ This is a Spring Boot OAuth2 Authorization Server with OpenID Connect (OIDC), PK
 
 - **Framework**: Spring Boot 3.2.x with Spring Security OAuth2 Authorization Server
 - **Language**: Java 21
-- **Build Tool**: Maven 3.8+
+- **Build Tool**: Gradle 9.0 (multi-module Kotlin DSL)
 - **Key Features**: OAuth 2.1, OIDC 1.0, PKCE, JWT tokens, OpenTelemetry, Prometheus metrics
 
 ## Build and Test Commands
 
 ```bash
 # Build the project
-./mvnw package
+./gradlew build
 
 # Run unit tests only
-./mvnw test
+./gradlew test
 
 # Run all tests including integration tests
-./mvnw verify
-
-# Run tests with coverage report
-./mvnw verify jacoco:report
+./gradlew check
 
 # Run the application locally
-./mvnw spring-boot:run
+./gradlew :server-ui:bootRun
 ```
 
 ## Code Style
 
 - Use Google Java Format with AOSP style (4-space indentation)
-- Run `./mvnw spotless:apply` to auto-format code before committing
-- Run `./mvnw spotless:check` to verify formatting
+- Run `./gradlew spotlessApply` to auto-format code before committing
+- Run `./gradlew spotlessCheck` to verify formatting
 - Import order: java, javax, org, com (blank line separated)
 - Remove unused imports
 
@@ -55,31 +52,20 @@ This is a Spring Boot OAuth2 Authorization Server with OpenID Connect (OIDC), PK
 
 ## Testing Conventions
 
-- Unit tests: `*Test.java` (run with Surefire plugin)
-- Integration tests: `*IntegrationTest.java` or `*IT.java` (run with Failsafe plugin)
+- Unit tests: `*Test.java` (run with JUnit Platform)
+- Integration tests: `*IntegrationTest.java` or `*IT.java`
 - Use `@SpringBootTest` with `@ActiveProfiles("test")` for integration tests
-- Test coverage minimum: 70% line coverage (enforced by JaCoCo)
 
 ## Project Structure
 
 ```
-src/
-├── main/java/com/bootsandcats/oauth2/
-│   ├── config/          # Spring configuration classes
-│   ├── controller/      # REST controllers
-│   └── service/         # Business logic services
-├── main/resources/
-│   └── application.properties
-└── test/java/com/bootsandcats/oauth2/
-    ├── config/          # Configuration tests
-    ├── controller/      # Controller tests
-    ├── integration/     # Integration tests
-    ├── security/        # Security tests
-    └── service/         # Service tests
+server-ui/          # Main Spring Boot application (UI, controllers, security config)
+server-logic/       # Business logic services
+server-dao/         # Data access layer (JPA entities, repositories)
+canary-app/         # Canary deployment test application
 ```
 
 ## Static Analysis
 
-- Run `./mvnw spotbugs:check` for static analysis with FindSecBugs
-- Run `./mvnw org.owasp:dependency-check-maven:check` for dependency vulnerability scanning
+- Run `./gradlew spotbugsMain` for static analysis with FindSecBugs
 - SpotBugs is configured with "Max" effort and "Medium" threshold
