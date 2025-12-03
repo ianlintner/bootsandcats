@@ -1,5 +1,6 @@
 package com.bootsandcats.oauth2.config;
 
+import com.bootsandcats.oauth2.security.FederatedIdentityAuthenticationSuccessHandler;
 import java.time.Duration;
 import java.util.UUID;
 
@@ -68,6 +69,12 @@ public class AuthorizationServerConfig {
     @Value("${oauth2.admin-user-password:admin}")
     private String adminUserPassword;
 
+    private final FederatedIdentityAuthenticationSuccessHandler federatedIdentityAuthenticationSuccessHandler;
+
+    public AuthorizationServerConfig(FederatedIdentityAuthenticationSuccessHandler federatedIdentityAuthenticationSuccessHandler) {
+        this.federatedIdentityAuthenticationSuccessHandler = federatedIdentityAuthenticationSuccessHandler;
+    }
+
     /**
      * Security filter chain for OAuth2 Authorization Server endpoints.
      *
@@ -123,17 +130,19 @@ public class AuthorizationServerConfig {
                                                 "/swagger-ui/**",
                                                 "/swagger-ui.html",
                                                 "/admin/**",
-                                                "/assets/**",
-                                                "/login",
-                                                "/instances",
-                                                "/instances/**",
-                                                "/applications",
-                                                "/applications/**")
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated())
                 .formLogin(Customizer.withDefaults())
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(federatedIdentityAuthenticationSuccessHandler))
                 .csrf(
+                        csrf ->
+                                csrf.ignoringRequestMatchers(
+                                        "/oauth2/token", "/oauth2/introspect", "/oauth2/revoke"));
+
+        return http.build();
+    }           .csrf(
                         csrf ->
                                 csrf.ignoringRequestMatchers(
                                         "/oauth2/token", "/oauth2/introspect", "/oauth2/revoke"));
