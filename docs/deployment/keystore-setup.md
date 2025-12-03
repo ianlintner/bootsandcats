@@ -64,7 +64,7 @@ The keystore and password are stored as GitHub repository secrets for CI/CD:
 ```yaml
 - name: Restore keystore for build
   run: |
-    echo "${{ secrets.OAUTH2_TLS_KEYSTORE }}" | base64 -d > src/main/resources/keystore.p12
+    echo "${{ secrets.OAUTH2_TLS_KEYSTORE }}" | base64 -d > server-ui/src/main/resources/keystore.p12
   
 - name: Run tests with SSL
   env:

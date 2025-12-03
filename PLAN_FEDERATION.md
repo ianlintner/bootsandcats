@@ -17,9 +17,9 @@
 ## 4. Canary Application
 - Create a new Maven module `canary-app` (or a separate source tree within the repo).
 - **Structure:**
-    - `src/main/java/com/bootsandcats/canary/CanaryApplication.java`
-    - `src/main/java/com/bootsandcats/canary/web/CanaryController.java` (Displays user info)
-    - `src/main/resources/application.properties` (Configured to use the Auth Server as provider)
+    - `canary-app/src/main/java/com/bootsandcats/canary/CanaryApplication.java`
+    - `canary-app/src/main/java/com/bootsandcats/canary/web/CanaryController.java` (Displays user info)
+    - `canary-app/src/main/resources/application.properties` (Configured to use the Auth Server as provider)
 - **Docker:** Create `canary-app/Dockerfile`.
 - **K8s:** Create `k8s/canary-deployment.yaml` and `k8s/canary-service.yaml`.
 

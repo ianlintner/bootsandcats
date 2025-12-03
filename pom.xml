@@ -373,7 +373,7 @@
                         <artifactId>gatling-maven-plugin</artifactId>
                         <version>4.8.2</version>
                         <configuration>
-                            <simulationsFolder>src/gatling/java</simulationsFolder>
+                            <simulationsFolder>server/gatling/java</simulationsFolder>
                             <simulationClass>com.bootsandcats.oauth2.load.OAuth2LoadSimulation</simulationClass>
                         </configuration>
                     </plugin>

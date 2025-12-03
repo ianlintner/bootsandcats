@@ -36,7 +36,7 @@ Environment variables (in Kubernetes via `oauth2-app-secrets`):
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
 - `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `AZURE_TENANT_ID`
 
-Application properties (`src/main/resources/application.properties`) map these to Spring’s OAuth2 client registrations.
+Application properties (`server-ui/src/main/resources/application.properties`) map these to Spring’s OAuth2 client registrations.
 
 ### Canary App
 

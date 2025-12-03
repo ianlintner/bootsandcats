@@ -244,7 +244,7 @@ curl -X POST http://localhost:9000/oauth2/introspect \
 ## 📋 Files Modified
 
 ### Source Code
-- `src/main/resources/application-prod.properties` - Fixed OTEL configuration
+- `server-ui/src/main/resources/application-prod.properties` - Fixed OTEL configuration
 
 ### Kubernetes Manifests
 - `k8s/deployment.yaml` - Updated with OTEL disabled, reduced resources

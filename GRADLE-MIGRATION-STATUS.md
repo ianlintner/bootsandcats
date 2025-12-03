@@ -15,17 +15,24 @@ bootsandcats/
 ├── build.gradle.kts             # Root config with Java 21 toolchain
 ├── server-dao/                  # Data Access Layer module
 │   ├── build.gradle.kts
-│   └── src/ (empty - awaiting migration)
+│   └── src/                     # Entities, repositories, Flyway migrations
 ├── server-logic/                # Business Logic Layer module
 │   ├── build.gradle.kts
-│   └── src/ (empty - awaiting migration)
+│   └── src/                     # Services, security utilities, unit tests
 ├── server-ui/                   # UI Layer module (main app)
 │   ├── build.gradle.kts
-│   └── src/ (empty - using ../src temporarily)
+│   └── src/                     # Controllers, configs, app entry point, resources & tests
+├── server/                      # Legacy root folder renamed from src/ for Gatling
+│   └── gatling/
 └── canary-app/                  # Canary application
     ├── build.gradle.kts
     └── src/ (has own source code)
 ```
+
+### Source Migration
+- ✅ DAO, logic, and UI source sets now live entirely inside their Gradle modules.
+- ✅ Application/test resources moved to `server-ui`, while Flyway migrations ship with `server-dao`.
+- ✅ Legacy root `src/` directory renamed to `server/` and limited to Gatling load simulations.
 
 ### Dependencies Configured
 All Maven dependencies successfully migrated to Gradle:
@@ -48,29 +55,15 @@ BUILD SUCCESSFUL in 6s
 ✅ canary-app: Compiled successfully
 ✅ server-dao: Ready for code migration
 ✅ server-logic: Ready for code migration
-✅ server-ui: Compiled successfully (using ../src/main/java temporarily)
+✅ server-ui: Compiled successfully with in-module sources/resources
 ```
 
 ## 🚧 Pending Work
 
-### Code Migration (Next Steps)
-1. **Move DAO code to server-dao module:**
-   - `User.java` (entity) → `server-dao/src/main/java/com/bootsandcats/oauth2/model/`
-   - `UserRepository.java` → `server-dao/src/main/java/com/bootsandcats/oauth2/repository/`
-
-2. **Move Business Logic to server-logic module:**
-   - Service classes → `server-logic/src/main/java/com/bootsandcats/oauth2/service/`
-   - Security utilities → `server-logic/src/main/java/com/bootsandcats/oauth2/security/`
-   - Crypto utilities → `server-logic/src/main/java/com/bootsandcats/oauth2/crypto/`
-
-3. **Move UI code to server-ui module:**
-   - Controllers → `server-ui/src/main/java/com/bootsandcats/oauth2/controller/`
-   - Configuration classes → `server-ui/src/main/java/com/bootsandcats/oauth2/config/`
-   - Main application class → `server-ui/src/main/java/com/bootsandcats/oauth2/`
-
-4. **Migrate tests to respective modules**
-
-5. **Remove temporary sourceSets configuration** from server-ui/build.gradle.kts
+### Outstanding Tasks
+1. **Stabilize Gradle test runs** – resolve Flyway validation errors blocking the suite.
+2. **Wire Gatling simulations into Gradle** or document how to run them from the renamed `server/gatling` path.
+3. **Retire Maven build artifacts** once CI/CD is fully Gradle-based.
 
 ### Test Fixes
 Tests currently fail due to Flyway validation issues when running in Gradle environment:
@@ -123,7 +116,7 @@ After validation:
 ### server-ui/build.gradle.kts
 - Spring Boot application plugin applied
 - All OAuth2, OpenTelemetry, Azure dependencies
-- Temporarily uses `../src` via sourceSets (to be removed)
+- Packages controllers, configuration, resources, and tests directly inside the module
 - Main class: `com.bootsandcats.oauth2.OAuth2AuthorizationServerApplication`
 
 ### canary-app/build.gradle.kts

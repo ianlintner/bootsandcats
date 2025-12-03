@@ -15,8 +15,8 @@ RUN chmod +x mvnw && \
         { echo "Attempt $i failed, retrying in 10s..."; sleep 10; }; \
     done
 
-# Copy source code
-COPY src ./src
+# Copy renamed source assets (legacy Maven build expects /src)
+COPY server ./src
 
 # Build the application with retry logic
 RUN for i in 1 2 3; do \
