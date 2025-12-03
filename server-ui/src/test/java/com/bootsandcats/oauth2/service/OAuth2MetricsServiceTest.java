@@ -2,13 +2,17 @@ package com.bootsandcats.oauth2.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.bootsandcats.oauth2.config.TestOAuth2ClientConfiguration;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@Import(TestOAuth2ClientConfiguration.class)
 class OAuth2MetricsServiceTest {
 
     @Autowired private OAuth2MetricsService metricsService;
