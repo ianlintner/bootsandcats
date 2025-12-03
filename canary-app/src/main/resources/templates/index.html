@@ -30,7 +30,12 @@
     </div>
     <div th:unless="${name}">
         <p>You are not logged in.</p>
-        <a href="/oauth2/authorization/oauth2-server">Login with OAuth2 Server</a>
+        <p>
+            <a href="/oauth2/authorization/oauth2-server">Login via Authorization Server</a>
+        </p>
+        <p style="font-size: 0.9em; color: #555;">
+            This will redirect you to the Authorization Server which supports federated login (GitHub, Google, Azure).
+        </p>
     </div>
 </div>
 </body>

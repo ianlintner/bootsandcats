@@ -309,6 +309,43 @@ spec:
           key: OAUTH2_M2M_CLIENT_SECRET
         - objectName: redis-password
           key: REDIS_PASSWORD
+        - objectName: github-client-id
+          key: GITHUB_CLIENT_ID
+        - objectName: github-client-secret
+          key: GITHUB_CLIENT_SECRET
+        - objectName: google-client-id
+          key: GOOGLE_CLIENT_ID
+        - objectName: google-client-secret
+          key: GOOGLE_CLIENT_SECRET
+        - objectName: azure-client-id
+          key: AZURE_CLIENT_ID
+        - objectName: azure-client-secret
+          key: AZURE_CLIENT_SECRET
+        - objectName: azure-tenant-id
+          key: AZURE_TENANT_ID
+
+"""
+Important: Add these provider secrets to Key Vault before deploying, otherwise the pods will start without federation enabled. The deployment tolerates missing keys, but login buttons will error until secrets exist.
+
+Recommended secret names in Key Vault:
+- github-client-id, github-client-secret
+- google-client-id, google-client-secret
+- azure-client-id, azure-client-secret, azure-tenant-id
+
+Example:
+
+```bash
+az keyvault secret set --vault-name $KEY_VAULT_NAME --name github-client-id --value "<github-oauth-app-client-id>"
+az keyvault secret set --vault-name $KEY_VAULT_NAME --name github-client-secret --value "<github-oauth-app-client-secret>"
+
+az keyvault secret set --vault-name $KEY_VAULT_NAME --name google-client-id --value "<google-oauth-client-id>"
+az keyvault secret set --vault-name $KEY_VAULT_NAME --name google-client-secret --value "<google-oauth-client-secret>"
+
+az keyvault secret set --vault-name $KEY_VAULT_NAME --name azure-client-id --value "<ms-entra-app-client-id>"
+az keyvault secret set --vault-name $KEY_VAULT_NAME --name azure-client-secret --value "<ms-entra-app-client-secret>"
+az keyvault secret set --vault-name $KEY_VAULT_NAME --name azure-tenant-id --value "<ms-entra-tenant-id>"
+```
+"""
 ```
 
 ### Azure-Specific Deployment
@@ -353,6 +390,49 @@ spec:
               value: "prod"
             - name: OAUTH2_ISSUER_URL
               value: "https://auth.example.com"
+            # Federated providers (optional; pods will still start without them)
+            - name: GITHUB_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: oauth2-server-secrets
+                  key: GITHUB_CLIENT_ID
+                  optional: true
+            - name: GITHUB_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: oauth2-server-secrets
+                  key: GITHUB_CLIENT_SECRET
+                  optional: true
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: oauth2-server-secrets
+                  key: GOOGLE_CLIENT_ID
+                  optional: true
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: oauth2-server-secrets
+                  key: GOOGLE_CLIENT_SECRET
+                  optional: true
+            - name: AZURE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: oauth2-server-secrets
+                  key: AZURE_CLIENT_ID
+                  optional: true
+            - name: AZURE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: oauth2-server-secrets
+                  key: AZURE_CLIENT_SECRET
+                  optional: true
+            - name: AZURE_TENANT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: oauth2-server-secrets
+                  key: AZURE_TENANT_ID
+                  optional: true
             - name: APPLICATIONINSIGHTS_CONNECTION_STRING
               valueFrom:
                 secretKeyRef:
@@ -439,6 +519,89 @@ spec:
 ```
 
 ## Observability with Azure Monitor
+
+## Canary App Deployment (OIDC Client)
+
+The canary app is a simple Spring Boot web client that signs in via the authorization server and displays the authenticated user's claims. It is useful for end-to-end smoke testing in AKS.
+
+### Canary App Config
+
+In cluster environments, prefer configuring explicit OAuth2 endpoints to the internal service DNS rather than relying on external issuer discovery:
+
+```properties
+spring.security.oauth2.client.registration.canary-client.client-id=canary-client
+spring.security.oauth2.client.registration.canary-client.client-secret=<set via env>
+spring.security.oauth2.client.registration.canary-client.authorization-grant-type=authorization_code
+spring.security.oauth2.client.registration.canary-client.redirect-uri={baseUrl}/login/oauth2/code/{registrationId}
+spring.security.oauth2.client.registration.canary-client.scope=openid,profile,email
+spring.security.oauth2.client.registration.canary-client.client-name=Canary Client
+
+spring.security.oauth2.client.provider.canary-provider.authorization-uri=http://oauth2-server.oauth2-system.svc.cluster.local:9000/oauth2/authorize
+spring.security.oauth2.client.provider.canary-provider.token-uri=http://oauth2-server.oauth2-system.svc.cluster.local:9000/oauth2/token
+spring.security.oauth2.client.provider.canary-provider.jwk-set-uri=http://oauth2-server.oauth2-system.svc.cluster.local:9000/oauth2/jwks
+spring.security.oauth2.client.provider.canary-provider.user-info-uri=http://oauth2-server.oauth2-system.svc.cluster.local:9000/userinfo
+spring.security.oauth2.client.registration.canary-client.provider=canary-provider
+```
+
+### Canary App Deployment YAML
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: canary-app
+  namespace: oauth2-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: canary-app
+  template:
+    metadata:
+      labels:
+        app: canary-app
+    spec:
+      containers:
+        - name: canary-app
+          image: ghcr.io/ianlintner/bootsandcats/canary-app:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: prod
+            - name: CANARY_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: oauth2-server-secrets
+                  key: OAUTH2_DEMO_CLIENT_SECRET
+                  optional: true
+```
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: canary-app
+  namespace: oauth2-system
+spec:
+  selector:
+    app: canary-app
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+```
+
+### Canary Troubleshooting
+
+- If the canary app shows issuer mismatch or fails OIDC discovery, ensure you configured explicit endpoints pointing to `oauth2-server.oauth2-system.svc.cluster.local:9000` as above.
+- If login buttons for GitHub, Google, or Azure return errors, verify provider secrets exist in Key Vault and were synced to the `oauth2-server-secrets` Kubernetes Secret via CSI provider.
+- Check pod logs:
+
+```bash
+kubectl logs deploy/oauth2-server -n oauth2-system
+kubectl logs deploy/canary-app -n oauth2-system
+```
 
 ### Application Insights Integration
 
