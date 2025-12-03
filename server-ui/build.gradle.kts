@@ -13,8 +13,27 @@ dependencies {
     implementation("io.micrometer:micrometer-registry-prometheus")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok")
 }
 
 springBoot {
     mainClass.set("com.bootsandcats.oauth2.OAuth2AuthorizationServerApplication")
+}
+
+// Temporarily reuse existing monolith sources during migration
+sourceSets {
+    val monolithMainJava = file("../src/main/java")
+    val monolithMainResources = file("../src/main/resources")
+    val monolithTestJava = file("../src/test/java")
+    val monolithTestResources = file("../src/test/resources")
+
+    main {
+        java.srcDir(monolithMainJava)
+        resources.srcDir(monolithMainResources)
+    }
+    test {
+        java.srcDir(monolithTestJava)
+        resources.srcDir(monolithTestResources)
+    }
 }
