@@ -1,6 +1,5 @@
 package com.bootsandcats.oauth2.config;
 
-import com.bootsandcats.oauth2.security.FederatedIdentityAuthenticationSuccessHandler;
 import java.time.Duration;
 import java.util.UUID;
 
@@ -37,6 +36,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 
+import com.bootsandcats.oauth2.security.FederatedIdentityAuthenticationSuccessHandler;
 import com.bootsandcats.oauth2.service.JwkSetProvider;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
@@ -68,12 +68,6 @@ public class AuthorizationServerConfig {
 
     @Value("${oauth2.admin-user-password:admin}")
     private String adminUserPassword;
-
-    private final FederatedIdentityAuthenticationSuccessHandler federatedIdentityAuthenticationSuccessHandler;
-
-    public AuthorizationServerConfig(FederatedIdentityAuthenticationSuccessHandler federatedIdentityAuthenticationSuccessHandler) {
-        this.federatedIdentityAuthenticationSuccessHandler = federatedIdentityAuthenticationSuccessHandler;
-    }
 
     /**
      * Security filter chain for OAuth2 Authorization Server endpoints.
@@ -111,9 +105,12 @@ public class AuthorizationServerConfig {
      * @param http HttpSecurity builder
      * @return Configured SecurityFilterChain
      */
-    @Bean
-    @Order(2)
-    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+        @Bean
+        @Order(2)
+        public SecurityFilterChain defaultSecurityFilterChain(
+                        HttpSecurity http,
+                        FederatedIdentityAuthenticationSuccessHandler federatedIdentityAuthenticationSuccessHandler)
+                        throws Exception {
         http.authorizeHttpRequests(
                         (authorize) ->
                                 authorize
@@ -147,8 +144,8 @@ public class AuthorizationServerConfig {
                                 csrf.ignoringRequestMatchers(
                                         "/oauth2/token", "/oauth2/introspect", "/oauth2/revoke"));
 
-        return http.build();
-    }
+                return http.build();
+        }
 
     /**
      * User details service for form login authentication.

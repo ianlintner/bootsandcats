@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.lang.Nullable;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import com.azure.core.exception.ResourceNotFoundException;
@@ -23,18 +23,20 @@ public class JwkSetProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JwkSetProvider.class);
 
-    private final AzureKeyVaultProperties properties;
-    private final SecretClient secretClient;
+    private final KeyVaultSettings keyVaultSettings;
+    private final ObjectProvider<SecretClient> secretClientProvider;
     private final Duration cacheTtl;
     private final JWKSet fallbackJwkSet;
 
     private volatile JWKSet cachedKeyVaultSet;
     private volatile Instant cacheExpiresAt = Instant.EPOCH;
 
-    public JwkSetProvider(AzureKeyVaultProperties properties, @Nullable SecretClient secretClient) {
-        this.properties = properties;
-        this.secretClient = secretClient;
-        this.cacheTtl = properties.getCacheTtl();
+    public JwkSetProvider(
+            AzureKeyVaultProperties properties,
+            ObjectProvider<SecretClient> secretClientProvider) {
+        this.keyVaultSettings = KeyVaultSettings.from(properties);
+        this.secretClientProvider = secretClientProvider;
+        this.cacheTtl = keyVaultSettings.cacheTtl();
         this.fallbackJwkSet = new JWKSet(JwkSupport.generateEcSigningKey());
     }
 
@@ -44,19 +46,20 @@ public class JwkSetProvider {
      * @return JWKSet containing signing keys
      */
     public JWKSet getJwkSet() {
-        if (!isKeyVaultEnabled()) {
+        if (!keyVaultSettings.enabled()) {
             return fallbackJwkSet;
         }
 
-        refreshCacheIfNeeded();
+        SecretClient client = secretClientProvider.getIfAvailable();
+        if (client == null) {
+            return fallbackJwkSet;
+        }
+
+        refreshCacheIfNeeded(client);
         return cachedKeyVaultSet != null ? cachedKeyVaultSet : fallbackJwkSet;
     }
 
-    private boolean isKeyVaultEnabled() {
-        return properties.isEnabled() && secretClient != null;
-    }
-
-    private void refreshCacheIfNeeded() {
+    private void refreshCacheIfNeeded(SecretClient client) {
         if (Instant.now().isBefore(cacheExpiresAt)) {
             return;
         }
@@ -67,25 +70,25 @@ public class JwkSetProvider {
             }
 
             try {
-                KeyVaultSecret secret = secretClient.getSecret(properties.getJwkSecretName());
+                KeyVaultSecret secret = client.getSecret(keyVaultSettings.jwkSecretName());
                 cachedKeyVaultSet = JWKSet.parse(secret.getValue());
                 cacheExpiresAt = Instant.now().plus(cacheTtl);
                 LOGGER.info(
                         "Loaded {} key(s) from Azure Key Vault secret '{}' (kids: {}).",
                         cachedKeyCount(),
-                        properties.getJwkSecretName(),
+                        keyVaultSettings.jwkSecretName(),
                         describeKeyIds());
             } catch (ResourceNotFoundException ex) {
                 cacheExpiresAt = Instant.now().plus(Duration.ofMinutes(1));
                 LOGGER.error(
                         "Azure Key Vault secret '{}' not found. Falling back to in-memory key.",
-                        properties.getJwkSecretName(),
+                        keyVaultSettings.jwkSecretName(),
                         ex);
             } catch (ParseException ex) {
                 cacheExpiresAt = Instant.now().plus(Duration.ofMinutes(1));
                 LOGGER.error(
                         "Failed to parse JWK Set from Azure Key Vault secret '{}'.",
-                        properties.getJwkSecretName(),
+                        keyVaultSettings.jwkSecretName(),
                         ex);
             } catch (RuntimeException ex) {
                 cacheExpiresAt = Instant.now().plus(Duration.ofMinutes(1));
@@ -105,5 +108,36 @@ public class JwkSetProvider {
         return cachedKeyVaultSet.getKeys().stream()
                 .map(jwk -> jwk.getKeyID() == null ? "(no kid)" : jwk.getKeyID())
                 .collect(Collectors.joining(", "));
+    }
+
+    private static final class KeyVaultSettings {
+        private final boolean enabled;
+        private final String jwkSecretName;
+        private final Duration cacheTtl;
+
+        private KeyVaultSettings(boolean enabled, String jwkSecretName, Duration cacheTtl) {
+            this.enabled = enabled;
+            this.jwkSecretName = jwkSecretName;
+            this.cacheTtl = cacheTtl;
+        }
+
+        static KeyVaultSettings from(AzureKeyVaultProperties properties) {
+            return new KeyVaultSettings(
+                    properties.isEnabled(),
+                    properties.getJwkSecretName(),
+                    properties.getCacheTtl());
+        }
+
+        boolean enabled() {
+            return enabled;
+        }
+
+        String jwkSecretName() {
+            return jwkSecretName;
+        }
+
+        Duration cacheTtl() {
+            return cacheTtl;
+        }
     }
 }

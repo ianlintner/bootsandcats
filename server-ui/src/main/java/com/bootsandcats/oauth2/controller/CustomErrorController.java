@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import io.swagger.v3.oas.annotations.Hidden;
@@ -29,7 +30,7 @@ public class CustomErrorController implements ErrorController {
      * @param request HTTP request
      * @return Error response
      */
-    @RequestMapping("/error")
+    @RequestMapping(value = "/error", method = {RequestMethod.GET, RequestMethod.HEAD})
     @ResponseBody
     public ResponseEntity<Map<String, Object>> handleError(HttpServletRequest request) {
         Object status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
