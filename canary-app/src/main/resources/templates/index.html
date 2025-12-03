@@ -16,6 +16,10 @@
         <div class="card">
             <h2>Welcome, <span th:text="${name}">User</span>!</h2>
             <p>Email: <span th:text="${email}">email@example.com</span></p>
+            <p>
+                <strong>Authenticated via:</strong>
+                <span th:text="${attributes['iss']} ?: 'Authorization Server'"></span>
+            </p>
             
             <h3>Claims</h3>
             <pre th:text="${attributes}"></pre>
@@ -30,9 +34,15 @@
     </div>
     <div th:unless="${name}">
         <p>You are not logged in.</p>
-        <p>
-            <a href="/oauth2/authorization/oauth2-server">Login via Authorization Server</a>
-        </p>
+        <div class="card">
+            <h3>Sign in</h3>
+            <p>
+                <a href="/oauth2/authorization/oauth2-server" style="display:inline-block;padding:10px 14px;border:1px solid #444;border-radius:4px;text-decoration:none;">Login via Authorization Server</a>
+            </p>
+            <p style="font-size: 0.9em; color: #555;">
+                Federated login (GitHub, Google, Azure) is available from the Authorization Server login page.
+            </p>
+        </div>
         <p style="font-size: 0.9em; color: #555;">
             This will redirect you to the Authorization Server which supports federated login (GitHub, Google, Azure).
         </p>

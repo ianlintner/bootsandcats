@@ -43,6 +43,10 @@ java -jar target/oauth2-server-1.0.0-SNAPSHOT.jar
 
 The server will start on `http://localhost:9000`.
 
+### Canary App
+
+For an end-to-end smoke test, deploy the simple OIDC web client (Canary App) that signs in via this Authorization Server and displays user claims. See `docs/operations/canary-app.md`.
+
 ### Running with Docker
 
 ```bash
@@ -198,6 +202,12 @@ curl -X POST http://localhost:9000/oauth2/introspect \
 - CSRF protection
 - Rate limiting ready (via Spring Security)
 - OWASP Dependency Check in CI pipeline
+
+## Federation and Deployment Docs
+
+- Federated login architecture and setup: `docs/architecture/federation.md`
+- Canary App operations and troubleshooting: `docs/operations/canary-app.md`
+- Azure AKS deployment (Key Vault, CSI, Ingress): `docs/deployment/azure.md`
 
 ### Security Scanning
 
