@@ -1,0 +1,3 @@
+# Auto-import test configurations for all Spring Boot tests
+org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration=\
+com.bootsandcats.oauth2.config.TestOAuth2ClientConfiguration
