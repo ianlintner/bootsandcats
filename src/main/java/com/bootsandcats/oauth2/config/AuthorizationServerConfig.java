@@ -130,6 +130,12 @@ public class AuthorizationServerConfig {
                                                 "/swagger-ui/**",
                                                 "/swagger-ui.html",
                                                 "/admin/**",
+                                                "/assets/**",
+                                                "/login",
+                                                "/instances",
+                                                "/instances/**",
+                                                "/applications",
+                                                "/applications/**")
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated())
@@ -137,12 +143,6 @@ public class AuthorizationServerConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(federatedIdentityAuthenticationSuccessHandler))
                 .csrf(
-                        csrf ->
-                                csrf.ignoringRequestMatchers(
-                                        "/oauth2/token", "/oauth2/introspect", "/oauth2/revoke"));
-
-        return http.build();
-    }           .csrf(
                         csrf ->
                                 csrf.ignoringRequestMatchers(
                                         "/oauth2/token", "/oauth2/introspect", "/oauth2/revoke"));

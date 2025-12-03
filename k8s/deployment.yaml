@@ -72,6 +72,48 @@ spec:
             secretKeyRef:
               name: oauth2-app-secrets
               key: admin-user-password
+        - name: GITHUB_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: github-client-id
+              optional: true
+        - name: GITHUB_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: github-client-secret
+              optional: true
+        - name: GOOGLE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: google-client-id
+              optional: true
+        - name: GOOGLE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: google-client-secret
+              optional: true
+        - name: AZURE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: azure-client-id
+              optional: true
+        - name: AZURE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: azure-client-secret
+              optional: true
+        - name: AZURE_TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: azure-tenant-id
+              optional: true
         - name: SSL_KEYSTORE_PASSWORD
           valueFrom:
             secretKeyRef:

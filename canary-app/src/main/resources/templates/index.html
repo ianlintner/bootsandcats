@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Canary App</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .card { border: 1px solid #ccc; padding: 20px; border-radius: 5px; margin-top: 20px; }
+        pre { background: #f4f4f4; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Canary Application</h1>
+    <div th:if="${name}">
+        <div class="card">
+            <h2>Welcome, <span th:text="${name}">User</span>!</h2>
+            <p>Email: <span th:text="${email}">email@example.com</span></p>
+            
+            <h3>Claims</h3>
+            <pre th:text="${attributes}"></pre>
+            
+            <h3>ID Token</h3>
+            <pre th:text="${idToken}"></pre>
+            
+            <form action="/logout" method="post">
+                <button type="submit">Logout</button>
+            </form>
+        </div>
+    </div>
+    <div th:unless="${name}">
+        <p>You are not logged in.</p>
+        <a href="/oauth2/authorization/oauth2-server">Login with OAuth2 Server</a>
+    </div>
+</div>
+</body>
+</html>
