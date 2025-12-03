@@ -198,3 +198,131 @@ public class AuthorizationServerConfig {
     @Bean
     public RegisteredClientRepository registeredClientRepository(PasswordEncoder passwordEncoder) {
         // Confidential client with client_secret
+        RegisteredClient confidentialClient =
+                RegisteredClient.withId(UUID.randomUUID().toString())
+                        .clientId("demo-client")
+                        .clientSecret(passwordEncoder.encode(demoClientSecret))
+                        .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                        .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
+                        .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                        .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                        .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                        .redirectUri("http://localhost:8080/callback")
+                        .redirectUri("http://127.0.0.1:8080/callback")
+                        .postLogoutRedirectUri("http://localhost:8080/")
+                        .scope(OidcScopes.OPENID)
+                        .scope(OidcScopes.PROFILE)
+                        .scope(OidcScopes.EMAIL)
+                        .scope("read")
+                        .scope("write")
+                        .tokenSettings(
+                                TokenSettings.builder()
+                                        .accessTokenTimeToLive(Duration.ofMinutes(15))
+                                        .refreshTokenTimeToLive(Duration.ofDays(7))
+                                        .reuseRefreshTokens(false)
+                                        .build())
+                        .clientSettings(
+                                ClientSettings.builder()
+                                        .requireAuthorizationConsent(true)
+                                        .requireProofKey(false)
+                                        .build())
+                        .build();
+
+        // Public client with PKCE (for SPAs, mobile apps)
+        RegisteredClient publicClient =
+                RegisteredClient.withId(UUID.randomUUID().toString())
+                        .clientId("public-client")
+                        .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
+                        .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                        .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                        .redirectUri("http://localhost:3000/callback")
+                        .redirectUri("http://127.0.0.1:3000/callback")
+                        .postLogoutRedirectUri("http://localhost:3000/")
+                        .scope(OidcScopes.OPENID)
+                        .scope(OidcScopes.PROFILE)
+                        .scope(OidcScopes.EMAIL)
+                        .scope("read")
+                        .tokenSettings(
+                                TokenSettings.builder()
+                                        .accessTokenTimeToLive(Duration.ofMinutes(15))
+                                        .refreshTokenTimeToLive(Duration.ofHours(24))
+                                        .reuseRefreshTokens(false)
+                                        .build())
+                        .clientSettings(
+                                ClientSettings.builder()
+                                        .requireAuthorizationConsent(true)
+                                        .requireProofKey(true) // PKCE required
+                                        .build())
+                        .build();
+
+        // Machine-to-machine client
+        RegisteredClient m2mClient =
+                RegisteredClient.withId(UUID.randomUUID().toString())
+                        .clientId("m2m-client")
+                        .clientSecret(passwordEncoder.encode(m2mClientSecret))
+                        .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                        .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                        .scope("api:read")
+                        .scope("api:write")
+                        .tokenSettings(
+                                TokenSettings.builder()
+                                        .accessTokenTimeToLive(Duration.ofHours(1))
+                                        .build())
+                        .build();
+
+        return new InMemoryRegisteredClientRepository(confidentialClient, publicClient, m2mClient);
+    }
+
+    /**
+     * JWK Source for JWT signing/verification.
+     *
+     * <p>WARNING: The RSA key pair is generated dynamically on each server startup, which means
+     * tokens issued before a restart will become invalid after restart. For production use,
+     * consider persisting the JWK to a database or loading from a keystore to maintain token
+     * validity across restarts.
+     *
+     * @return JWKSource with RSA key pair
+     */
+    @Bean
+    public JWKSource<SecurityContext> jwkSource(JwkSetProvider jwkSetProvider) {
+        return (selector, securityContext) -> selector.select(jwkSetProvider.getJwkSet());
+    }
+
+    @Bean
+    public OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer() {
+        return context -> context.getJwsHeader().algorithm(SignatureAlgorithm.ES256);
+    }
+
+    /**
+     * JWT Decoder for validating access tokens.
+     *
+     * @param jwkSource JWK source
+     * @return JwtDecoder
+     */
+    @Bean
+    public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
+        return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
+    }
+
+    /**
+     * Authorization Server settings.
+     *
+     * @return AuthorizationServerSettings
+     */
+    @Bean
+    public AuthorizationServerSettings authorizationServerSettings() {
+        return AuthorizationServerSettings.builder()
+                .issuer(issuerUrl)
+                .authorizationEndpoint("/oauth2/authorize")
+                .deviceAuthorizationEndpoint("/oauth2/device_authorization")
+                .deviceVerificationEndpoint("/oauth2/device_verification")
+                .tokenEndpoint("/oauth2/token")
+                .jwkSetEndpoint("/oauth2/jwks")
+                .tokenRevocationEndpoint("/oauth2/revoke")
+                .tokenIntrospectionEndpoint("/oauth2/introspect")
+                .oidcClientRegistrationEndpoint("/connect/register")
+                .oidcUserInfoEndpoint("/userinfo")
+                .oidcLogoutEndpoint("/connect/logout")
+                .build();
+    }
+}
