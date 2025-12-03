@@ -329,3 +329,25 @@ MIT License
 4. Run tests: `./mvnw verify`
 5. Format code: `./mvnw spotless:apply`
 6. Submit a pull request
+
+## Pre-commit Quality Gate
+
+To prevent commits that break the main quality bars, the repository ships with a Git pre-commit hook that runs the following Maven goals in order:
+
+- `./mvnw spotless:check` – verifies formatting
+- `./mvnw spotbugs:check` – runs static analysis / linting
+- `./mvnw verify` – builds the project and executes tests
+
+### Installation
+
+1. Point Git to the bundled hooks directory (one-time setup):
+  ```bash
+  git config core.hooksPath githooks
+  ```
+2. Commit as usual; the hook will run automatically and block the commit if any command fails.
+
+You can also run the same checks on-demand outside of Git by executing:
+
+```bash
+./scripts/pre-commit-checks.sh
+```

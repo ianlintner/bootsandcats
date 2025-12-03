@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"
+SCRIPT_PATH="${REPO_ROOT}/scripts/pre-commit-checks.sh"
+
+if [[ ! -x "${SCRIPT_PATH}" ]]; then
+  echo "Expected pre-commit helper at ${SCRIPT_PATH} (make sure it's executable)." >&2
+  exit 1
+fi
+
+"${SCRIPT_PATH}"
