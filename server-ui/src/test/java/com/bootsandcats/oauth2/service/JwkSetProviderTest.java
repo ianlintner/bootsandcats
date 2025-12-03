@@ -1,15 +1,15 @@
 package com.bootsandcats.oauth2.service;
 
+import java.time.Duration;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import java.time.Duration;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.ObjectProvider;
 
 import com.azure.security.keyvault.secrets.SecretClient;
 import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
@@ -33,7 +33,7 @@ class JwkSetProviderTest {
     @Test
     void shouldReturnFallbackWhenKeyVaultDisabled() {
         properties.setEnabled(false);
-        JwkSetProvider provider = new JwkSetProvider(properties, null);
+        JwkSetProvider provider = new JwkSetProvider(properties, providerReturning(null));
 
         JWKSet jwkSet = provider.getJwkSet();
 
@@ -51,7 +51,7 @@ class JwkSetProviderTest {
         KeyVaultSecret secret = new KeyVaultSecret("oauth2-jwk", jwkJson);
         when(secretClient.getSecret("oauth2-jwk")).thenReturn(secret);
 
-        JwkSetProvider provider = new JwkSetProvider(properties, secretClient);
+        JwkSetProvider provider = new JwkSetProvider(properties, providerReturning(secretClient));
 
         JWKSet actual = provider.getJwkSet();
 
@@ -66,11 +66,17 @@ class JwkSetProviderTest {
         when(secretClient.getSecret("oauth2-jwk"))
                 .thenThrow(new RuntimeException("Secret not found"));
 
-        JwkSetProvider provider = new JwkSetProvider(properties, secretClient);
+        JwkSetProvider provider = new JwkSetProvider(properties, providerReturning(secretClient));
 
         JWKSet jwkSet = provider.getJwkSet();
 
         assertThat(jwkSet).isNotNull();
         assertThat(jwkSet.getKeys()).hasSize(1);
+    }
+
+    private ObjectProvider<SecretClient> providerReturning(SecretClient client) {
+        ObjectProvider<SecretClient> provider = mock(ObjectProvider.class);
+        when(provider.getIfAvailable()).thenReturn(client);
+        return provider;
     }
 }
