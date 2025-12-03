@@ -9,6 +9,10 @@ plugins {
 allprojects {
     group = "com.bootsandcats"
     version = "1.0.0-SNAPSHOT"
+
+    repositories {
+        mavenCentral()
+    }
 }
 
 // Spotless configuration for the root project and all subprojects
