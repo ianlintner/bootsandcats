@@ -14,7 +14,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.0")
     implementation("io.micrometer:micrometer-registry-prometheus")
     implementation("io.micrometer:micrometer-tracing-bridge-otel")
     implementation("io.opentelemetry:opentelemetry-api:1.44.0")
