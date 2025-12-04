@@ -60,97 +60,97 @@ jobs:
       - name: Run smoke tests
         id: smoke-tests
         run: |
-          mkdir -p target/smoke-test-results
+          mkdir -p build/smoke-test-results
           
-          echo "=== Smoke Test Results ===" > target/smoke-test-results/smoke-test-report.txt
-          echo "Timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> target/smoke-test-results/smoke-test-report.txt
-          echo "" >> target/smoke-test-results/smoke-test-report.txt
+          echo "=== Smoke Test Results ===" > build/smoke-test-results/smoke-test-report.txt
+          echo "Timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> build/smoke-test-results/smoke-test-report.txt
+          echo "" >> build/smoke-test-results/smoke-test-report.txt
           
           TESTS_PASSED=0
           TESTS_FAILED=0
           
           # Test 1: Health endpoint
-          echo "Test 1: Health Endpoint" >> target/smoke-test-results/smoke-test-report.txt
+          echo "Test 1: Health Endpoint" >> build/smoke-test-results/smoke-test-report.txt
           if HEALTH_RESPONSE=$(curl -sf http://localhost:9000/actuator/health); then
-            echo "  Status: PASSED" >> target/smoke-test-results/smoke-test-report.txt
-            echo "  Response: $HEALTH_RESPONSE" >> target/smoke-test-results/smoke-test-report.txt
+            echo "  Status: PASSED" >> build/smoke-test-results/smoke-test-report.txt
+            echo "  Response: $HEALTH_RESPONSE" >> build/smoke-test-results/smoke-test-report.txt
             ((TESTS_PASSED++)) || true
           else
-            echo "  Status: FAILED" >> target/smoke-test-results/smoke-test-report.txt
+            echo "  Status: FAILED" >> build/smoke-test-results/smoke-test-report.txt
             ((TESTS_FAILED++)) || true
           fi
-          echo "" >> target/smoke-test-results/smoke-test-report.txt
+          echo "" >> build/smoke-test-results/smoke-test-report.txt
           
           # Test 2: Liveness probe
-          echo "Test 2: Liveness Probe" >> target/smoke-test-results/smoke-test-report.txt
+          echo "Test 2: Liveness Probe" >> build/smoke-test-results/smoke-test-report.txt
           if curl -sf http://localhost:9000/actuator/health/liveness > /dev/null; then
-            echo "  Status: PASSED" >> target/smoke-test-results/smoke-test-report.txt
+            echo "  Status: PASSED" >> build/smoke-test-results/smoke-test-report.txt
             ((TESTS_PASSED++)) || true
           else
-            echo "  Status: FAILED" >> target/smoke-test-results/smoke-test-report.txt
+            echo "  Status: FAILED" >> build/smoke-test-results/smoke-test-report.txt
             ((TESTS_FAILED++)) || true
           fi
-          echo "" >> target/smoke-test-results/smoke-test-report.txt
+          echo "" >> build/smoke-test-results/smoke-test-report.txt
           
           # Test 3: Readiness probe
-          echo "Test 3: Readiness Probe" >> target/smoke-test-results/smoke-test-report.txt
+          echo "Test 3: Readiness Probe" >> build/smoke-test-results/smoke-test-report.txt
           if curl -sf http://localhost:9000/actuator/health/readiness > /dev/null; then
-            echo "  Status: PASSED" >> target/smoke-test-results/smoke-test-report.txt
+            echo "  Status: PASSED" >> build/smoke-test-results/smoke-test-report.txt
             ((TESTS_PASSED++)) || true
           else
-            echo "  Status: FAILED" >> target/smoke-test-results/smoke-test-report.txt
+            echo "  Status: FAILED" >> build/smoke-test-results/smoke-test-report.txt
             ((TESTS_FAILED++)) || true
           fi
-          echo "" >> target/smoke-test-results/smoke-test-report.txt
+          echo "" >> build/smoke-test-results/smoke-test-report.txt
           
           # Test 4: OIDC Discovery endpoint
-          echo "Test 4: OIDC Discovery Endpoint" >> target/smoke-test-results/smoke-test-report.txt
+          echo "Test 4: OIDC Discovery Endpoint" >> build/smoke-test-results/smoke-test-report.txt
           if OIDC_RESPONSE=$(curl -sf http://localhost:9000/.well-known/openid-configuration); then
-            echo "  Status: PASSED" >> target/smoke-test-results/smoke-test-report.txt
-            echo "  Issuer: $(echo $OIDC_RESPONSE | jq -r '.issuer')" >> target/smoke-test-results/smoke-test-report.txt
+            echo "  Status: PASSED" >> build/smoke-test-results/smoke-test-report.txt
+            echo "  Issuer: $(echo $OIDC_RESPONSE | jq -r '.issuer')" >> build/smoke-test-results/smoke-test-report.txt
             ((TESTS_PASSED++)) || true
           else
-            echo "  Status: FAILED" >> target/smoke-test-results/smoke-test-report.txt
+            echo "  Status: FAILED" >> build/smoke-test-results/smoke-test-report.txt
             ((TESTS_FAILED++)) || true
           fi
-          echo "" >> target/smoke-test-results/smoke-test-report.txt
+          echo "" >> build/smoke-test-results/smoke-test-report.txt
           
           # Test 5: JWKS endpoint
-          echo "Test 5: JWKS Endpoint" >> target/smoke-test-results/smoke-test-report.txt
+          echo "Test 5: JWKS Endpoint" >> build/smoke-test-results/smoke-test-report.txt
           if JWKS_RESPONSE=$(curl -sf http://localhost:9000/oauth2/jwks); then
-            echo "  Status: PASSED" >> target/smoke-test-results/smoke-test-report.txt
+            echo "  Status: PASSED" >> build/smoke-test-results/smoke-test-report.txt
             KEYS_COUNT=$(echo $JWKS_RESPONSE | jq '.keys | length')
-            echo "  Keys count: $KEYS_COUNT" >> target/smoke-test-results/smoke-test-report.txt
+            echo "  Keys count: $KEYS_COUNT" >> build/smoke-test-results/smoke-test-report.txt
             ((TESTS_PASSED++)) || true
           else
-            echo "  Status: FAILED" >> target/smoke-test-results/smoke-test-report.txt
+            echo "  Status: FAILED" >> build/smoke-test-results/smoke-test-report.txt
             ((TESTS_FAILED++)) || true
           fi
-          echo "" >> target/smoke-test-results/smoke-test-report.txt
+          echo "" >> build/smoke-test-results/smoke-test-report.txt
           
           # Test 6: Client Credentials token request
-          echo "Test 6: Client Credentials Token Request" >> target/smoke-test-results/smoke-test-report.txt
+          echo "Test 6: Client Credentials Token Request" >> build/smoke-test-results/smoke-test-report.txt
           if TOKEN_RESPONSE=$(curl -sf -X POST http://localhost:9000/oauth2/token \
             -H "Content-Type: application/x-www-form-urlencoded" \
             -u "$TEST_CLIENT_ID:$TEST_CLIENT_SECRET" \
             -d "grant_type=client_credentials&scope=api:read"); then
-            echo "  Status: PASSED" >> target/smoke-test-results/smoke-test-report.txt
+            echo "  Status: PASSED" >> build/smoke-test-results/smoke-test-report.txt
             TOKEN_TYPE=$(echo $TOKEN_RESPONSE | jq -r '.token_type')
             EXPIRES_IN=$(echo $TOKEN_RESPONSE | jq -r '.expires_in')
-            echo "  Token type: $TOKEN_TYPE" >> target/smoke-test-results/smoke-test-report.txt
-            echo "  Expires in: $EXPIRES_IN seconds" >> target/smoke-test-results/smoke-test-report.txt
+            echo "  Token type: $TOKEN_TYPE" >> build/smoke-test-results/smoke-test-report.txt
+            echo "  Expires in: $EXPIRES_IN seconds" >> build/smoke-test-results/smoke-test-report.txt
             
             # Save access token for introspection test
             ACCESS_TOKEN=$(echo $TOKEN_RESPONSE | jq -r '.access_token')
             ((TESTS_PASSED++)) || true
           else
-            echo "  Status: FAILED" >> target/smoke-test-results/smoke-test-report.txt
+            echo "  Status: FAILED" >> build/smoke-test-results/smoke-test-report.txt
             ((TESTS_FAILED++)) || true
           fi
-          echo "" >> target/smoke-test-results/smoke-test-report.txt
+          echo "" >> build/smoke-test-results/smoke-test-report.txt
           
           # Test 7: Token introspection (only if token was obtained)
-          echo "Test 7: Token Introspection" >> target/smoke-test-results/smoke-test-report.txt
+          echo "Test 7: Token Introspection" >> build/smoke-test-results/smoke-test-report.txt
           if [ -n "$ACCESS_TOKEN" ]; then
             if INTROSPECT_RESPONSE=$(curl -sf -X POST http://localhost:9000/oauth2/introspect \
               -H "Content-Type: application/x-www-form-urlencoded" \
@@ -158,46 +158,46 @@ jobs:
               -d "token=$ACCESS_TOKEN"); then
               ACTIVE=$(echo $INTROSPECT_RESPONSE | jq -r '.active')
               if [ "$ACTIVE" = "true" ]; then
-                echo "  Status: PASSED" >> target/smoke-test-results/smoke-test-report.txt
-                echo "  Token active: $ACTIVE" >> target/smoke-test-results/smoke-test-report.txt
+                echo "  Status: PASSED" >> build/smoke-test-results/smoke-test-report.txt
+                echo "  Token active: $ACTIVE" >> build/smoke-test-results/smoke-test-report.txt
                 ((TESTS_PASSED++)) || true
               else
-                echo "  Status: FAILED (token not active)" >> target/smoke-test-results/smoke-test-report.txt
+                echo "  Status: FAILED (token not active)" >> build/smoke-test-results/smoke-test-report.txt
                 ((TESTS_FAILED++)) || true
               fi
             else
-              echo "  Status: FAILED" >> target/smoke-test-results/smoke-test-report.txt
+              echo "  Status: FAILED" >> build/smoke-test-results/smoke-test-report.txt
               ((TESTS_FAILED++)) || true
             fi
           else
-            echo "  Status: SKIPPED (no token available)" >> target/smoke-test-results/smoke-test-report.txt
+            echo "  Status: SKIPPED (no token available)" >> build/smoke-test-results/smoke-test-report.txt
           fi
-          echo "" >> target/smoke-test-results/smoke-test-report.txt
+          echo "" >> build/smoke-test-results/smoke-test-report.txt
           
           # Test 8: Prometheus metrics endpoint
-          echo "Test 8: Prometheus Metrics Endpoint" >> target/smoke-test-results/smoke-test-report.txt
+          echo "Test 8: Prometheus Metrics Endpoint" >> build/smoke-test-results/smoke-test-report.txt
           if curl -sf http://localhost:9000/actuator/prometheus > /dev/null; then
-            echo "  Status: PASSED" >> target/smoke-test-results/smoke-test-report.txt
+            echo "  Status: PASSED" >> build/smoke-test-results/smoke-test-report.txt
             ((TESTS_PASSED++)) || true
           else
-            echo "  Status: FAILED" >> target/smoke-test-results/smoke-test-report.txt
+            echo "  Status: FAILED" >> build/smoke-test-results/smoke-test-report.txt
             ((TESTS_FAILED++)) || true
           fi
-          echo "" >> target/smoke-test-results/smoke-test-report.txt
+          echo "" >> build/smoke-test-results/smoke-test-report.txt
           
           # Summary
-          echo "=== Summary ===" >> target/smoke-test-results/smoke-test-report.txt
-          echo "Tests Passed: $TESTS_PASSED" >> target/smoke-test-results/smoke-test-report.txt
-          echo "Tests Failed: $TESTS_FAILED" >> target/smoke-test-results/smoke-test-report.txt
+          echo "=== Summary ===" >> build/smoke-test-results/smoke-test-report.txt
+          echo "Tests Passed: $TESTS_PASSED" >> build/smoke-test-results/smoke-test-report.txt
+          echo "Tests Failed: $TESTS_FAILED" >> build/smoke-test-results/smoke-test-report.txt
           TOTAL_TESTS=$((TESTS_PASSED + TESTS_FAILED))
-          echo "Total Tests: $TOTAL_TESTS" >> target/smoke-test-results/smoke-test-report.txt
+          echo "Total Tests: $TOTAL_TESTS" >> build/smoke-test-results/smoke-test-report.txt
           
           # Output for GitHub Actions
           echo "tests_passed=$TESTS_PASSED" >> $GITHUB_OUTPUT
           echo "tests_failed=$TESTS_FAILED" >> $GITHUB_OUTPUT
           
           # Display report
-          cat target/smoke-test-results/smoke-test-report.txt
+          cat build/smoke-test-results/smoke-test-report.txt
           
           # Fail if any tests failed
           if [ $TESTS_FAILED -gt 0 ]; then
@@ -216,10 +216,10 @@ jobs:
       - name: Collect Docker logs
         if: always()
         run: |
-          mkdir -p target/smoke-test-results/docker-logs
-          docker compose logs oauth2-server > target/smoke-test-results/docker-logs/oauth2-server.log 2>&1 || true
-          docker compose logs postgres > target/smoke-test-results/docker-logs/postgres.log 2>&1 || true
-          docker compose logs otel-collector > target/smoke-test-results/docker-logs/otel-collector.log 2>&1 || true
+          mkdir -p build/smoke-test-results/docker-logs
+          docker compose logs oauth2-server > build/smoke-test-results/docker-logs/oauth2-server.log 2>&1 || true
+          docker compose logs postgres > build/smoke-test-results/docker-logs/postgres.log 2>&1 || true
+          docker compose logs otel-collector > build/smoke-test-results/docker-logs/otel-collector.log 2>&1 || true
 
       - name: Stop Docker Compose environment
         if: always()
@@ -230,7 +230,7 @@ jobs:
         if: always()
         with:
           name: smoke-test-results
-          path: target/smoke-test-results/
+          path: build/smoke-test-results/
 
       - name: Upload Gatling load test report
         uses: actions/upload-artifact@v4
