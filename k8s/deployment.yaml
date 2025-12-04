@@ -7,7 +7,7 @@ metadata:
     app: oauth2-server
     version: v1
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: oauth2-server
@@ -120,11 +120,12 @@ spec:
               name: oauth2-app-secrets
               key: keystore.password
         - name: AZURE_KEYVAULT_ENABLED
-          value: "true"
-        - name: AZURE_KEYVAULT_VAULT_URI
-          value: "https://inker-kv.vault.azure.net/"
-        - name: AZURE_KEYVAULT_JWK_SECRET_NAME
-          value: "oauth2-jwk"
+          value: "false"
+        - name: AZURE_KEYVAULT_STATIC_JWK
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-jwk-secret
+              key: static-jwk
         - name: SERVER_SSL_ENABLED
           value: "false"
         volumeMounts:

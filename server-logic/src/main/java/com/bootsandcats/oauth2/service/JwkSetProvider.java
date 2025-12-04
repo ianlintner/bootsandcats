@@ -173,8 +173,7 @@ public class JwkSetProvider {
                         "FATAL: Failed to parse JWK Set from Azure Key Vault secret '{}'.",
                         keyVaultSettings.jwkSecretName(),
                         ex);
-                throw new IllegalStateException(
-                        "Failed to parse JWK Set from Azure Key Vault", ex);
+                throw new IllegalStateException("Failed to parse JWK Set from Azure Key Vault", ex);
             } catch (RuntimeException ex) {
                 LOGGER.error(
                         "FATAL: Unexpected error while loading JWK Set from Azure Key Vault.", ex);
