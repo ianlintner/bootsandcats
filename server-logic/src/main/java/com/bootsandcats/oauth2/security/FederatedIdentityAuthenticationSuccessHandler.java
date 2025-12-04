@@ -84,6 +84,18 @@ public class FederatedIdentityAuthenticationSuccessHandler
             userRepository.save(user);
         }
 
+        // Check if there's a saved OAuth2 authorization request to continue
+        SavedRequest savedRequest = requestCache.getRequest(request, response);
+        if (savedRequest != null) {
+            String savedUrl = savedRequest.getRedirectUrl();
+            // If the saved request was an OAuth2 authorization request, redirect to it
+            if (savedUrl.contains("/oauth2/authorize")) {
+                getRedirectStrategy().sendRedirect(request, response, savedUrl);
+                return;
+            }
+        }
+
+        // Otherwise, use default behavior (redirect to default target or saved request)
         super.onAuthenticationSuccess(request, response, authentication);
     }
 }
