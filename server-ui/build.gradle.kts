@@ -20,6 +20,7 @@ dependencies {
     implementation("io.opentelemetry:opentelemetry-api:1.44.0")
     implementation("io.opentelemetry:opentelemetry-sdk:1.44.0")
     implementation("io.opentelemetry:opentelemetry-exporter-otlp:1.44.0")
+    implementation("io.opentelemetry:opentelemetry-exporter-prometheus:1.44.0-alpha")
     implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:1.44.0")
     implementation("io.opentelemetry.instrumentation:opentelemetry-spring-boot-starter:2.12.0")
     implementation("com.azure:azure-identity:1.15.0")
