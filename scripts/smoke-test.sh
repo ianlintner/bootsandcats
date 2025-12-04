@@ -161,7 +161,6 @@ if echo "$TOKEN_RESPONSE" | jq -e '.access_token' > /dev/null 2>&1; then
     INTROSPECT=$(curl -sf -X POST http://localhost:9000/oauth2/introspect \
         -u "m2m-client:${M2M_CLIENT_SECRET}" \
         -d "token=$ACCESS_TOKEN" 2>&1)
-        -d "token=$ACCESS_TOKEN" 2>&1)
 
     if echo "$INTROSPECT" | jq -e '.active' > /dev/null 2>&1; then
         IS_ACTIVE=$(echo "$INTROSPECT" | jq -r '.active')

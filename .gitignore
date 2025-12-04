@@ -68,3 +68,5 @@ dependency-check-report.*
 *.p12
 *.p12.*
 .gradle
+
+.fake
