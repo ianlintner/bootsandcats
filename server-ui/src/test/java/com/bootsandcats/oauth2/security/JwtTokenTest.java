@@ -5,6 +5,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -51,6 +53,33 @@ class JwtTokenTest {
         // Verify JWT structure (header.payload.signature)
         String[] jwtParts = accessToken.split("\\.");
         org.assertj.core.api.Assertions.assertThat(jwtParts).hasSize(3);
+    }
+
+    @Test
+    void issuedToken_shouldUseEs256Algorithm() throws Exception {
+        MvcResult result =
+                mockMvc.perform(
+                                post("/oauth2/token")
+                                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                                        .param("grant_type", "client_credentials")
+                                        .param("scope", "api:read")
+                                        .with(httpBasic("m2m-client", "m2m-secret")))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.access_token").exists())
+                        .andReturn();
+
+        String responseBody = result.getResponse().getContentAsString();
+        JsonNode jsonNode = objectMapper.readTree(responseBody);
+        String accessToken = jsonNode.get("access_token").asText();
+
+        String headerJson =
+                new String(
+                        Base64.getUrlDecoder().decode(accessToken.split("\\.")[0]),
+                        StandardCharsets.UTF_8);
+        JsonNode header = objectMapper.readTree(headerJson);
+
+        org.assertj.core.api.Assertions.assertThat(header.get("alg").asText())
+                .isEqualTo("ES256");
     }
 
     @Test
