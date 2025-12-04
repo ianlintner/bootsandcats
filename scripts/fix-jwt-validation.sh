@@ -39,9 +39,14 @@ JWKS=$(curl -s http://localhost:9000/oauth2/jwks)
 echo "$JWKS" | jq '.keys[] | {kid, alg, kty, crv}'
 
 info "Requesting token"
+M2M_SECRET=$(kubectl get secret oauth2-app-secrets -o jsonpath='{.data.m2m-client-secret}' | base64 -d 2>/dev/null || true)
+if [ -z "$M2M_SECRET" ]; then
+  warn "Unable to load m2m-client secret from Kubernetes; falling back to default"
+  M2M_SECRET="m2m-secret"
+fi
 TOKEN=$(curl -s -X POST http://localhost:9000/oauth2/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=client_credentials&client_id=m2m-client&client_secret=m2m-secret" | jq -r '.access_token')
+  -d "grant_type=client_credentials&client_id=m2m-client&client_secret=$M2M_SECRET" | jq -r '.access_token')
 if [ "$TOKEN" = "null" ] || [ -z "$TOKEN" ]; then
   err "Token request failed"
   exit 1
