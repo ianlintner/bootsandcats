@@ -69,51 +69,59 @@ graph TB
 
 ## Component Architecture
 
+The current implementation is built directly on top of Spring Authorization Server and Spring
+Security components. Rather than custom `*Service` classes, the application wires and
+configures framework-provided building blocks.
+
 ```mermaid
 graph LR
     subgraph "OAuth2 Authorization Server"
         subgraph "Web Layer"
-            Filters[Security Filters]
-            Controllers[Controllers]
+            Filters[Spring Security Filter Chain]
+            Controllers[Authorization Server Endpoints]
         end
-        
+
         subgraph "Security Layer"
-            AuthProvider[Authentication Provider]
-            TokenEndpoint[Token Endpoint]
-            AuthorizationEndpoint[Authorization Endpoint]
-            JWKSEndpoint[JWKS Endpoint]
+            ASConfig[AuthorizationServerConfig]
+            JwtCustomizer[OAuth2TokenCustomizer]
+            JwtDecoder[JwtDecoder]
         end
-        
-        subgraph "Service Layer"
-            TokenService[Token Service]
-            UserService[User Service]
-            ClientService[Client Service]
-            MetricsService[Metrics Service]
+
+        subgraph "Identity Layer"
+            UserDetailsSvc[InMemoryUserDetailsManager]
         end
-        
-        subgraph "Data Layer"
-            AuthorizationRepo[Authorization Repository]
-            TokenRepo[Token Repository]
-            ClientRepo[Client Repository]
+
+        subgraph "Client Registration"
+            RegRepo[JdbcRegisteredClientRepository]
+        end
+
+        subgraph "Crypto / Keys"
+            JwkProvider[JwkSetProvider]
+            JwkSource[JWKSource]
         end
     end
-    
+
     Filters --> Controllers
-    Controllers --> AuthProvider
-    Controllers --> TokenEndpoint
-    Controllers --> AuthorizationEndpoint
-    Controllers --> JWKSEndpoint
-    
-    AuthProvider --> UserService
-    TokenEndpoint --> TokenService
-    AuthorizationEndpoint --> ClientService
-    
-    TokenService --> TokenRepo
-    UserService --> AuthorizationRepo
-    ClientService --> ClientRepo
-    
-    TokenService --> MetricsService
+    Controllers --> ASConfig
+
+    ASConfig --> UserDetailsSvc
+    ASConfig --> RegRepo
+    ASConfig --> JwtCustomizer
+    ASConfig --> JwtDecoder
+    ASConfig --> JwkSource
+
+    JwkSource --> JwkProvider
+
+    RegRepo --> DB[(PostgreSQL)]
+
+    note right of UserDetailsSvc: Demo users in-memory (non-persistent)
+    note right of RegRepo: OAuth2 clients stored in PostgreSQL
 ```
+
+> NOTE: User accounts and authorization data are currently held in-memory. This is suitable for
+> local development, tests, and demos, but **not** for production. For production deployments,
+> plan to replace the in-memory user store and token storage with persistent implementations
+> backed by your identity store and database.
 
 ## Request Flow Architecture
 
