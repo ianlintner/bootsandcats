@@ -85,25 +85,42 @@ public class AuthorizationServerConfig {
     @Order(1)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
             throws Exception {
-        // Apply default security for authorization server endpoints (JWKS, OpenID config are
-        // public)
-        OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+        OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
+                new OAuth2AuthorizationServerConfigurer();
 
-        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
-                .oidc(
-                        oidc ->
-                                oidc.providerConfigurationEndpoint(
-                                        providerConfig ->
-                                                providerConfig.providerConfigurationCustomizer(
-                                                        config ->
-                                                                config.idTokenSigningAlgorithms(
-                                                                        algs -> {
-                                                                            algs.clear();
-                                                                            algs.add("ES256");
-                                                                        }))));
+        http.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
+                .with(
+                        authorizationServerConfigurer,
+                        (authorizationServer) ->
+                                authorizationServer.oidc(
+                                        oidc ->
+                                                oidc.providerConfigurationEndpoint(
+                                                        providerConfig ->
+                                                                providerConfig
+                                                                        .providerConfigurationCustomizer(
+                                                                                config ->
+                                                                                        config
+                                                                                                .idTokenSigningAlgorithms(
+                                                                                                        algs -> {
+                                                                                                            algs
+                                                                                                                    .clear();
+                                                                                                            algs
+                                                                                                                    .add(
+                                                                                                                            "ES256");
+                                                                                                        })))))
+                .authorizeHttpRequests(
+                        authorize ->
+                                authorize
+                                        .requestMatchers(
+                                                "/.well-known/openid-configuration",
+                                                "/.well-known/jwks.json",
+                                                "/oauth2/jwks")
+                                        .permitAll()
+                                        .anyRequest()
+                                        .authenticated())
 
-        // Redirect to the login page when not authenticated from the authorization endpoint
-        http.exceptionHandling(
+                // Redirect to the login page when not authenticated from the authorization endpoint
+                .exceptionHandling(
                         (exceptions) ->
                                 exceptions.defaultAuthenticationEntryPointFor(
                                         new LoginUrlAuthenticationEntryPoint("/login"),
