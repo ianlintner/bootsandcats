@@ -16,6 +16,7 @@ on:
 
 env:
   JAVA_VERSION: '21'
+  GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2'
   # Default load test configuration (can be overridden via workflow_dispatch inputs)
   LOAD_TEST_USERS: ${{ github.event.inputs.load_test_users || '50' }}
   LOAD_TEST_RAMP_UP: ${{ github.event.inputs.load_test_ramp_up || '30' }}
@@ -38,18 +39,13 @@ jobs:
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
-          cache: 'maven'
+          cache: 'gradle'
 
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Build application JAR
-        run: mvn -B package -DskipTests --file pom.xml
+        run: ./gradlew :server-ui:bootJar -x test
 
       - name: Start Docker Compose environment
         run: |
@@ -212,8 +208,7 @@ jobs:
       - name: Run load tests
         continue-on-error: true
         run: |
-          mvn -B gatling:test -Pload-test \
-            -Dgatling.simulationClass=com.bootsandcats.oauth2.load.OAuth2LoadSimulation \
+          ./gradlew :gatling:gatlingRun \
             -DbaseUrl=http://localhost:9000 \
             -Dusers=${{ env.LOAD_TEST_USERS }} \
             -DrampUp=${{ env.LOAD_TEST_RAMP_UP }}
@@ -242,4 +237,4 @@ jobs:
         if: always()
         with:
           name: load-test-report
-          path: target/gatling/
+          path: gatling/build/reports/gatling/
