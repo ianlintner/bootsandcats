@@ -7,6 +7,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.RequestCache;
+import org.springframework.security.web.savedrequest.SavedRequest;
 import org.springframework.stereotype.Component;
 
 import com.bootsandcats.oauth2.model.User;
@@ -16,14 +19,23 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+/**
+ * Handles successful federated identity (GitHub, Google, etc.) authentication.
+ * After federated login completes, this handler:
+ * 1. Creates or updates the user record in the database
+ * 2. Redirects back to the original saved request (typically /oauth2/authorize for the OAuth2 flow)
+ */
 @Component
 public class FederatedIdentityAuthenticationSuccessHandler
         extends SavedRequestAwareAuthenticationSuccessHandler {
 
     private final UserRepository userRepository;
+    private final RequestCache requestCache = new HttpSessionRequestCache();
 
     public FederatedIdentityAuthenticationSuccessHandler(UserRepository userRepository) {
         this.userRepository = userRepository;
+        // Ensure we use the session-based request cache
+        setRequestCache(requestCache);
     }
 
     @Override
