@@ -23,8 +23,15 @@ spec:
         - containerPort: 8080
           name: http
         env:
-        - name: OAUTH2_ISSUER_URI
-          value: "https://oauth.bigboy.example.com"
+        - name: OAUTH2_AUTHORIZATION_URI
+          value: "https://oauth2.cat-herding.net/oauth2/authorize"
+        - name: OAUTH2_CLIENT_ID
+          value: "canary-app"
+        - name: OAUTH2_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: demo-client-secret
       nodeSelector:
         kubernetes.io/arch: amd64
       tolerations:

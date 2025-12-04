@@ -1,0 +1,39 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: oauth2-server
+  namespace: default
+spec:
+  hosts:
+  - oauth2.cat-herding.net
+  gateways:
+  - istio-ingress/cat-herding-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: oauth2-server
+        port:
+          number: 9000
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: canary-app
+  namespace: default
+spec:
+  hosts:
+  - canary.cat-herding.net
+  gateways:
+  - istio-ingress/cat-herding-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: canary-app
+        port:
+          number: 80
