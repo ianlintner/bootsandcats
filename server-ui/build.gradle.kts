@@ -6,6 +6,7 @@ plugins {
 
 dependencies {
     implementation(project(":server-logic"))
+    implementation(project(":server-dao"))
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.security:spring-security-oauth2-authorization-server:1.2.4")
