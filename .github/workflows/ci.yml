@@ -82,10 +82,13 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: ${{ env.JAVA_VERSION }}
-          cache: 'maven'
+          cache: 'gradle'
 
-      - name: Run integration tests only
-        run: ./mvnw -T 1C --batch-mode -DskipTests -DskipITs=false verify
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run integration tests
+        run: ./gradlew integrationTest --continue
 
       - name: Upload IT reports (always)
         if: always()
@@ -93,7 +96,7 @@ jobs:
         with:
           name: failsafe-reports
           path: |
-            target/failsafe-reports/**
+            **/build/reports/tests/integrationTest/**
           if-no-files-found: ignore
 
   static-analysis:
@@ -109,10 +112,13 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: ${{ env.JAVA_VERSION }}
-          cache: 'maven'
+          cache: 'gradle'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
       - name: SpotBugs
-        run: ./mvnw -T 1C --batch-mode spotbugs:check
+        run: ./gradlew spotbugsMain
 
       - name: Upload SpotBugs report (always)
         if: always()
@@ -120,8 +126,7 @@ jobs:
         with:
           name: spotbugs-reports
           path: |
-            target/spotbugsXml.xml
-            target/spotbugsHtml.html
+            **/build/reports/spotbugs/**
           if-no-files-found: ignore
 
   smoke:
