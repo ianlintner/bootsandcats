@@ -125,7 +125,7 @@ public class JwkSetProvider {
 
         SecretClient client = secretClientProvider.getIfAvailable();
         if (client == null) {
-            throw new IllegalStateException(
+            return fallbackToStaticOrThrow(
                     "Azure Key Vault is enabled but SecretClient is not available");
         }
 
@@ -135,7 +135,7 @@ public class JwkSetProvider {
             return cachedKeyVaultSet;
         }
 
-        throw new IllegalStateException(
+        return fallbackToStaticOrThrow(
                 "Failed to load JWK from Azure Key Vault and no static JWK configured");
     }
 
@@ -163,25 +163,40 @@ public class JwkSetProvider {
                         "FATAL: Azure Key Vault secret '{}' not found.",
                         keyVaultSettings.jwkSecretName(),
                         ex);
-                throw new IllegalStateException(
-                        "Azure Key Vault secret '"
-                                + keyVaultSettings.jwkSecretName()
-                                + "' not found",
-                        ex);
+                fallbackToStaticOrThrow(
+                    "Azure Key Vault secret '"
+                        + keyVaultSettings.jwkSecretName()
+                        + "' not found",
+                    ex);
             } catch (ParseException ex) {
                 LOGGER.error(
                         "FATAL: Failed to parse JWK Set from Azure Key Vault secret '{}'.",
                         keyVaultSettings.jwkSecretName(),
                         ex);
-                throw new IllegalStateException("Failed to parse JWK Set from Azure Key Vault", ex);
+                fallbackToStaticOrThrow("Failed to parse JWK Set from Azure Key Vault", ex);
             } catch (RuntimeException ex) {
                 LOGGER.error(
                         "FATAL: Unexpected error while loading JWK Set from Azure Key Vault.", ex);
-                throw new IllegalStateException(
-                        "Unexpected error loading JWK from Azure Key Vault", ex);
+                fallbackToStaticOrThrow(
+                    "Unexpected error loading JWK from Azure Key Vault", ex);
             }
         }
     }
+
+            private JWKSet fallbackToStaticOrThrow(String message) {
+            return fallbackToStaticOrThrow(message, null);
+            }
+
+            private JWKSet fallbackToStaticOrThrow(String message, Exception cause) {
+            if (staticJwkSet != null) {
+                LOGGER.warn("{} Falling back to static JWK configuration.", message);
+                cachedKeyVaultSet = staticJwkSet;
+                cacheExpiresAt = Instant.now().plus(cacheTtl);
+                return staticJwkSet;
+            }
+
+            throw new IllegalStateException(message, cause);
+            }
 
     private long cachedKeyCount() {
         return cachedKeyVaultSet == null ? 0 : cachedKeyVaultSet.getKeys().size();
