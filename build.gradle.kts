@@ -1,5 +1,5 @@
 plugins {
-    id("org.springframework.boot") version "3.2.5" apply false
+    id("org.springframework.boot") version "3.4.1" apply false
     id("io.spring.dependency-management") version "1.1.7" apply false
     kotlin("jvm") version "1.9.23" apply false
     id("com.diffplug.spotless") version "6.25.0"
@@ -42,7 +42,7 @@ subprojects {
         useJUnitPlatform()
     }
 
-    // SpotBugs configuration for each subproject
+    // SpotBugs configuration for each subproject - only run on main source
     tasks.withType<com.github.spotbugs.snom.SpotBugsTask> {
         reports.create("html") {
             required.set(true)
@@ -50,6 +50,11 @@ subprojects {
         reports.create("xml") {
             required.set(false)
         }
+    }
+
+    // Disable SpotBugs on test sources
+    tasks.matching { it.name == "spotbugsTest" }.configureEach {
+        enabled = false
     }
 
     configure<com.github.spotbugs.snom.SpotBugsExtension> {

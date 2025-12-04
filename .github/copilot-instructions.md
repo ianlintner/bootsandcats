@@ -4,7 +4,7 @@ This is a Spring Boot OAuth2 Authorization Server with OpenID Connect (OIDC), PK
 
 ## Project Overview
 
-- **Framework**: Spring Boot 3.2.x with Spring Security OAuth2 Authorization Server
+- **Framework**: Spring Boot 3.4.x with Spring Security OAuth2 Authorization Server
 - **Language**: Java 21
 - **Build Tool**: Gradle 9.0 (multi-module Kotlin DSL)
 - **Key Features**: OAuth 2.1, OIDC 1.0, PKCE, JWT tokens, OpenTelemetry, Prometheus metrics

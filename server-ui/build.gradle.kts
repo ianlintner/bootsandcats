@@ -1,5 +1,5 @@
 plugins {
-    id("org.springframework.boot") version "3.2.5"
+    id("org.springframework.boot") version "3.4.1"
     id("io.spring.dependency-management")
     id("java")
 }
@@ -34,6 +34,7 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers:1.19.7")
     testImplementation("org.testcontainers:postgresql:1.19.7")
     testImplementation("org.testcontainers:junit-jupiter:1.19.7")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     
     compileOnly("org.projectlombok:lombok:1.18.32")
     annotationProcessor("org.projectlombok:lombok:1.18.32")
