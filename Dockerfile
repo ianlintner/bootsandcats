@@ -14,6 +14,7 @@ COPY gradle.properties ./
 COPY server-ui/build.gradle.kts server-ui/
 COPY server-logic/build.gradle.kts server-logic/
 COPY server-dao/build.gradle.kts server-dao/
+COPY canary-app/build.gradle.kts canary-app/
 
 # Download dependencies with retry logic
 RUN chmod +x gradlew && \
@@ -26,6 +27,7 @@ RUN chmod +x gradlew && \
 COPY server-ui/src server-ui/src
 COPY server-logic/src server-logic/src
 COPY server-dao/src server-dao/src
+COPY canary-app/src canary-app/src
 
 # Build the application with retry logic
 RUN for i in 1 2 3; do \
