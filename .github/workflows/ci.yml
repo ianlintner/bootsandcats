@@ -26,7 +26,6 @@ concurrency:
 
 env:
   JAVA_VERSION: '21'
-  GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2'
 
 jobs:
   build-unit:
@@ -41,18 +40,15 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: ${{ env.JAVA_VERSION }}
-          cache: 'gradle'
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.0.0'
-
-      - name: Validate formatting
-        run: gradle spotlessCheck
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
       - name: Build & run unit tests
-        run: gradle build
+        run: gradle spotlessCheck build --build-cache --parallel
 
       - name: Upload test reports (always)
         if: always()
@@ -84,15 +80,15 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: ${{ env.JAVA_VERSION }}
-          cache: 'gradle'
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.0.0'
+          cache-read-only: true
 
       - name: Run integration tests
-        run: gradle integrationTest --continue
+        run: gradle integrationTest --continue --build-cache --parallel
 
       - name: Upload IT reports (always)
         if: always()
@@ -116,15 +112,15 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: ${{ env.JAVA_VERSION }}
-          cache: 'gradle'
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '9.0.0'
+          cache-read-only: true
 
       - name: SpotBugs
-        run: gradle spotbugsMain
+        run: gradle spotbugsMain --build-cache --parallel
 
       - name: Upload SpotBugs report (always)
         if: always()
@@ -149,7 +145,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: ${{ env.JAVA_VERSION }}
-          cache: 'gradle'
 
       - name: Download packaged JAR
         uses: actions/download-artifact@v4

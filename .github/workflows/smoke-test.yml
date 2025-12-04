@@ -7,7 +7,6 @@ on:
 
 env:
   JAVA_VERSION: '21'
-  GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2'
   # Test client credentials (these are demo/test values already present in the codebase)
   TEST_CLIENT_ID: 'm2m-client'
   TEST_CLIENT_SECRET: 'm2m-secret'
@@ -27,7 +26,6 @@ jobs:
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
-          cache: 'gradle'
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -35,7 +33,7 @@ jobs:
           gradle-version: '9.0.0'
 
       - name: Build application JAR
-        run: gradle :server-ui:bootJar -x test
+        run: gradle :server-ui:bootJar -x test --build-cache --parallel
 
       - name: Start Docker Compose environment
         run: |
