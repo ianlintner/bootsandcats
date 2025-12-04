@@ -215,7 +215,6 @@ public class AuthorizationServerConfig {
                 () ->
                         buildConfidentialClient(
                                 passwordEncoder.encode(demoClientSecret),
-                                passwordEncoder,
                                 UUID.randomUUID().toString()));
 
         registerClientIfMissing(
@@ -241,8 +240,7 @@ public class AuthorizationServerConfig {
         }
     }
 
-    private RegisteredClient buildConfidentialClient(
-            String encodedSecret, PasswordEncoder passwordEncoder, String id) {
+        private RegisteredClient buildConfidentialClient(String encodedSecret, String id) {
         return RegisteredClient.withId(id)
                 .clientId("demo-client")
                 .clientSecret(encodedSecret)
