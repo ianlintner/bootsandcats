@@ -4,7 +4,8 @@ FROM eclipse-temurin:21-jdk AS builder
 WORKDIR /app
 
 # Copy the pre-built JAR (provided by CI or local build)
-COPY server-ui/build/libs/oauth2-server-*.jar app.jar
+# Gradle bootJar currently produces: server-ui/build/libs/server-ui-1.0.0-SNAPSHOT.jar
+COPY server-ui/build/libs/server-ui-1.0.0-SNAPSHOT.jar app.jar
 
 # Extract layers for optimized Docker image
 RUN java -Djarmode=layertools -jar app.jar extract
