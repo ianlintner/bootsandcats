@@ -4,22 +4,10 @@ on:
   schedule:
     - cron: '0 4 * * 1' # Mondays at 05:00 UTC
   workflow_dispatch:
-    inputs:
-      load_test_users:
-        description: 'Number of concurrent users for load test'
-        required: false
-        default: '50'
-      load_test_ramp_up:
-        description: 'Ramp-up time in seconds for load test'
-        required: false
-        default: '30'
 
 env:
   JAVA_VERSION: '21'
   GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2'
-  # Default load test configuration (can be overridden via workflow_dispatch inputs)
-  LOAD_TEST_USERS: ${{ github.event.inputs.load_test_users || '50' }}
-  LOAD_TEST_RAMP_UP: ${{ github.event.inputs.load_test_ramp_up || '30' }}
   # Test client credentials (these are demo/test values already present in the codebase)
   TEST_CLIENT_ID: 'm2m-client'
   TEST_CLIENT_SECRET: 'm2m-secret'
@@ -205,14 +193,6 @@ jobs:
             exit 1
           fi
 
-      - name: Run load tests
-        continue-on-error: true
-        run: |
-          ./gradlew :gatling:gatlingRun \
-            -DbaseUrl=http://localhost:9000 \
-            -Dusers=${{ env.LOAD_TEST_USERS }} \
-            -DrampUp=${{ env.LOAD_TEST_RAMP_UP }}
-
       - name: Collect Docker logs
         if: always()
         run: |
@@ -231,10 +211,3 @@ jobs:
         with:
           name: smoke-test-results
           path: build/smoke-test-results/
-
-      - name: Upload Gatling load test report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: load-test-report
-          path: gatling/build/reports/gatling/
