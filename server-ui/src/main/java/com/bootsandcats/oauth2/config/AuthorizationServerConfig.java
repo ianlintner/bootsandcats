@@ -108,6 +108,10 @@ public class AuthorizationServerConfig {
                                                                                                                     .add(
                                                                                                                             "ES256");
                                                                                                         })))))
+                .csrf(
+                        csrf ->
+                                csrf.ignoringRequestMatchers(
+                                        authorizationServerConfigurer.getEndpointsMatcher()))
                 .authorizeHttpRequests(
                         authorize ->
                                 authorize
@@ -118,7 +122,6 @@ public class AuthorizationServerConfig {
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated())
-
                 // Redirect to the login page when not authenticated from the authorization endpoint
                 .exceptionHandling(
                         (exceptions) ->
