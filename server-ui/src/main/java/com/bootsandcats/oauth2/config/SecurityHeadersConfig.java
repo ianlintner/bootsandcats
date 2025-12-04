@@ -39,14 +39,7 @@ public class SecurityHeadersConfig {
                                         referrer ->
                                                 referrer.policy(
                                                         ReferrerPolicyHeaderWriter.ReferrerPolicy
-                                                                .STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
-                                .permissionsPolicy(
-                                        permissions ->
-                                                permissions.policy(
-                                                        "geolocation=(), "
-                                                                + "camera=(), "
-                                                                + "microphone=(), "
-                                                                + "payment=()")));
+                                                                .STRICT_ORIGIN_WHEN_CROSS_ORIGIN)));
     }
 
     @Bean

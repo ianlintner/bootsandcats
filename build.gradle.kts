@@ -1,9 +1,9 @@
 plugins {
     id("org.springframework.boot") version "3.4.1" apply false
     id("io.spring.dependency-management") version "1.1.7" apply false
-    kotlin("jvm") version "1.9.23" apply false
+    kotlin("jvm") version "2.1.0" apply false
     id("com.diffplug.spotless") version "6.25.0"
-    id("com.github.spotbugs") version "6.0.26" apply false
+    id("com.github.spotbugs") version "6.1.4" apply false
     id("org.owasp.dependencycheck") version "10.0.3"
 }
 
@@ -45,8 +45,8 @@ subprojects {
             mavenBom(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
         }
         dependencies {
-            dependency("org.flywaydb:flyway-core:11.1.0")
-            dependency("org.flywaydb:flyway-database-postgresql:11.1.0")
+            dependency("org.flywaydb:flyway-core:11.2.0")
+            dependency("org.flywaydb:flyway-database-postgresql:11.2.0")
         }
     }
 

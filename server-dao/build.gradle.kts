@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-    implementation(platform("org.springframework.boot:spring-boot-dependencies:3.2.5"))
+    implementation(platform("org.springframework.boot:spring-boot-dependencies:3.4.1"))
     api("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-security")

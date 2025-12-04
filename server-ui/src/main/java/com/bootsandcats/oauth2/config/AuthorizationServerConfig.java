@@ -85,18 +85,29 @@ public class AuthorizationServerConfig {
     @Order(1)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
             throws Exception {
-        OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+        OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
+                new OAuth2AuthorizationServerConfigurer();
 
-        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
-                .oidc(oidc -> oidc
-                        .providerConfigurationEndpoint(providerConfig -> providerConfig
-                                .providerConfigurationCustomizer(config -> config
-                                        .idTokenSigningAlgorithms(algs -> {
-                                            algs.clear();
-                                            algs.add("ES256");
-                                        })))); // Advertise ES256 for ID tokens
-
-        http
+        http.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
+                .with(
+                        authorizationServerConfigurer,
+                        (authorizationServer) ->
+                                authorizationServer.oidc(
+                                        oidc ->
+                                                oidc.providerConfigurationEndpoint(
+                                                        providerConfig ->
+                                                                providerConfig
+                                                                        .providerConfigurationCustomizer(
+                                                                                config ->
+                                                                                        config
+                                                                                                .idTokenSigningAlgorithms(
+                                                                                                        algs -> {
+                                                                                                            algs
+                                                                                                                    .clear();
+                                                                                                            algs.add(
+                                                                                                                    "ES256");
+                                                                                                        })))))
+                .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
                 // Redirect to the login page when not authenticated from the
                 // authorization endpoint
                 .exceptionHandling(
