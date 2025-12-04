@@ -39,6 +39,17 @@ subprojects {
         }
     }
 
+    // Override Flyway version from Spring Boot BOM
+    the<io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension>().apply {
+        imports {
+            mavenBom(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
+        }
+        dependencies {
+            dependency("org.flywaydb:flyway-core:11.1.0")
+            dependency("org.flywaydb:flyway-database-postgresql:11.1.0")
+        }
+    }
+
     tasks.withType<Test> {
         useJUnitPlatform()
     }
