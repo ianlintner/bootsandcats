@@ -25,7 +25,9 @@ COPY server-logic/src server-logic/src
 COPY server-dao/src server-dao/src
 
 # Build the application
-RUN ./gradlew :server-ui:bootJar --no-daemon -x test
+RUN ./gradlew :server-ui:bootJar --no-daemon -x test && \
+    echo "Checking for JAR files:" && \
+    find . -name "*.jar" -type f
 
 # Extract layers for optimized Docker image
 RUN java -Djarmode=layertools -jar server-ui/build/libs/oauth2-server-*.jar extract
