@@ -5,6 +5,7 @@ plugins {
     id("com.diffplug.spotless") version "6.25.0"
     id("com.github.spotbugs") version "6.0.26" apply false
     id("org.owasp.dependencycheck") version "10.0.3"
+    id("io.gatling.gradle") version "3.11.5.2" apply false
 }
 
 allprojects {
