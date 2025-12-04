@@ -64,7 +64,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-jar
-          path: server-ui/build/libs/*.jar
+          path: |
+            server-ui/build/libs/*.jar
+            !server-ui/build/libs/*-plain.jar
           if-no-files-found: error
 
   static-analysis:
@@ -125,13 +127,15 @@ jobs:
 
       - name: Run app
         run: |
-          OTEL_SDK_DISABLED=true nohup java -jar server-ui/build/libs/*.jar --server.port=9000 > app.log 2>&1 &
+          JAR_FILE=$(ls server-ui/build/libs/*.jar | grep -v plain | head -1)
+          echo "Starting JAR: $JAR_FILE"
+          OTEL_SDK_DISABLED=true nohup java -jar "$JAR_FILE" --server.port=9000 > app.log 2>&1 &
           echo $! > app.pid
 
       - name: Wait for health endpoint
         run: |
           for i in {1..60}; do
-            if curl -fsS http://localhost:9000/actuator/health | grep -q '"status"\s*:\s*"UP"'; then
+            if curl -fsS --connect-timeout 5 --max-time 10 http://localhost:9000/actuator/health | grep -q '"status"\s*:\s*"UP"'; then
               echo "App is healthy"; exit 0;
             fi
             sleep 2
@@ -140,7 +144,7 @@ jobs:
 
       - name: Verify OIDC discovery document
         run: |
-          curl -fsS http://localhost:9000/.well-known/openid-configuration -o discovery.json
+          curl -fsS --connect-timeout 5 --max-time 10 http://localhost:9000/.well-known/openid-configuration -o discovery.json
           test -s discovery.json
           jq -e '.issuer | length > 0' discovery.json
           jq -e '.authorization_endpoint | length > 0' discovery.json
