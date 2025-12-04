@@ -5,8 +5,6 @@ import org.springframework.test.context.ActiveProfiles;
 
 import com.bootsandcats.oauth2.config.TestOAuth2ClientConfiguration;
 
-import com.bootsandcats.oauth2.config.TestOAuth2ClientConfiguration;
-
 @SpringBootTest
 @ActiveProfiles("test")
 @Import(TestOAuth2ClientConfiguration.class)

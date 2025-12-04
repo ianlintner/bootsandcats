@@ -18,7 +18,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
@@ -59,8 +58,7 @@ import com.nimbusds.jose.proc.SecurityContext;
 @EnableWebSecurity
 public class AuthorizationServerConfig {
 
-        private static final Logger log =
-                        LoggerFactory.getLogger(AuthorizationServerConfig.class);
+    private static final Logger log = LoggerFactory.getLogger(AuthorizationServerConfig.class);
 
     @Value("${oauth2.issuer-url:http://localhost:9000}")
     private String issuerUrl;
@@ -218,9 +216,7 @@ public class AuthorizationServerConfig {
                                 UUID.randomUUID().toString()));
 
         registerClientIfMissing(
-                repository,
-                "public-client",
-                () -> buildPublicClient(UUID.randomUUID().toString()));
+                repository, "public-client", () -> buildPublicClient(UUID.randomUUID().toString()));
 
         registerClientIfMissing(
                 repository,
@@ -240,7 +236,7 @@ public class AuthorizationServerConfig {
         }
     }
 
-        private RegisteredClient buildConfidentialClient(String encodedSecret, String id) {
+    private RegisteredClient buildConfidentialClient(String encodedSecret, String id) {
         return RegisteredClient.withId(id)
                 .clientId("demo-client")
                 .clientSecret(encodedSecret)
@@ -307,9 +303,7 @@ public class AuthorizationServerConfig {
                 .scope("api:read")
                 .scope("api:write")
                 .tokenSettings(
-                        TokenSettings.builder()
-                                .accessTokenTimeToLive(Duration.ofHours(1))
-                                .build())
+                        TokenSettings.builder().accessTokenTimeToLive(Duration.ofHours(1)).build())
                 .build();
     }
 
