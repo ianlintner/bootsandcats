@@ -185,6 +185,12 @@ jobs:
           name: app-jar
           path: server-ui/build/libs
 
+      - name: Verify JAR artifact
+        run: |
+          echo "Checking for JAR file..."
+          ls -la server-ui/build/libs/
+          file server-ui/build/libs/*.jar
+
       - name: Azure Login
         uses: azure/login@v2
         with:
