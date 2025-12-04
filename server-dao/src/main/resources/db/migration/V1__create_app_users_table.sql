@@ -1,6 +1,6 @@
 -- Create app_users table for federated identity users
 CREATE TABLE IF NOT EXISTS app_users (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     username VARCHAR(255),
     email VARCHAR(255),
     provider VARCHAR(100) NOT NULL,
