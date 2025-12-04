@@ -143,20 +143,20 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: ${{ env.JAVA_VERSION }}
-          cache: 'maven'
+          cache: 'gradle'
 
       - name: Download packaged JAR
         uses: actions/download-artifact@v4
         with:
           name: app-jar
-          path: target
+          path: server-ui/build/libs
 
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
       - name: Run app
         run: |
-          OTEL_SDK_DISABLED=true nohup java -jar target/*.jar --server.port=9000 > app.log 2>&1 &
+          OTEL_SDK_DISABLED=true nohup java -jar server-ui/build/libs/*.jar --server.port=9000 > app.log 2>&1 &
           echo $! > app.pid
 
       - name: Wait for health endpoint
@@ -181,7 +181,7 @@ jobs:
         run: |
           if [ -f app.pid ]; then kill $(cat app.pid) || true; fi
           sleep 2 || true
-          pkill -f 'java -jar target' || true
+          pkill -f 'java -jar server-ui' || true
 
       - name: Upload app logs (always)
         if: always()
@@ -210,7 +210,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: app-jar
-          path: target
+          path: server-ui/build/libs
 
       - name: Azure Login
         uses: azure/login@v2
