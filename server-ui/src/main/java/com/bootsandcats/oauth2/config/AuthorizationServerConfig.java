@@ -246,6 +246,14 @@ public class AuthorizationServerConfig {
                 "m2m-client",
                 () -> buildMachineToMachineClient(passwordEncoder.encode(m2mClientSecret)));
 
+        registerClientIfMissing(
+                repository,
+                "canary-app",
+                () ->
+                        buildCanaryClient(
+                                passwordEncoder.encode(demoClientSecret),
+                                UUID.randomUUID().toString()));
+
         return repository;
     }
 
@@ -327,6 +335,34 @@ public class AuthorizationServerConfig {
                 .scope("api:write")
                 .tokenSettings(
                         TokenSettings.builder().accessTokenTimeToLive(Duration.ofHours(1)).build())
+                .build();
+    }
+
+    private RegisteredClient buildCanaryClient(String encodedSecret, String id) {
+        return RegisteredClient.withId(id)
+                .clientId("canary-app")
+                .clientSecret(encodedSecret)
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
+                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                .redirectUri("https://canary.cat-herding.net/login/oauth2/code/oauth2-server")
+                .redirectUri("http://localhost:8080/login/oauth2/code/oauth2-server")
+                .postLogoutRedirectUri("https://canary.cat-herding.net/")
+                .scope(OidcScopes.OPENID)
+                .scope(OidcScopes.PROFILE)
+                .scope(OidcScopes.EMAIL)
+                .tokenSettings(
+                        TokenSettings.builder()
+                                .accessTokenTimeToLive(Duration.ofMinutes(15))
+                                .refreshTokenTimeToLive(Duration.ofDays(7))
+                                .reuseRefreshTokens(false)
+                                .build())
+                .clientSettings(
+                        ClientSettings.builder()
+                                .requireAuthorizationConsent(true)
+                                .requireProofKey(false)
+                                .build())
                 .build();
     }
 
