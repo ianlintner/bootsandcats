@@ -29,6 +29,7 @@ class JwkSetProviderTest {
         properties.setVaultUri("https://example.vault.azure.net/");
         properties.setJwkSecretName("oauth2-jwk");
         properties.setCacheTtl(Duration.ofMinutes(5));
+        properties.setStaticJwk(JwkSupport.generateEcSigningKey().toJSONString());
     }
 
     @Test
