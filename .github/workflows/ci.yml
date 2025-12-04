@@ -26,7 +26,7 @@ concurrency:
 
 env:
   JAVA_VERSION: '21'
-  MAVEN_OPTS: '-Dmaven.wagon.http.retryHandler.count=3 -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn'
+  GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2'
 
 jobs:
   build-unit:
@@ -41,13 +41,16 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: ${{ env.JAVA_VERSION }}
-          cache: 'maven'
+          cache: 'gradle'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Validate formatting
-        run: ./mvnw --batch-mode spotless:check
+        run: ./gradlew spotlessCheck
 
-      - name: Build & run unit tests (skip ITs)
-        run: ./mvnw -T 1C --batch-mode --update-snapshots -DskipITs verify
+      - name: Build & run unit tests
+        run: ./gradlew build
 
       - name: Upload test reports (always)
         if: always()
@@ -55,15 +58,15 @@ jobs:
         with:
           name: surefire-reports
           path: |
-            target/surefire-reports/**
-            target/site/jacoco/**
+            **/build/reports/tests/**
+            **/build/reports/jacoco/**
           if-no-files-found: ignore
 
       - name: Upload packaged JAR
         uses: actions/upload-artifact@v4
         with:
           name: app-jar
-          path: target/*.jar
+          path: server-ui/build/libs/*.jar
           if-no-files-found: error
 
   integration:
