@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
@@ -178,13 +179,13 @@ public class AuthorizationServerConfig {
     }
 
     /**
-     * Password encoder using BCrypt.
+     * Password encoder using DelegatingPasswordEncoder to support {noop} and {bcrypt} prefixes.
      *
-     * @return BCryptPasswordEncoder
+     * @return DelegatingPasswordEncoder
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(12);
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
     /**
@@ -205,7 +206,7 @@ public class AuthorizationServerConfig {
         RegisteredClient confidentialClient =
                 RegisteredClient.withId(UUID.randomUUID().toString())
                         .clientId("demo-client")
-                        .clientSecret(passwordEncoder.encode(demoClientSecret))
+                        .clientSecret("{bcrypt}" + passwordEncoder.encode(demoClientSecret))
                         .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                         .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
                         .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
@@ -263,7 +264,7 @@ public class AuthorizationServerConfig {
         RegisteredClient m2mClient =
                 RegisteredClient.withId(UUID.randomUUID().toString())
                         .clientId("m2m-client")
-                        .clientSecret(passwordEncoder.encode(m2mClientSecret))
+                        .clientSecret("{bcrypt}" + passwordEncoder.encode(m2mClientSecret))
                         .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                         .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
                         .scope("api:read")

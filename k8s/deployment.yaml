@@ -7,7 +7,7 @@ metadata:
     app: oauth2-server
     version: v1
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: oauth2-server
@@ -136,7 +136,7 @@ spec:
           httpGet:
             path: /actuator/health/liveness
             port: 9000
-          initialDelaySeconds: 50
+          initialDelaySeconds: 45
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 10
@@ -144,16 +144,16 @@ spec:
           httpGet:
             path: /actuator/health/liveness
             port: 9000
-          initialDelaySeconds: 60
-          periodSeconds: 15
+          initialDelaySeconds: 45
+          periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 6
         readinessProbe:
           httpGet:
             path: /actuator/health/readiness
             port: 9000
-          initialDelaySeconds: 60
-          periodSeconds: 15
+          initialDelaySeconds: 45
+          periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 6
         securityContext:
