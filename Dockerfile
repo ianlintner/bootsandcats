@@ -3,13 +3,29 @@ FROM eclipse-temurin:21-jdk AS builder
 
 WORKDIR /app
 
-# Copy everything needed for build
-COPY . .
+# Copy Gradle files
+COPY gradlew .
+COPY gradle gradle
+COPY settings.gradle.kts .
+COPY build.gradle.kts .
+COPY gradle.properties .
+
+# Copy module build files
+COPY server-ui/build.gradle.kts server-ui/
+COPY server-logic/build.gradle.kts server-logic/
+COPY server-dao/build.gradle.kts server-dao/
+COPY canary-app/build.gradle.kts canary-app/
+
+# Download dependencies (separate layer for caching)
+RUN chmod +x gradlew && ./gradlew dependencies --no-daemon
+
+# Copy source code
+COPY server-ui/src server-ui/src
+COPY server-logic/src server-logic/src
+COPY server-dao/src server-dao/src
 
 # Build the application
-RUN chmod +x gradlew && \
-    ./gradlew :server-ui:bootJar --no-daemon -x test && \
-    ls -la server-ui/build/libs/
+RUN ./gradlew :server-ui:bootJar --no-daemon -x test
 
 # Extract layers for optimized Docker image
 RUN java -Djarmode=layertools -jar server-ui/build/libs/oauth2-server-*.jar extract
