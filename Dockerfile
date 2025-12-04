@@ -31,7 +31,9 @@ COPY server-dao/src server-dao/src
 RUN for i in 1 2 3; do \
         ./gradlew :server-ui:bootJar --no-daemon -x test && break || \
         { echo "Attempt $i failed, retrying in 10s..."; sleep 10; }; \
-    done
+    done && \
+    echo "Build completed, checking for JAR file..." && \
+    ls -la server-ui/build/libs/
 
 # Extract layers for optimized Docker image
 RUN java -Djarmode=layertools -jar server-ui/build/libs/oauth2-server-*.jar extract
