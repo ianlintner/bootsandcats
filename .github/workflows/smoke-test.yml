@@ -33,7 +33,7 @@ jobs:
           gradle-version: '9.0.0'
 
       - name: Build application JAR
-        run: gradle :server-ui:bootJar -x test --build-cache --parallel
+        run: gradle :server-ui:bootJar -x test --no-daemon --build-cache --parallel
 
       - name: Start Docker Compose environment
         run: |

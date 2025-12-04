@@ -48,7 +48,7 @@ jobs:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
       - name: Build & run unit tests
-        run: gradle spotlessCheck build --build-cache --parallel
+        run: gradle spotlessCheck build --no-daemon --build-cache --parallel
 
       - name: Upload test reports (always)
         if: always()
@@ -88,7 +88,7 @@ jobs:
           cache-read-only: true
 
       - name: SpotBugs
-        run: gradle spotbugsMain --build-cache --parallel
+        run: gradle spotbugsMain --no-daemon --build-cache --parallel
 
       - name: Upload SpotBugs report (always)
         if: always()
