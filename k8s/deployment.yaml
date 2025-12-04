@@ -132,11 +132,19 @@ spec:
           limits:
             memory: "512Mi"
             cpu: "250m"
+        startupProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 9000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 30
         livenessProbe:
           httpGet:
             path: /actuator/health/liveness
             port: 9000
-          initialDelaySeconds: 120
+          initialDelaySeconds: 150
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
