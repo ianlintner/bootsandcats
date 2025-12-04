@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -78,8 +79,7 @@ class JwtTokenTest {
                         StandardCharsets.UTF_8);
         JsonNode header = objectMapper.readTree(headerJson);
 
-        org.assertj.core.api.Assertions.assertThat(header.get("alg").asText())
-                .isEqualTo("ES256");
+        org.assertj.core.api.Assertions.assertThat(header.get("alg").asText()).isEqualTo("ES256");
     }
 
     @Test

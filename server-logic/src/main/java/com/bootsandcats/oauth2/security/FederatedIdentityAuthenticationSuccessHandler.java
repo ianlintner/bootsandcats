@@ -20,10 +20,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
- * Handles successful federated identity (GitHub, Google, etc.) authentication.
- * After federated login completes, this handler:
- * 1. Creates or updates the user record in the database
- * 2. Redirects back to the original saved request (typically /oauth2/authorize for the OAuth2 flow)
+ * Handles successful federated identity (GitHub, Google, etc.) authentication. After federated
+ * login completes, this handler: 1. Creates or updates the user record in the database 2. Redirects
+ * back to the original saved request (typically /oauth2/authorize for the OAuth2 flow)
  */
 @Component
 public class FederatedIdentityAuthenticationSuccessHandler
