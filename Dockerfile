@@ -3,38 +3,12 @@ FROM eclipse-temurin:21-jdk AS builder
 
 WORKDIR /app
 
-# Copy Gradle wrapper and build files
-COPY gradlew ./
-COPY gradle gradle
-COPY settings.gradle.kts ./
-COPY build.gradle.kts ./
-COPY gradle.properties ./
+# Copy everything needed for build
+COPY . .
 
-# Copy all module build files first for better caching
-COPY server-ui/build.gradle.kts server-ui/
-COPY server-logic/build.gradle.kts server-logic/
-COPY server-dao/build.gradle.kts server-dao/
-COPY canary-app/build.gradle.kts canary-app/
-
-# Download dependencies with retry logic
+# Build the application
 RUN chmod +x gradlew && \
-    for i in 1 2 3; do \
-        ./gradlew dependencies --no-daemon && break || \
-        { echo "Attempt $i failed, retrying in 10s..."; sleep 10; }; \
-    done
-
-# Copy source code
-COPY server-ui/src server-ui/src
-COPY server-logic/src server-logic/src
-COPY server-dao/src server-dao/src
-COPY canary-app/src canary-app/src
-
-# Build the application with retry logic
-RUN for i in 1 2 3; do \
-        ./gradlew :server-ui:bootJar --no-daemon -x test && break || \
-        { echo "Attempt $i failed, retrying in 10s..."; sleep 10; }; \
-    done && \
-    echo "Build completed, checking for JAR file..." && \
+    ./gradlew :server-ui:bootJar --no-daemon -x test && \
     ls -la server-ui/build/libs/
 
 # Extract layers for optimized Docker image
