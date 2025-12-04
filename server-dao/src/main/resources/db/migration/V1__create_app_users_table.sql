@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS app_users (
     provider_id VARCHAR(255) NOT NULL,
     name VARCHAR(255),
     picture_url TEXT,
-    last_login TIMESTAMP WITH TIME ZONE,
+    last_login TIMESTAMP,
     CONSTRAINT uq_provider_provider_id UNIQUE (provider, provider_id)
 );
 
