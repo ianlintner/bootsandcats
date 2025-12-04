@@ -24,6 +24,7 @@ dependencies {
     implementation("io.opentelemetry.instrumentation:opentelemetry-spring-boot-starter:2.12.0")
     implementation("com.azure:azure-identity:1.15.0")
     implementation("com.azure:azure-security-keyvault-secrets:4.8.3")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("de.codecentric:spring-boot-admin-starter-client:3.4.0")
     implementation("de.codecentric:spring-boot-admin-starter-server:3.4.0")
     implementation("org.flywaydb:flyway-core:11.2.0")

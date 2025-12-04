@@ -107,6 +107,11 @@ public class AuthorizationServerConfig {
                                                                                                             algs.add(
                                                                                                                     "ES256");
                                                                                                         })))))
+                .csrf(
+                        csrf ->
+                                csrf.ignoringRequestMatchers(
+                                                authorizationServerConfigurer
+                                                        .getEndpointsMatcher()))
                 .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
                 // Redirect to the login page when not authenticated from the
                 // authorization endpoint
