@@ -7,7 +7,7 @@ spec:
   hosts:
   - oauth2.cat-herding.net
   gateways:
-  - istio-ingress/cat-herding-gateway
+  - aks-istio-ingress/cat-herding-gateway
   http:
   - match:
     - uri:
@@ -27,7 +27,7 @@ spec:
   hosts:
   - canary.cat-herding.net
   gateways:
-  - istio-ingress/cat-herding-gateway
+  - aks-istio-ingress/cat-herding-gateway
   http:
   - match:
     - uri:
