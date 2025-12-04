@@ -85,10 +85,8 @@ public class AuthorizationServerConfig {
     @Order(1)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
             throws Exception {
-        OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
-                new OAuth2AuthorizationServerConfigurer();
-
-        // Apply default security for authorization server endpoints (JWKS, OpenID config are public)
+        // Apply default security for authorization server endpoints (JWKS, OpenID config are
+        // public)
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
 
         http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
@@ -103,9 +101,9 @@ public class AuthorizationServerConfig {
                                                                             algs.clear();
                                                                             algs.add("ES256");
                                                                         }))));
-                // Redirect to the login page when not authenticated from the
-                // authorization endpoint
-                .exceptionHandling(
+
+        // Redirect to the login page when not authenticated from the authorization endpoint
+        http.exceptionHandling(
                         (exceptions) ->
                                 exceptions.defaultAuthenticationEntryPointFor(
                                         new LoginUrlAuthenticationEntryPoint("/login"),
