@@ -14,6 +14,7 @@ concurrency:
 
 env:
   JAVA_VERSION: '21'
+  GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2'
 
 jobs:
   owasp-dep-check:
@@ -29,19 +30,24 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: ${{ env.JAVA_VERSION }}
-          cache: 'maven'
+          cache: 'gradle'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Cache OWASP NVD database
         uses: actions/cache@v4
         with:
           path: |
-            ~/.m2/repository/org/owasp/dependency-check-data
+            ~/.gradle/dependency-check-data
           key: ${{ runner.os }}-owasp-nvd-cache-v1
           restore-keys: |
             ${{ runner.os }}-owasp-nvd-cache-
 
       - name: Run OWASP Dependency-Check
-        run: ./mvnw --batch-mode org.owasp:dependency-check-maven:check
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: ./gradlew dependencyCheckAnalyze
 
       - name: Upload OWASP report (always)
         if: always()
@@ -49,5 +55,5 @@ jobs:
         with:
           name: owasp-dependency-check-report
           path: |
-            target/dependency-check-report.*
+            build/reports/dependency-check-report.*
           if-no-files-found: ignore
