@@ -5,17 +5,23 @@ The Canary App is a simple Spring Boot web application used to validate end-to-e
 ## Build
 
 ```bash
-cd canary-app
-../mvnw clean package -DskipTests
+./gradlew :canary-app:bootJar
 ```
 
 ## Container Image
 
-Build and push via Azure Container Registry remote build:
+Build a Linux/AMD64 image from your Apple Silicon workstation using BuildKit, then push to ACR:
 
 ```bash
-az acr build --registry gabby --image canary-app:latest canary-app
+docker buildx build \
+	--platform linux/amd64 \
+	-t gabby.azurecr.io/canary-app:latest \
+	-f canary-app/Dockerfile \
+	canary-app \
+	--push
 ```
+
+> ℹ️ Use `--load` instead of `--push` if you only need the artifact locally (for example, kind or tilt).
 
 ## Deploy
 
