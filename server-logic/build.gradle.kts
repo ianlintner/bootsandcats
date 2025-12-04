@@ -19,3 +19,11 @@ dependencies {
     compileOnly("org.projectlombok:lombok:1.18.32")
     annotationProcessor("org.projectlombok:lombok:1.18.32")
 }
+
+tasks.register<JavaExec>("runGenerator") {
+    group = "tools"
+    description = "Generate EC P-256 JWK for OAuth2 token signing"
+    mainClass.set("com.bootsandcats.oauth2.tools.EcJwkGenerator")
+    classpath = sourceSets["main"].runtimeClasspath
+    isIgnoreExitValue = false
+}

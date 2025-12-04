@@ -14,10 +14,23 @@ import com.azure.core.exception.ResourceNotFoundException;
 import com.azure.security.keyvault.secrets.SecretClient;
 import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
 import com.bootsandcats.oauth2.config.AzureKeyVaultProperties;
-import com.bootsandcats.oauth2.crypto.JwkSupport;
 import com.nimbusds.jose.jwk.JWKSet;
 
-/** Loads JSON Web Keys from Azure Key Vault or falls back to an in-memory EC key. */
+/**
+ * Loads JSON Web Keys from Azure Key Vault or a static JWK configuration.
+ *
+ * <p>This provider requires explicit JWK configuration and will fail fast during startup if no JWK
+ * source is available. This ensures production deployments have stable, persistent signing keys.
+ *
+ * <p>Configuration options (in order of precedence):
+ *
+ * <ol>
+ *   <li>Azure Key Vault (when {@code azure.keyvault.enabled=true})
+ *   <li>Static JWK (when {@code azure.keyvault.static-jwk} is set)
+ * </ol>
+ *
+ * <p>If neither is configured, the application will fail to start.
+ */
 @Component
 public class JwkSetProvider {
 
@@ -26,7 +39,7 @@ public class JwkSetProvider {
     private final KeyVaultSettings keyVaultSettings;
     private final ObjectProvider<SecretClient> secretClientProvider;
     private final Duration cacheTtl;
-    private final JWKSet fallbackJwkSet;
+    private final JWKSet staticJwkSet;
 
     private volatile JWKSet cachedKeyVaultSet;
     private volatile Instant cacheExpiresAt = Instant.EPOCH;
@@ -36,48 +49,94 @@ public class JwkSetProvider {
         this.keyVaultSettings = KeyVaultSettings.from(properties);
         this.secretClientProvider = secretClientProvider;
         this.cacheTtl = keyVaultSettings.cacheTtl();
-        this.fallbackJwkSet = initializeFallbackJwkSet(properties.getStaticJwk());
-    }
+        this.staticJwkSet = parseStaticJwk(properties.getStaticJwk());
 
-    private JWKSet initializeFallbackJwkSet(String staticJwk) {
-        if (staticJwk != null && !staticJwk.isBlank()) {
-            try {
-                JWKSet jwkSet = JWKSet.parse(staticJwk);
-                LOGGER.info(
-                        "Using static JWK with {} key(s) (kids: {})",
-                        jwkSet.getKeys().size(),
-                        jwkSet.getKeys().stream()
-                                .map(k -> k.getKeyID())
-                                .collect(Collectors.joining(", ")));
-                return jwkSet;
-            } catch (ParseException ex) {
-                LOGGER.error(
-                        "Failed to parse static JWK, falling back to generated key: {}",
-                        ex.getMessage());
-            }
-        }
-        LOGGER.warn(
-                "No static JWK configured. Generating random key - this will change on each restart!");
-        return new JWKSet(JwkSupport.generateEcSigningKey());
+        validateConfiguration();
     }
 
     /**
-     * Returns the active JWK set, preferring Azure Key Vault when configured.
+     * Validates that at least one JWK source is configured. Fails fast if no JWK source is
+     * available.
+     *
+     * @throws IllegalStateException if no JWK source is configured
+     */
+    private void validateConfiguration() {
+        if (keyVaultSettings.enabled()) {
+            LOGGER.info(
+                    "JWK source: Azure Key Vault (secret: '{}')", keyVaultSettings.jwkSecretName());
+            return;
+        }
+
+        if (staticJwkSet != null) {
+            LOGGER.info(
+                    "JWK source: Static JWK with {} key(s) (kids: {})",
+                    staticJwkSet.getKeys().size(),
+                    staticJwkSet.getKeys().stream()
+                            .map(k -> k.getKeyID())
+                            .collect(Collectors.joining(", ")));
+            return;
+        }
+
+        String errorMessage =
+                """
+                FATAL: No JWK source configured. The OAuth2 Authorization Server requires \
+                signing keys to issue tokens. Configure one of the following:
+                  1. Azure Key Vault: Set azure.keyvault.enabled=true and configure vault URI
+                  2. Static JWK: Set azure.keyvault.static-jwk with a valid JWK JSON string
+                     (can be set via AZURE_KEYVAULT_STATIC_JWK environment variable)
+                """;
+        LOGGER.error(errorMessage);
+        throw new IllegalStateException(errorMessage);
+    }
+
+    private JWKSet parseStaticJwk(String staticJwk) {
+        if (staticJwk == null || staticJwk.isBlank()) {
+            return null;
+        }
+
+        try {
+            return JWKSet.parse(staticJwk);
+        } catch (ParseException ex) {
+            String errorMessage =
+                    String.format(
+                            "FATAL: Failed to parse static JWK configuration: %s", ex.getMessage());
+            LOGGER.error(errorMessage, ex);
+            throw new IllegalStateException(errorMessage, ex);
+        }
+    }
+
+    /**
+     * Returns the active JWK set.
+     *
+     * <p>When Azure Key Vault is enabled, keys are fetched from Key Vault with caching. Otherwise,
+     * returns the static JWK set.
      *
      * @return JWKSet containing signing keys
+     * @throws IllegalStateException if Key Vault is enabled but keys cannot be loaded and no static
+     *     fallback exists
      */
     public JWKSet getJwkSet() {
         if (!keyVaultSettings.enabled()) {
-            return fallbackJwkSet;
+            if (staticJwkSet == null) {
+                throw new IllegalStateException("No JWK source configured");
+            }
+            return staticJwkSet;
         }
 
         SecretClient client = secretClientProvider.getIfAvailable();
         if (client == null) {
-            return fallbackJwkSet;
+            throw new IllegalStateException(
+                    "Azure Key Vault is enabled but SecretClient is not available");
         }
 
         refreshCacheIfNeeded(client);
-        return cachedKeyVaultSet != null ? cachedKeyVaultSet : fallbackJwkSet;
+
+        if (cachedKeyVaultSet != null) {
+            return cachedKeyVaultSet;
+        }
+
+        throw new IllegalStateException(
+                "Failed to load JWK from Azure Key Vault and no static JWK configured");
     }
 
     private void refreshCacheIfNeeded(SecretClient client) {
@@ -100,20 +159,27 @@ public class JwkSetProvider {
                         keyVaultSettings.jwkSecretName(),
                         describeKeyIds());
             } catch (ResourceNotFoundException ex) {
-                cacheExpiresAt = Instant.now().plus(Duration.ofMinutes(1));
                 LOGGER.error(
-                        "Azure Key Vault secret '{}' not found. Falling back to in-memory key.",
+                        "FATAL: Azure Key Vault secret '{}' not found.",
                         keyVaultSettings.jwkSecretName(),
+                        ex);
+                throw new IllegalStateException(
+                        "Azure Key Vault secret '"
+                                + keyVaultSettings.jwkSecretName()
+                                + "' not found",
                         ex);
             } catch (ParseException ex) {
-                cacheExpiresAt = Instant.now().plus(Duration.ofMinutes(1));
                 LOGGER.error(
-                        "Failed to parse JWK Set from Azure Key Vault secret '{}'.",
+                        "FATAL: Failed to parse JWK Set from Azure Key Vault secret '{}'.",
                         keyVaultSettings.jwkSecretName(),
                         ex);
+                throw new IllegalStateException(
+                        "Failed to parse JWK Set from Azure Key Vault", ex);
             } catch (RuntimeException ex) {
-                cacheExpiresAt = Instant.now().plus(Duration.ofMinutes(1));
-                LOGGER.error("Unexpected error while loading JWK Set from Azure Key Vault.", ex);
+                LOGGER.error(
+                        "FATAL: Unexpected error while loading JWK Set from Azure Key Vault.", ex);
+                throw new IllegalStateException(
+                        "Unexpected error loading JWK from Azure Key Vault", ex);
             }
         }
     }
