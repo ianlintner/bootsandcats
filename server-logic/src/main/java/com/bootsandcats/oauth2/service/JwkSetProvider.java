@@ -95,13 +95,20 @@ public class JwkSetProvider {
         }
 
         try {
+            // Prefer JWK Set representation ({"keys":[...]}). This matches production usage.
             return JWKSet.parse(staticJwk);
-        } catch (ParseException ex) {
-            String errorMessage =
-                    String.format(
-                            "FATAL: Failed to parse static JWK configuration: %s", ex.getMessage());
-            LOGGER.error(errorMessage, ex);
-            throw new IllegalStateException(errorMessage, ex);
+        } catch (ParseException primary) {
+            try {
+                // Accept single-key JWK JSON (commonly used in tests) by wrapping into a set
+                return new JWKSet(com.nimbusds.jose.jwk.JWK.parse(staticJwk));
+            } catch (ParseException secondary) {
+                String errorMessage =
+                        String.format(
+                                "FATAL: Failed to parse static JWK configuration: %s",
+                                secondary.getMessage());
+                LOGGER.error(errorMessage, secondary);
+                throw new IllegalStateException(errorMessage, secondary);
+            }
         }
     }
 
