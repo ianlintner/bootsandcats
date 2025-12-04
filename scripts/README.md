@@ -1,225 +1,479 @@
-# Complete Azure & GitHub Setup Guide
+# Azure OAuth2 EC JWK Management Scripts
 
-This directory contains scripts for automated setup of Azure and GitHub resources for CI/CD deployment.
+This directory contains scripts for managing Elliptic Curve (P-256/ES256) JSON Web Keys for the OAuth2 Authorization Server running in Azure Kubernetes Service.
+
+## Scripts Overview
+
+### 1. `complete-azure-setup.sh` ⭐ **START HERE**
+**Interactive guided setup wizard for complete deployment**
+
+```bash
+# Interactive mode (recommended for first-time setup)
+./scripts/complete-azure-setup.sh
+
+# Fully automated mode
+./scripts/complete-azure-setup.sh --auto
+
+# Custom configuration
+./scripts/complete-azure-setup.sh --vault-name my-vault --auto
+```
+
+**What it does:**
+1. Checks all prerequisites
+2. Generates EC P-256 JWK
+3. Uploads to Azure Key Vault
+4. Updates Kubernetes manifests
+5. Deploys to AKS
+6. Verifies the entire setup
+
+**Time needed:** ~5 minutes
+
+---
+
+### 2. `azure-ec-jwk-manager.sh`
+**Command-line tool for managing JWK lifecycle (macOS/Linux)**
+
+```bash
+./scripts/azure-ec-jwk-manager.sh <command> [options]
+```
+
+**Commands:**
+- `generate` - Generate new EC P-256 JWK
+- `upload <file>` - Upload JWK to Azure Key Vault
+- `download` - Download JWK from Key Vault
+- `validate <file>` - Validate JWK format
+- `update-k8s <file>` - Update Kubernetes secret
+- `deploy` - Deploy to AKS
+- `verify` - Verify configuration
+- `rotate <file>` - Rotate keys (keep old, add new)
+- `show-config` - Display current configuration
+- `help` - Show help message
+
+**Examples:**
+```bash
+# Generate and upload
+./scripts/azure-ec-jwk-manager.sh generate > my-jwk.json
+./scripts/azure-ec-jwk-manager.sh upload my-jwk.json
+
+# Verify everything is working
+./scripts/azure-ec-jwk-manager.sh verify
+
+# Rotate keys
+./scripts/azure-ec-jwk-manager.sh generate > new.json
+./scripts/azure-ec-jwk-manager.sh rotate new.json
+./scripts/azure-ec-jwk-manager.sh deploy
+```
+
+---
+
+### 3. `azure-ec-jwk-manager.ps1`
+**Command-line tool for managing JWK lifecycle (Windows PowerShell)**
+
+```powershell
+.\scripts\azure-ec-jwk-manager.ps1 -Command <command> -FilePath <path>
+```
+
+**Commands:** Same as bash version
+
+**Examples:**
+```powershell
+# Generate and upload
+.\scripts\azure-ec-jwk-manager.ps1 -Command generate | Out-File my-jwk.json
+.\scripts\azure-ec-jwk-manager.ps1 -Command upload -FilePath my-jwk.json
+
+# Verify everything
+.\scripts\azure-ec-jwk-manager.ps1 -Command verify
+
+# Rotate keys
+.\scripts\azure-ec-jwk-manager.ps1 -Command generate | Out-File new.json
+.\scripts\azure-ec-jwk-manager.ps1 -Command rotate -FilePath new.json
+.\scripts\azure-ec-jwk-manager.ps1 -Command deploy
+```
+
+---
+
+### 4. `generate-ec-jwk.sh`
+**Simple EC JWK generation script (macOS/Linux)**
+
+```bash
+./scripts/generate-ec-jwk.sh
+```
+
+Generates and outputs EC P-256 JWK to stdout. Useful for piping to files or other commands:
+
+```bash
+# Save to file
+./scripts/generate-ec-jwk.sh > my-jwk.json
+
+# Pretty print
+./scripts/generate-ec-jwk.sh | jq .
+
+# Pipe directly to Key Vault
+./scripts/generate-ec-jwk.sh | az keyvault secret set --vault-name inker-kv --name oauth2-jwk --file /dev/stdin
+```
+
+---
 
 ## Prerequisites
 
-Install the required CLI tools:
-
+### macOS/Linux
 ```bash
-# macOS
-brew install azure-cli gh kubectl jq
+# Install Azure CLI
+brew install azure-cli
+
+# Install kubectl
+brew install kubectl
+
+# Install jq
+brew install jq
 
 # Login to Azure
 az login
 
-# Login to GitHub
-gh auth login
+# Configure kubectl
+az aks get-credentials --resource-group <resource-group> --name <aks-cluster>
 ```
 
-## Automated Setup
+### Windows (PowerShell)
+```powershell
+# Install Azure CLI
+choco install azure-cli
 
-### Option 1: Run the complete setup script
+# Install kubectl
+choco install kubernetes-cli
 
+# Install jq
+choco install jq
+
+# Login to Azure
+az login
+
+# Configure kubectl
+az aks get-credentials --resource-group <resource-group> --name <aks-cluster>
+```
+
+---
+
+## Quick Start
+
+### Option 1: Guided Setup (Recommended)
 ```bash
-./scripts/setup-azure-github.sh
+cd bootsandcats
+./scripts/complete-azure-setup.sh
 ```
 
-This script will:
-1. Verify Azure and GitHub authentication
-2. Locate ACR (gabby) and AKS (bigboy) resources
-3. Create Azure service principal with federated identity
-4. Configure OIDC federated credentials for GitHub Actions
-5. Grant necessary Azure permissions (ACR push, AKS access)
-6. Configure GitHub repository secrets
-7. Create Kubernetes secrets and ConfigMap
-8. Deploy the application manifest
-
-### Option 2: Manual step-by-step setup
-
-See `docs/deployment/azure-setup.md` for detailed manual instructions.
-
-## Validation
-
-After running the setup, validate everything is configured:
-
+### Option 2: Manual Steps
 ```bash
-./scripts/validate-setup.sh
+cd bootsandcats
+
+# 1. Generate JWK
+./scripts/azure-ec-jwk-manager.sh generate > my-jwk.json
+
+# 2. Validate
+./scripts/azure-ec-jwk-manager.sh validate my-jwk.json
+
+# 3. Upload to Key Vault
+./scripts/azure-ec-jwk-manager.sh upload my-jwk.json
+
+# 4. Deploy to AKS
+./scripts/azure-ec-jwk-manager.sh deploy
+
+# 5. Verify
+./scripts/azure-ec-jwk-manager.sh verify
 ```
 
-This will check:
-- Azure CLI authentication
-- GitHub CLI authentication
-- kubectl cluster connection
-- GitHub secrets configuration
-- Kubernetes resources
+---
 
-## What Gets Created
+## Configuration
 
-### Azure Resources
-
-- **Service Principal**: `oauth2-server-gh-actions`
-  - Federated identity credential for main branch
-  - Contributor role on resource group
-  - AcrPush role on ACR
-  - AKS Cluster User and RBAC Admin roles
-
-### GitHub Secrets
-
-- `AZURE_CLIENT_ID` - Service principal application ID
-- `AZURE_TENANT_ID` - Azure tenant ID
-- `AZURE_SUBSCRIPTION_ID` - Azure subscription ID
-- `AZURE_RESOURCE_GROUP` - Resource group name
-
-### Kubernetes Resources
-
-- **Secret**: `oauth2-secrets` (namespace: default)
-  - database-url
-  - database-username
-  - database-password
-  - demo-client-secret
-  - m2m-client-secret
-  - demo-user-password
-  - admin-user-password
-
-- **ConfigMap**: `oauth2-config` (namespace: default)
-  - issuer-url
-
-- **Deployment**: `oauth2-server` (from k8s/deployment.yaml)
-  - 2 replicas
-  - Health probes
-  - Resource limits
-
-## Credentials
-
-Generated credentials are saved to `~/.oauth2-server-credentials.txt`.
-
-⚠️ **IMPORTANT**: Save these credentials to a secure password manager and delete the file:
-
+### Environment Variables
 ```bash
-# After saving to your password manager
-rm ~/.oauth2-server-credentials.txt
+export AZURE_VAULT_NAME="inker-kv"           # Key Vault name
+export AZURE_JWK_SECRET_NAME="oauth2-jwk"    # Secret name in Key Vault
+export K8S_NAMESPACE="default"               # Kubernetes namespace
 ```
 
-## Trigger First Deployment
-
-After setup is complete, push to main to trigger the first deployment:
-
+### Custom Vault/Secret
 ```bash
-git add .
-git commit -m "chore: configure Azure deployment"
-git push origin main
-
-# Watch the deployment
-gh run watch
+AZURE_VAULT_NAME=my-vault \
+./scripts/azure-ec-jwk-manager.sh verify
 ```
 
-## Verify Deployment
+---
 
+## Common Tasks
+
+### Generate New Key
 ```bash
-# Check deployment status
-kubectl rollout status deployment/oauth2-server -n default
-
-# View pods
-kubectl get pods -l app=oauth2-server -n default
-
-# Check logs
-kubectl logs -f -l app=oauth2-server -n default
-
-# Port-forward to test locally
-kubectl port-forward service/oauth2-server 9000:9000 -n default
-
-# Test health endpoint
-curl http://localhost:9000/actuator/health
-
-# Test OIDC discovery
-curl http://localhost:9000/.well-known/openid-configuration
+./scripts/azure-ec-jwk-manager.sh generate > new-key.json
+./scripts/azure-ec-jwk-manager.sh validate new-key.json
 ```
+
+### Upload to Key Vault
+```bash
+./scripts/azure-ec-jwk-manager.sh upload my-key.json
+```
+
+### Verify Setup
+```bash
+./scripts/azure-ec-jwk-manager.sh verify
+```
+
+### Key Rotation
+```bash
+# Generate new key
+./scripts/azure-ec-jwk-manager.sh generate > new-key.json
+
+# Rotate (merges old and new)
+./scripts/azure-ec-jwk-manager.sh rotate new-key.json
+
+# Deploy
+./scripts/azure-ec-jwk-manager.sh deploy
+
+# After tokens expire, use only new key:
+./scripts/azure-ec-jwk-manager.sh generate > final-key.json
+./scripts/azure-ec-jwk-manager.sh upload final-key.json
+./scripts/azure-ec-jwk-manager.sh deploy
+```
+
+### View Current Key
+```bash
+./scripts/azure-ec-jwk-manager.sh download | jq .
+```
+
+### Check JWKS Endpoint
+```bash
+# Port-forward
+kubectl port-forward svc/oauth2-server 9000:9000 &
+
+# Check endpoint
+curl -s http://localhost:9000/oauth2/jwks | jq .
+```
+
+---
 
 ## Troubleshooting
 
-### Azure authentication fails
-
+### Script won't run
 ```bash
-# Re-login to Azure
+# Make scripts executable
+chmod +x scripts/*.sh
+
+# Check permissions
+ls -la scripts/
+```
+
+### Missing prerequisites
+```bash
+# Check what's missing
+command -v az kubectl jq
+
+# Install using Homebrew (macOS)
+brew install azure-cli kubectl jq
+
+# Install using Chocolatey (Windows)
+choco install azure-cli kubernetes-cli jq
+```
+
+### Not logged into Azure
+```bash
+# Login
 az login
 
-# Check current account
+# Verify
 az account show
 ```
 
-### GitHub authentication fails
-
+### kubectl not configured
 ```bash
-# Re-login to GitHub
-gh auth login
+# Get credentials from AKS cluster
+az aks get-credentials --resource-group nekoc --name <cluster-name>
 
-# Check status
-gh auth status
+# Verify
+kubectl config current-context
 ```
 
-### AKS connection fails
-
+### Key Vault not found
 ```bash
-# Get AKS credentials
-az aks get-credentials --resource-group <RESOURCE_GROUP> --name bigboy --overwrite-existing
+# List available vaults
+az keyvault list
 
-# Test connection
-kubectl cluster-info
-kubectl get nodes
+# Use the correct vault name
+AZURE_VAULT_NAME=correct-name ./scripts/azure-ec-jwk-manager.sh verify
 ```
 
-### Federated credential not working
-
-Wait 5-10 minutes for Azure AD propagation, then retry the GitHub Actions workflow.
-
-### Permission errors
-
-Verify role assignments:
-
+### Pod still running old version
 ```bash
-# Get your service principal ID
-APP_ID="<your-app-id>"
+# Force restart pods
+kubectl rollout restart deployment/oauth2-server
 
-# List role assignments
-az role assignment list --assignee $APP_ID --output table
+# Watch the rollout
+kubectl rollout status deployment/oauth2-server -w
+
+# Check logs
+kubectl logs -l app=oauth2-server -f
 ```
 
-## Clean Up
+---
 
-To remove all resources created by the setup:
+## Exit Codes
 
+- `0` - Success
+- `1` - General error
+- `2` - Prerequisites not met
+- `3` - Key Vault error
+- `4` - Kubernetes error
+- `5` - JWK validation error
+
+---
+
+## Logging & Debugging
+
+### Enable verbose output
 ```bash
-# Delete Kubernetes resources
-kubectl delete secret oauth2-secrets -n default
-kubectl delete configmap oauth2-config -n default
-kubectl delete -f k8s/deployment.yaml
+# Bash scripts support -v for verbose
+bash -v ./scripts/azure-ec-jwk-manager.sh verify
 
-# Delete GitHub secrets
-gh secret delete AZURE_CLIENT_ID -R ianlintner/bootsandcats
-gh secret delete AZURE_TENANT_ID -R ianlintner/bootsandcats
-gh secret delete AZURE_SUBSCRIPTION_ID -R ianlintner/bootsandcats
-gh secret delete AZURE_RESOURCE_GROUP -R ianlintner/bootsandcats
-
-# Delete service principal (get APP_ID first)
-az ad app delete --id <APP_ID>
-
-# Delete credentials file
-rm ~/.oauth2-server-credentials.txt
+# Or use set -x for debugging
+set -x
+./scripts/azure-ec-jwk-manager.sh verify
+set +x
 ```
 
-## Security Best Practices
+### Check pod logs
+```bash
+# Current logs
+kubectl logs -l app=oauth2-server
 
-1. ✅ **Federated Identity**: Using OIDC instead of long-lived secrets
-2. ✅ **Least Privilege**: Only necessary roles granted
-3. ✅ **Generated Secrets**: Using strong random passwords
-4. ✅ **Secure Storage**: Credentials saved to protected file (0600 permissions)
-5. ⚠️ **Manual Cleanup**: Remember to delete credentials file after saving securely
+# Follow logs
+kubectl logs -l app=oauth2-server -f
 
-## Support
+# Last 100 lines
+kubectl logs -l app=oauth2-server --tail=100
 
-For issues or questions:
-- Check `docs/deployment/azure-setup.md` for detailed setup instructions
-- Run `./scripts/validate-setup.sh` to diagnose issues
-- Check GitHub Actions logs: `gh run list` and `gh run view`
+# Previous pod logs (if crashed)
+kubectl logs -l app=oauth2-server --previous
+```
+
+### View Key Vault operations
+```bash
+# List all secrets
+az keyvault secret list --vault-name inker-kv
+
+# Show specific secret
+az keyvault secret show --vault-name inker-kv --name oauth2-jwk
+
+# View secret version history
+az keyvault secret list-versions --vault-name inker-kv --name oauth2-jwk
+```
+
+---
+
+## Examples
+
+### Complete Setup from Scratch
+```bash
+#!/bin/bash
+cd bootsandcats
+
+# Run automated setup
+./scripts/complete-azure-setup.sh --auto
+
+# Verify
+./scripts/azure-ec-jwk-manager.sh verify
+
+# Test endpoint
+kubectl port-forward svc/oauth2-server 9000:9000 &
+curl -s http://localhost:9000/oauth2/jwks | jq .
+```
+
+### CI/CD Integration
+
+**GitHub Actions:**
+```yaml
+- name: Deploy OAuth2 with EC JWK
+  run: |
+    cd bootsandcats
+    az login --service-principal \
+      -u ${{ secrets.AZURE_CLIENT_ID }} \
+      -p ${{ secrets.AZURE_CLIENT_SECRET }} \
+      --tenant ${{ secrets.AZURE_TENANT_ID }}
+    
+    az aks get-credentials \
+      --resource-group nekoc \
+      --name production
+    
+    ./scripts/complete-azure-setup.sh --auto
+```
+
+**Azure Pipelines:**
+```yaml
+- script: |
+    cd bootsandcats
+    ./scripts/complete-azure-setup.sh --auto
+  env:
+    AZURE_VAULT_NAME: $(vaultName)
+    K8S_NAMESPACE: $(kubeNamespace)
+  displayName: Deploy OAuth2 JWK Setup
+```
+
+---
+
+## Security Notes
+
+⚠️ **DO NOT:**
+- Commit JWK files to git (add `*.json` to `.gitignore`)
+- Share JWK content in logs or chat
+- Store private key material outside Key Vault
+- Use container images with embedded keys
+
+✅ **DO:**
+- Store keys in Azure Key Vault
+- Use Managed Identities for pod authentication
+- Rotate keys quarterly
+- Audit Key Vault access logs
+- Keep Key IDs for reference
+
+---
+
+## Getting Help
+
+1. **Quick questions:** See `docs/QUICK_START_EC_JWK.md`
+2. **Setup details:** See `docs/AZURE_EC_JWK_SETUP.md`
+3. **Issues:** See `docs/TROUBLESHOOTING_EC_JWK.md`
+4. **Script help:**
+   ```bash
+   ./scripts/azure-ec-jwk-manager.sh help
+   ./scripts/complete-azure-setup.sh --help
+   ```
+5. **Check config:**
+   ```bash
+   ./scripts/azure-ec-jwk-manager.sh show-config
+   ```
+
+---
+
+## References
+
+- [Azure Key Vault Documentation](https://learn.microsoft.com/en-us/azure/key-vault/)
+- [RFC 7517 - JSON Web Key (JWK)](https://tools.ietf.org/html/rfc7517)
+- [RFC 7518 - JSON Web Algorithms (JWA)](https://tools.ietf.org/html/rfc7518)
+- [Spring Security OAuth2](https://spring.io/projects/spring-security)
+- [Kubernetes Secrets Store CSI Driver](https://kubernetes-csi.github.io/docs/secrets-store-csi-driver.html)
+
+---
+
+## Version Information
+
+- **Created:** December 4, 2025
+- **Bash Version:** 4.0+
+- **PowerShell Version:** 7.0+
+- **Kubernetes:** 1.24+
+- **Azure CLI:** 2.50+
+
+---
+
+## License
+
+These scripts are part of the OAuth2 Authorization Server project and follow the same license terms.
 
