@@ -91,7 +91,10 @@ public class AuthorizationServerConfig {
                 .oidc(oidc -> oidc
                         .providerConfigurationEndpoint(providerConfig -> providerConfig
                                 .providerConfigurationCustomizer(config -> config
-                                        .idTokenSigningAlgorithm("ES256")))); // Advertise ES256 for ID tokens
+                                        .idTokenSigningAlgorithms(algs -> {
+                                            algs.clear();
+                                            algs.add("ES256");
+                                        })))); // Advertise ES256 for ID tokens
 
         http
                 // Redirect to the login page when not authenticated from the
