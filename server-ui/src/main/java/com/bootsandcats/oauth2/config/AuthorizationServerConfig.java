@@ -167,7 +167,8 @@ public class AuthorizationServerConfig {
                                                 "/instances",
                                                 "/instances/**",
                                                 "/applications",
-                                                "/applications/**")
+                                                "/applications/**",
+                                                "/.well-known/jwks.json")
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated())
