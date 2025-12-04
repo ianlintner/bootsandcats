@@ -158,6 +158,11 @@ spec:
             - ALL
       nodeSelector:
         kubernetes.io/arch: amd64
+      tolerations:
+      - key: "kubernetes.azure.com/scalesetpriority"
+        operator: "Equal"
+        value: "spot"
+        effect: "NoSchedule"
       volumes:
       - name: keystore-volume
         csi:
