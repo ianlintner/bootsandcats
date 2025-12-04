@@ -264,7 +264,7 @@ public class AuthorizationServerConfig {
         RegisteredClient m2mClient =
                 RegisteredClient.withId(UUID.randomUUID().toString())
                         .clientId("m2m-client")
-                        .clientSecret("{bcrypt}" + passwordEncoder.encode(m2mClientSecret))
+                        .clientSecret("{noop}" + m2mClientSecret)
                         .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                         .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
                         .scope("api:read")
