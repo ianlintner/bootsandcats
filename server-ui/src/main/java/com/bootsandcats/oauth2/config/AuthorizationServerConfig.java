@@ -88,31 +88,21 @@ public class AuthorizationServerConfig {
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
                 new OAuth2AuthorizationServerConfigurer();
 
-        http.securityMatcher(authorizationServerConfigurer.getEndpointsMatcher())
-                .with(
-                        authorizationServerConfigurer,
-                        (authorizationServer) ->
-                                authorizationServer.oidc(
-                                        oidc ->
-                                                oidc.providerConfigurationEndpoint(
-                                                        providerConfig ->
-                                                                providerConfig
-                                                                        .providerConfigurationCustomizer(
-                                                                                config ->
-                                                                                        config
-                                                                                                .idTokenSigningAlgorithms(
-                                                                                                        algs -> {
-                                                                                                            algs
-                                                                                                                    .clear();
-                                                                                                            algs
-                                                                                                                    .add(
-                                                                                                                            "ES256");
-                                                                                                        })))))
-                .csrf(
-                        csrf ->
-                                csrf.ignoringRequestMatchers(
-                                        authorizationServerConfigurer.getEndpointsMatcher()))
-                .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
+        // Apply default security for authorization server endpoints (JWKS, OpenID config are public)
+        OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+
+        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
+                .oidc(
+                        oidc ->
+                                oidc.providerConfigurationEndpoint(
+                                        providerConfig ->
+                                                providerConfig.providerConfigurationCustomizer(
+                                                        config ->
+                                                                config.idTokenSigningAlgorithms(
+                                                                        algs -> {
+                                                                            algs.clear();
+                                                                            algs.add("ES256");
+                                                                        }))));
                 // Redirect to the login page when not authenticated from the
                 // authorization endpoint
                 .exceptionHandling(
