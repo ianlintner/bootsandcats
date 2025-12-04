@@ -15,7 +15,6 @@ resources:
   - postgres.yaml
   - pdb.yaml
   - hpa.yaml
-  - vpa.yaml
 
 # You can add configMapGenerator/secretGenerator later if you want kustomize to build these dynamically
 # configMapGenerator:
