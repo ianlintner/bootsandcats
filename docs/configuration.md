@@ -406,6 +406,55 @@ JAVA_OPTS="-XX:+UseContainerSupport \
 
 ---
 
+## Internal Configuration Components
+
+The core security configuration for the authorization server lives in the `server-ui` module in
+the `AuthorizationServerConfig` class. This class wires together Spring Authorization Server,
+user details, client registration, and the JWK infrastructure.
+
+```mermaid
+classDiagram
+  class AuthorizationServerConfig {
+    +SecurityFilterChain authorizationServerSecurityFilterChain()
+    +SecurityFilterChain defaultSecurityFilterChain()
+    +UserDetailsService userDetailsService()
+    +PasswordEncoder passwordEncoder()
+    +RegisteredClientRepository registeredClientRepository()
+    +JWKSource jwkSource()
+    +OAuth2TokenCustomizer jwtCustomizer()
+    +JwtDecoder jwtDecoder()
+    +AuthorizationServerSettings authorizationServerSettings()
+  }
+
+  class InMemoryUserDetailsManager {
+    +loadUserByUsername()
+  }
+
+  class JdbcRegisteredClientRepository {
+    +save()
+    +findByClientId()
+  }
+
+  class JwkSetProvider {
+    +getJwkSet()
+  }
+
+  class JWKSource {
+    +select()
+  }
+
+  AuthorizationServerConfig --> InMemoryUserDetailsManager : configures
+  AuthorizationServerConfig --> JdbcRegisteredClientRepository : configures
+  AuthorizationServerConfig --> JWKSource : exposes
+  JWKSource --> JwkSetProvider : uses
+```
+
+> TIP: The current implementation uses an in-memory user store and dynamically loaded EC JWKs.
+> For hardened environments, plan to integrate with your user directory (e.g., LDAP/IdP) and
+> manage signing keys via a dedicated key management solution.
+
+---
+
 ## Configuration Validation
 
 ```bash
