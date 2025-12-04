@@ -13,3 +13,8 @@ gatling {
 dependencies {
     gatling("io.gatling.highcharts:gatling-charts-highcharts:3.11.5")
 }
+
+// Disable SpotBugs for Gatling module (it's load test code, not production)
+tasks.matching { it.name.contains("spotbugs", ignoreCase = true) }.configureEach {
+    enabled = false
+}
