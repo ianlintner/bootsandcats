@@ -197,6 +197,10 @@ public class AuthorizationServerConfig {
      */
     @Bean
     public RegisteredClientRepository registeredClientRepository(PasswordEncoder passwordEncoder) {
+        // Log the secret values being used (first 10 chars only for security)
+        System.out.println("DEBUG: Demo client secret (first 10 chars): " + demoClientSecret.substring(0, Math.min(10, demoClientSecret.length())));
+        System.out.println("DEBUG: M2M client secret (first 10 chars): " + m2mClientSecret.substring(0, Math.min(10, m2mClientSecret.length())));
+        
         // Confidential client with client_secret
         RegisteredClient confidentialClient =
                 RegisteredClient.withId(UUID.randomUUID().toString())
