@@ -131,7 +131,7 @@ test_endpoint "Response Types (Code)" \
 
 # Test 13: Token Endpoint - Client Credentials Flow (with wrong credentials - expect 401)
 echo -n "Testing: Token Endpoint (Authentication Check)... "
-HTTP_CODE=$(curl -sf -o /dev/null -w "%{http_code}" -X POST http://localhost:9000/oauth2/token \
+HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:9000/oauth2/token \
     -u "invalid-client:invalid-secret" \
     -d "grant_type=client_credentials" \
     -d "scope=api:read")
@@ -144,9 +144,10 @@ else
 fi
 
 # Test 14: Token Endpoint - Valid Client Credentials
+M2M_CLIENT_SECRET="${M2M_CLIENT_SECRET:-CHANGEME}"
 echo -n "Testing: Token Endpoint (Valid Client Credentials)... "
 TOKEN_RESPONSE=$(curl -sf -X POST http://localhost:9000/oauth2/token \
-    -u "m2m-client:CHANGEME" \
+    -u "m2m-client:${M2M_CLIENT_SECRET}" \
     -d "grant_type=client_credentials" \
     -d "scope=api:read" 2>&1)
 
@@ -155,11 +156,11 @@ if echo "$TOKEN_RESPONSE" | jq -e '.access_token' > /dev/null 2>&1; then
     echo -e "${GREEN}✅ PASS${NC}"
     echo "  └─ Access Token: ${GREEN}${ACCESS_TOKEN:0:50}...${NC}"
     ((PASSED++))
-
     # Test 15: Token Introspection
     echo -n "Testing: Token Introspection... "
     INTROSPECT=$(curl -sf -X POST http://localhost:9000/oauth2/introspect \
-        -u "m2m-client:CHANGEME" \
+        -u "m2m-client:${M2M_CLIENT_SECRET}" \
+        -d "token=$ACCESS_TOKEN" 2>&1)
         -d "token=$ACCESS_TOKEN" 2>&1)
 
     if echo "$INTROSPECT" | jq -e '.active' > /dev/null 2>&1; then
