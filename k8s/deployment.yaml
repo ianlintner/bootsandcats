@@ -145,17 +145,17 @@ spec:
             path: /actuator/health/liveness
             port: 9000
           initialDelaySeconds: 360
-          periodSeconds: 10
+          periodSeconds: 30
           timeoutSeconds: 5
-          failureThreshold: 3
+          failureThreshold: 6
         readinessProbe:
           httpGet:
             path: /actuator/health/readiness
             port: 9000
           initialDelaySeconds: 300
-          periodSeconds: 10
+          periodSeconds: 30
           timeoutSeconds: 5
-          failureThreshold: 3
+          failureThreshold: 6
         securityContext:
           runAsNonRoot: true
           runAsUser: 1001
