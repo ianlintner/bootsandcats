@@ -43,3 +43,7 @@ dependencies {
 springBoot {
     mainClass.set("com.bootsandcats.oauth2.OAuth2AuthorizationServerApplication")
 }
+
+tasks.named<Jar>("jar") {
+    enabled = false
+}
