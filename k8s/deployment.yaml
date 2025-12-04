@@ -156,6 +156,8 @@ spec:
           capabilities:
             drop:
             - ALL
+      nodeSelector:
+        kubernetes.io/arch: amd64
       volumes:
       - name: keystore-volume
         csi:
