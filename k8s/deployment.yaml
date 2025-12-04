@@ -136,15 +136,15 @@ spec:
           httpGet:
             path: /actuator/health/liveness
             port: 9000
-          initialDelaySeconds: 90
+          initialDelaySeconds: 70
           periodSeconds: 10
           timeoutSeconds: 5
-          failureThreshold: 30
+          failureThreshold: 10
         livenessProbe:
           httpGet:
             path: /actuator/health/liveness
             port: 9000
-          initialDelaySeconds: 130
+          initialDelaySeconds: 80
           periodSeconds: 30
           timeoutSeconds: 5
           failureThreshold: 6
@@ -152,7 +152,7 @@ spec:
           httpGet:
             path: /actuator/health/readiness
             port: 9000
-          initialDelaySeconds: 120
+          initialDelaySeconds: 90
           periodSeconds: 30
           timeoutSeconds: 5
           failureThreshold: 6
