@@ -1,15 +1,15 @@
 package com.bootsandcats.oauth2.load;
 
-import io.gatling.javaapi.core.ChainBuilder;
-import io.gatling.javaapi.core.ScenarioBuilder;
-import io.gatling.javaapi.core.Simulation;
-import io.gatling.javaapi.http.HttpProtocolBuilder;
+import static io.gatling.javaapi.core.CoreDsl.*;
+import static io.gatling.javaapi.http.HttpDsl.*;
 
 import java.time.Duration;
 import java.util.Base64;
 
-import static io.gatling.javaapi.core.CoreDsl.*;
-import static io.gatling.javaapi.http.HttpDsl.*;
+import io.gatling.javaapi.core.ChainBuilder;
+import io.gatling.javaapi.core.ScenarioBuilder;
+import io.gatling.javaapi.core.Simulation;
+import io.gatling.javaapi.http.HttpProtocolBuilder;
 
 /**
  * Gatling load test simulation for OAuth2 Authorization Server.
@@ -25,7 +25,8 @@ public class OAuth2LoadSimulation extends Simulation {
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException e) {
-            System.err.println("Invalid integer value: '" + value + "'. Using fallback: " + defaultValue);
+            System.err.println(
+                    "Invalid integer value: '" + value + "'. Using fallback: " + defaultValue);
             return defaultValue;
         }
     }
@@ -108,7 +109,8 @@ public class OAuth2LoadSimulation extends Simulation {
         setUp(
                         // Client credentials flow with ramp-up
                         clientCredentialsScenario
-                                .injectOpen(rampUsers(users).during(Duration.ofSeconds(rampUpSeconds)))
+                                .injectOpen(
+                                        rampUsers(users).during(Duration.ofSeconds(rampUpSeconds)))
                                 .protocols(httpProtocol),
 
                         // Discovery endpoint load
