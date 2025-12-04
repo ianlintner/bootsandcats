@@ -152,6 +152,7 @@ public class AuthorizationServerConfig {
                                                 "/favicon.ico",
                                                 "/css/**",
                                                 "/js/**",
+                                                "/docs/**",
                                                 "/v3/api-docs/**",
                                                 "/swagger-ui/**",
                                                 "/swagger-ui.html",
