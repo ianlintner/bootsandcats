@@ -4,6 +4,7 @@ plugins {
     kotlin("jvm") version "1.9.23" apply false
     id("com.diffplug.spotless") version "6.25.0"
     id("com.github.spotbugs") version "6.0.26" apply false
+    id("org.owasp.dependencycheck") version "10.0.3"
 }
 
 allprojects {
