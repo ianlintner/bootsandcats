@@ -2,12 +2,16 @@ package com.bootsandcats.oauth2.config;
 
 import java.time.Duration;
 import java.util.UUID;
+import java.util.function.Supplier;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -22,7 +26,7 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
@@ -54,6 +58,9 @@ import com.nimbusds.jose.proc.SecurityContext;
 @Configuration
 @EnableWebSecurity
 public class AuthorizationServerConfig {
+
+        private static final Logger log =
+                        LoggerFactory.getLogger(AuthorizationServerConfig.class);
 
     @Value("${oauth2.issuer-url:http://localhost:9000}")
     private String issuerUrl;
@@ -197,85 +204,115 @@ public class AuthorizationServerConfig {
      * @return RegisteredClientRepository with demo clients
      */
     @Bean
-    public RegisteredClientRepository registeredClientRepository(PasswordEncoder passwordEncoder) {
-        // Log the secret values being used (first 10 chars only for security)
-        System.out.println("DEBUG: Demo client secret (first 10 chars): " + demoClientSecret.substring(0, Math.min(10, demoClientSecret.length())));
-        System.out.println("DEBUG: M2M client secret (first 10 chars): " + m2mClientSecret.substring(0, Math.min(10, m2mClientSecret.length())));
-        
-        // Confidential client with client_secret
-        RegisteredClient confidentialClient =
-                RegisteredClient.withId(UUID.randomUUID().toString())
-                        .clientId("demo-client")
-                        .clientSecret("{bcrypt}" + passwordEncoder.encode(demoClientSecret))
-                        .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-                        .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
-                        .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-                        .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-                        .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
-                        .redirectUri("http://localhost:8080/callback")
-                        .redirectUri("http://127.0.0.1:8080/callback")
-                        .postLogoutRedirectUri("http://localhost:8080/")
-                        .scope(OidcScopes.OPENID)
-                        .scope(OidcScopes.PROFILE)
-                        .scope(OidcScopes.EMAIL)
-                        .scope("read")
-                        .scope("write")
-                        .tokenSettings(
-                                TokenSettings.builder()
-                                        .accessTokenTimeToLive(Duration.ofMinutes(15))
-                                        .refreshTokenTimeToLive(Duration.ofDays(7))
-                                        .reuseRefreshTokens(false)
-                                        .build())
-                        .clientSettings(
-                                ClientSettings.builder()
-                                        .requireAuthorizationConsent(true)
-                                        .requireProofKey(false)
-                                        .build())
-                        .build();
+    public RegisteredClientRepository registeredClientRepository(
+            JdbcTemplate jdbcTemplate, PasswordEncoder passwordEncoder) {
+        JdbcRegisteredClientRepository repository =
+                new JdbcRegisteredClientRepository(jdbcTemplate);
 
-        // Public client with PKCE (for SPAs, mobile apps)
-        RegisteredClient publicClient =
-                RegisteredClient.withId(UUID.randomUUID().toString())
-                        .clientId("public-client")
-                        .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
-                        .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-                        .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-                        .redirectUri("http://localhost:3000/callback")
-                        .redirectUri("http://127.0.0.1:3000/callback")
-                        .postLogoutRedirectUri("http://localhost:3000/")
-                        .scope(OidcScopes.OPENID)
-                        .scope(OidcScopes.PROFILE)
-                        .scope(OidcScopes.EMAIL)
-                        .scope("read")
-                        .tokenSettings(
-                                TokenSettings.builder()
-                                        .accessTokenTimeToLive(Duration.ofMinutes(15))
-                                        .refreshTokenTimeToLive(Duration.ofHours(24))
-                                        .reuseRefreshTokens(false)
-                                        .build())
-                        .clientSettings(
-                                ClientSettings.builder()
-                                        .requireAuthorizationConsent(true)
-                                        .requireProofKey(true) // PKCE required
-                                        .build())
-                        .build();
+        registerClientIfMissing(
+                repository,
+                "demo-client",
+                () ->
+                        buildConfidentialClient(
+                                passwordEncoder.encode(demoClientSecret),
+                                passwordEncoder,
+                                UUID.randomUUID().toString()));
 
-        // Machine-to-machine client
-        RegisteredClient m2mClient =
-                RegisteredClient.withId(UUID.randomUUID().toString())
-                        .clientId("m2m-client")
-                        .clientSecret("{noop}" + m2mClientSecret)
-                        .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-                        .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
-                        .scope("api:read")
-                        .scope("api:write")
-                        .tokenSettings(
-                                TokenSettings.builder()
-                                        .accessTokenTimeToLive(Duration.ofHours(1))
-                                        .build())
-                        .build();
+        registerClientIfMissing(
+                repository,
+                "public-client",
+                () -> buildPublicClient(UUID.randomUUID().toString()));
 
-        return new InMemoryRegisteredClientRepository(confidentialClient, publicClient, m2mClient);
+        registerClientIfMissing(
+                repository,
+                "m2m-client",
+                () -> buildMachineToMachineClient(passwordEncoder.encode(m2mClientSecret)));
+
+        return repository;
+    }
+
+    private void registerClientIfMissing(
+            JdbcRegisteredClientRepository repository,
+            String clientId,
+            Supplier<RegisteredClient> supplier) {
+        if (repository.findByClientId(clientId) == null) {
+            log.info("Registering OAuth client '{}' in database", clientId);
+            repository.save(supplier.get());
+        }
+    }
+
+    private RegisteredClient buildConfidentialClient(
+            String encodedSecret, PasswordEncoder passwordEncoder, String id) {
+        return RegisteredClient.withId(id)
+                .clientId("demo-client")
+                .clientSecret(encodedSecret)
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
+                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                .redirectUri("http://localhost:8080/callback")
+                .redirectUri("http://127.0.0.1:8080/callback")
+                .postLogoutRedirectUri("http://localhost:8080/")
+                .scope(OidcScopes.OPENID)
+                .scope(OidcScopes.PROFILE)
+                .scope(OidcScopes.EMAIL)
+                .scope("read")
+                .scope("write")
+                .tokenSettings(
+                        TokenSettings.builder()
+                                .accessTokenTimeToLive(Duration.ofMinutes(15))
+                                .refreshTokenTimeToLive(Duration.ofDays(7))
+                                .reuseRefreshTokens(false)
+                                .build())
+                .clientSettings(
+                        ClientSettings.builder()
+                                .requireAuthorizationConsent(true)
+                                .requireProofKey(false)
+                                .build())
+                .build();
+    }
+
+    private RegisteredClient buildPublicClient(String id) {
+        return RegisteredClient.withId(id)
+                .clientId("public-client")
+                .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
+                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                .redirectUri("http://localhost:3000/callback")
+                .redirectUri("http://127.0.0.1:3000/callback")
+                .postLogoutRedirectUri("http://localhost:3000/")
+                .scope(OidcScopes.OPENID)
+                .scope(OidcScopes.PROFILE)
+                .scope(OidcScopes.EMAIL)
+                .scope("read")
+                .tokenSettings(
+                        TokenSettings.builder()
+                                .accessTokenTimeToLive(Duration.ofMinutes(15))
+                                .refreshTokenTimeToLive(Duration.ofHours(24))
+                                .reuseRefreshTokens(false)
+                                .build())
+                .clientSettings(
+                        ClientSettings.builder()
+                                .requireAuthorizationConsent(true)
+                                .requireProofKey(true)
+                                .build())
+                .build();
+    }
+
+    private RegisteredClient buildMachineToMachineClient(String encodedSecret) {
+        return RegisteredClient.withId(UUID.randomUUID().toString())
+                .clientId("m2m-client")
+                .clientSecret(encodedSecret)
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                .scope("api:read")
+                .scope("api:write")
+                .tokenSettings(
+                        TokenSettings.builder()
+                                .accessTokenTimeToLive(Duration.ofHours(1))
+                                .build())
+                .build();
     }
 
     /**
