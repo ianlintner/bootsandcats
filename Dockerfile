@@ -1,3 +1,18 @@
+# Documentation build stage - separate Python environment for MkDocs
+FROM python:3.12-slim AS docs-builder
+
+WORKDIR /docs
+
+# Copy documentation sources
+COPY mkdocs.yml ./
+COPY docs ./docs
+
+# Install MkDocs, Material theme, and mermaid2 plugin
+RUN pip install --no-cache-dir mkdocs mkdocs-material mkdocs-mermaid2-plugin
+
+# Build MkDocs site
+RUN mkdocs build --site-dir /docs/site
+
 # Build stage - extract layers from pre-built JAR
 FROM eclipse-temurin:21-jdk AS builder
 
@@ -6,19 +21,6 @@ WORKDIR /app
 # Copy the pre-built JAR (provided by CI or local build)
 # Gradle bootJar currently produces: server-ui/build/libs/server-ui-1.0.0-SNAPSHOT.jar
 COPY server-ui/build/libs/server-ui-1.0.0-SNAPSHOT.jar app.jar
-
-# Copy documentation sources to build MkDocs site
-COPY mkdocs.yml ./
-COPY docs ./docs
-
-# Install MkDocs and Material theme to build the static site
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends python3 python3-pip \
-    && pip3 install --no-cache-dir mkdocs mkdocs-material \
-    && mkdocs build --site-dir /app/mkdocs-site \
-    && apt-get purge -y python3-pip \
-    && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/*
 
 # Extract layers for optimized Docker image
 RUN java -Djarmode=layertools -jar app.jar extract
@@ -38,8 +40,8 @@ COPY --from=builder /app/spring-boot-loader/ ./
 COPY --from=builder /app/snapshot-dependencies/ ./
 COPY --from=builder /app/application/ ./
 
-# Copy built MkDocs site into static resources so it is served under /docs
-COPY --from=builder /app/mkdocs-site/ ./BOOT-INF/classes/static/docs/
+# Copy built MkDocs site from docs-builder stage into static resources
+COPY --from=docs-builder /docs/site/ ./BOOT-INF/classes/static/docs/
 
 # Change ownership
 RUN chown -R appuser:appgroup /app
