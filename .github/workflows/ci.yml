@@ -49,10 +49,10 @@ jobs:
           gradle-version: '9.0.0'
 
       - name: Validate formatting
-        run: ./gradlew spotlessCheck
+        run: gradle spotlessCheck
 
       - name: Build & run unit tests
-        run: ./gradlew build
+        run: gradle build
 
       - name: Upload test reports (always)
         if: always()
@@ -92,7 +92,7 @@ jobs:
           gradle-version: '9.0.0'
 
       - name: Run integration tests
-        run: ./gradlew integrationTest --continue
+        run: gradle integrationTest --continue
 
       - name: Upload IT reports (always)
         if: always()
@@ -124,7 +124,7 @@ jobs:
           gradle-version: '9.0.0'
 
       - name: SpotBugs
-        run: ./gradlew spotbugsMain
+        run: gradle spotbugsMain
 
       - name: Upload SpotBugs report (always)
         if: always()

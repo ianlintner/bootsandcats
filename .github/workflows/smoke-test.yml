@@ -35,7 +35,7 @@ jobs:
           gradle-version: '9.0.0'
 
       - name: Build application JAR
-        run: ./gradlew :server-ui:bootJar -x test
+        run: gradle :server-ui:bootJar -x test
 
       - name: Start Docker Compose environment
         run: |
