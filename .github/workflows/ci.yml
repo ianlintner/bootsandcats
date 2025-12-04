@@ -203,7 +203,7 @@ jobs:
           IMAGE_LATEST="gabby.azurecr.io/oauth2-server:latest"
           
           docker buildx build \
-            --platform linux/amd64 \
+            --platform linux/amd64,linux/arm64 \
             --push \
             -t $IMAGE_TAG \
             -t $IMAGE_LATEST \
