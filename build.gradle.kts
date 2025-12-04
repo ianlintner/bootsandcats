@@ -72,15 +72,9 @@ subprojects {
 
 // OWASP Dependency Check configuration
 dependencyCheck {
-    format = org.owasp.dependencycheck.reporting.ReportGenerator.Format.ALL
-    analyzers {
-        assemblyEnabled = false
-        nodeEnabled = false
-        retirejs {
-            enabled = false
-        }
-    }
-    nvd {
-        apiKey = System.getenv("NVD_API_KEY") ?: ""
-    }
+    formats = listOf("HTML", "JSON", "SARIF")
+    analyzers.assemblyEnabled = false
+    analyzers.nodeEnabled = false
+    analyzers.retirejs.enabled = false
+    nvd.apiKey = System.getenv("NVD_API_KEY") ?: ""
 }
