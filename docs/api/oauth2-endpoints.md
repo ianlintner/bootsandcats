@@ -11,6 +11,8 @@ This document provides comprehensive documentation for all OAuth2 endpoints expo
 | `/oauth2/jwks` | GET | JSON Web Key Set for JWT verification |
 | `/oauth2/introspect` | POST | Token introspection endpoint |
 | `/oauth2/revoke` | POST | Token revocation endpoint |
+| `/oauth2/device_authorization` | POST | Device authorization endpoint for constrained devices |
+| `/oauth2/device_verification` | GET | User verification page for device flow |
 
 ## Authorization Endpoint
 
@@ -371,6 +373,92 @@ HTTP/1.1 200 OK
 !!! note "Revocation Behavior"
     The endpoint returns `200 OK` even if the token was already revoked or invalid.
     This prevents token enumeration attacks.
+
+---
+
+## Device Authorization Flow
+
+The authorization server supports the OAuth 2.0 Device Authorization Grant for constrained
+input devices (smart TVs, consoles, CLI tools, etc.).
+
+### `POST /oauth2/device_authorization`
+
+Initiates the device flow by creating a user code and device code pair.
+
+#### Request Headers
+
+| Header | Value | Required |
+|--------|-------|----------|
+| `Content-Type` | `application/x-www-form-urlencoded` | Yes |
+| `Authorization` | `Basic {base64(client_id:client_secret)}` | For confidential clients |
+
+#### Request Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `client_id` | string | Conditional | Required for public clients |
+| `scope` | string | No | Space-separated list of scopes |
+
+#### Example Request
+
+```http
+POST /oauth2/device_authorization HTTP/1.1
+Host: auth.example.com
+Authorization: Basic bTJtLWNsaWVudDptMm0tc2VjcmV0
+Content-Type: application/x-www-form-urlencoded
+
+scope=openid%20profile%20email
+```
+
+#### Example Response
+
+```json
+{
+    "device_code": "GmRhmhcxhwAzkoEqiMEg_DnyEysNkuNhszIySk9eS",
+    "user_code": "WDJB-MJHT",
+    "verification_uri": "https://auth.example.com/activate",
+    "verification_uri_complete": "https://auth.example.com/activate?user_code=WDJB-MJHT",
+    "expires_in": 1800,
+    "interval": 5
+}
+```
+
+### `GET /oauth2/device_verification`
+
+Displays the verification UI where the user enters the `user_code` and approves the device
+authorization request.
+
+The specific HTML UI is implementation‑defined, but the endpoint URL is fixed by
+`AuthorizationServerSettings`.
+
+---
+
+## Device Token Polling
+
+The device (or application on the constrained device) polls the token endpoint to obtain an
+access token once the user has completed verification.
+
+```mermaid
+sequenceDiagram
+        participant User
+        participant Device as Device Client
+        participant Auth as Auth Server
+
+        Device->>Auth: POST /oauth2/device_authorization
+        Auth-->>Device: user_code, device_code, verification_uri
+
+        Note over Device: Display user_code & verification_uri
+
+        Device->>Auth: POST /oauth2/token (poll)
+        Auth-->>Device: error=authorization_pending
+
+        User->>Auth: GET /oauth2/device_verification
+        Auth-->>User: Prompt for user_code
+        User->>Auth: Submit user_code & approve
+
+        Device->>Auth: POST /oauth2/token (poll)
+        Auth-->>Device: access_token, refresh_token
+```
 
 ---
 
