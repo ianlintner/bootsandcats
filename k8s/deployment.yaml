@@ -156,11 +156,8 @@ spec:
           capabilities:
             drop:
             - ALL
-      tolerations:
-      - key: "preemptible"
-        operator: "Equal"
-        value: "true"
-        effect: "NoSchedule"
+      nodeSelector:
+        kubernetes.io/arch: amd64
       volumes:
       - name: keystore-volume
         csi:
