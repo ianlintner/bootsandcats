@@ -25,6 +25,13 @@ spec:
         env:
         - name: OAUTH2_ISSUER_URI
           value: "https://oauth.bigboy.example.com"
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      tolerations:
+      - key: "kubernetes.azure.com/scalesetpriority"
+        operator: "Equal"
+        value: "spot"
+        effect: "NoSchedule"
 ---
 apiVersion: v1
 kind: Service

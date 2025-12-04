@@ -14,7 +14,8 @@ resources:
   - deployment.yaml
   - postgres.yaml
   - pdb.yaml
-  
+  - canary-deployment.yaml
+
 
 # You can add configMapGenerator/secretGenerator later if you want kustomize to build these dynamically
 # configMapGenerator:
