@@ -36,7 +36,29 @@ public class JwkSetProvider {
         this.keyVaultSettings = KeyVaultSettings.from(properties);
         this.secretClientProvider = secretClientProvider;
         this.cacheTtl = keyVaultSettings.cacheTtl();
-        this.fallbackJwkSet = new JWKSet(JwkSupport.generateEcSigningKey());
+        this.fallbackJwkSet = initializeFallbackJwkSet(properties.getStaticJwk());
+    }
+
+    private JWKSet initializeFallbackJwkSet(String staticJwk) {
+        if (staticJwk != null && !staticJwk.isBlank()) {
+            try {
+                JWKSet jwkSet = JWKSet.parse(staticJwk);
+                LOGGER.info(
+                        "Using static JWK with {} key(s) (kids: {})",
+                        jwkSet.getKeys().size(),
+                        jwkSet.getKeys().stream()
+                                .map(k -> k.getKeyID())
+                                .collect(Collectors.joining(", ")));
+                return jwkSet;
+            } catch (ParseException ex) {
+                LOGGER.error(
+                        "Failed to parse static JWK, falling back to generated key: {}",
+                        ex.getMessage());
+            }
+        }
+        LOGGER.warn(
+                "No static JWK configured. Generating random key - this will change on each restart!");
+        return new JWKSet(JwkSupport.generateEcSigningKey());
     }
 
     /**

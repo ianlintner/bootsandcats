@@ -16,6 +16,13 @@ public class AzureKeyVaultProperties {
 
     private Duration cacheTtl = Duration.ofMinutes(10);
 
+    /**
+     * Static JWK JSON string for use when Key Vault is not configured. If set, this will be used
+     * instead of generating a random key on startup. The value should be a valid JWK JSON object
+     * (single key) or JWKSet JSON object (multiple keys).
+     */
+    private String staticJwk;
+
     public boolean isEnabled() {
         return enabled;
     }
@@ -46,5 +53,13 @@ public class AzureKeyVaultProperties {
 
     public void setCacheTtl(Duration cacheTtl) {
         this.cacheTtl = cacheTtl;
+    }
+
+    public String getStaticJwk() {
+        return staticJwk;
+    }
+
+    public void setStaticJwk(String staticJwk) {
+        this.staticJwk = staticJwk;
     }
 }
