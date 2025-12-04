@@ -88,7 +88,10 @@ public class AuthorizationServerConfig {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
 
         http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
-                .oidc(Customizer.withDefaults()); // Enable OpenID Connect 1.0
+                .oidc(oidc -> oidc
+                        .providerConfigurationEndpoint(providerConfig -> providerConfig
+                                .providerConfigurationCustomizer(config -> config
+                                        .idTokenSigningAlgorithm("ES256")))); // Advertise ES256 for ID tokens
 
         http
                 // Redirect to the login page when not authenticated from the
