@@ -8,11 +8,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
+import com.bootsandcats.oauth2.config.TestKeyManagementConfig;
 import com.bootsandcats.oauth2.config.TestOAuth2ClientConfiguration;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Import(TestOAuth2ClientConfiguration.class)
+@Import({TestOAuth2ClientConfiguration.class, TestKeyManagementConfig.class})
 class OAuth2MetricsServiceTest {
 
     @Autowired private OAuth2MetricsService metricsService;

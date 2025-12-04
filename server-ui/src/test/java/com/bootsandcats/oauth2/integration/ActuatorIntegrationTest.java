@@ -13,13 +13,14 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import com.bootsandcats.oauth2.config.TestKeyManagementConfig;
 import com.bootsandcats.oauth2.config.TestOAuth2ClientConfiguration;
 
 /** Integration tests for actuator endpoints and metrics. */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(TestOAuth2ClientConfiguration.class)
+@Import({TestOAuth2ClientConfiguration.class, TestKeyManagementConfig.class})
 class ActuatorIntegrationTest {
 
     @Autowired private MockMvc mockMvc;
