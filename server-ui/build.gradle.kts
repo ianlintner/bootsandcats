@@ -25,7 +25,8 @@ dependencies {
     implementation("com.azure:azure-security-keyvault-secrets:4.8.2")
     implementation("de.codecentric:spring-boot-admin-starter-client:3.2.3")
     implementation("de.codecentric:spring-boot-admin-starter-server:3.2.3")
-    implementation("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-core:11.1.0")
+    implementation("org.flywaydb:flyway-database-postgresql:11.1.0")
     runtimeOnly("org.postgresql:postgresql")
     runtimeOnly("com.h2database:h2")
 
