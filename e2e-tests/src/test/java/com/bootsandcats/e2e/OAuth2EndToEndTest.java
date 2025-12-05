@@ -124,32 +124,23 @@ class OAuth2EndToEndTest {
         AuthorizationResult completeAuthorizationCodePkceFlow() throws Exception {
             Pkce pkce = Pkce.create();
             String state = UUID.randomUUID().toString();
-            String authorizePath =
-                    "/oauth2/authorize?response_type=code"
-                            + "&client_id="
-                            + encode(env.confidentialClientId)
-                            + "&redirect_uri="
-                            + encode(env.confidentialRedirectUri)
-                            + "&scope="
-                            + encode("openid profile email")
-                            + "&state="
-                            + encode(state)
-                            + "&code_challenge="
-                            + encode(pkce.codeChallenge)
-                            + "&code_challenge_method=S256";
+            Map<String, String> authorizeParams =
+                Map.of(
+                    "response_type", "code",
+                    "client_id", env.confidentialClientId,
+                    "redirect_uri", env.confidentialRedirectUri,
+                    "scope", "openid profile email",
+                        "state", state,
+                        "nonce", UUID.randomUUID().toString(),
+                    "code_challenge", pkce.codeChallenge,
+                    "code_challenge_method", "S256");
 
-            Response authInit =
-                    RestAssured.given()
-                            .baseUri(env.baseUrl)
-                            .filter(session)
-                            .redirects()
-                            .follow(false)
-                    .get(authorizePath);
+            String authorizePath = "/oauth2/authorize";
 
-            String loginUrl = resolveLocation(env.baseUrl, authInit.getHeader("Location"));
-            Response loginPage =
-                    RestAssured.given().filter(session).get(loginUrl);
+                Response loginPage =
+                    RestAssured.given().baseUri(env.baseUrl).filter(session).get("/login");
 
+            String loginUrl = env.baseUrl + "/login";
             ParsedForm loginForm = ParsedForm.parseFirstForm(loginPage.asString(), loginUrl);
             loginForm.fields.put("username", env.username);
             loginForm.fields.put("password", env.password);
@@ -163,24 +154,66 @@ class OAuth2EndToEndTest {
                             .formParams(loginForm.fields)
                             .post(loginForm.action);
 
-            String authorizeUrl = env.baseUrl + authorizePath;
+                System.out.println(
+                    "loginSubmit status="
+                        + loginSubmit.statusCode()
+                        + " location="
+                        + loginSubmit.getHeader("Location"));
+
+                if (loginSubmit.statusCode() >= 400) {
+                throw new IllegalStateException(
+                    "Login failed. status="
+                        + loginSubmit.statusCode()
+                        + " bodySnippet="
+                        + loginSubmit
+                            .asString()
+                            .substring(
+                                0, Math.min(300, loginSubmit.asString().length()))
+                        + " headers="
+                        + loginSubmit.getHeaders());
+                }
+
+            String authorizeUrl = env.baseUrl + authorizePath + "?" + toQuery(authorizeParams);
 
                 Response postLoginAuth =
-                    RestAssured.given()
-                        .filter(session)
-                        .redirects()
-                            .follow(true)
-                        .get(authorizeUrl);
+                        RestAssured.given()
+                                .filter(session)
+                                .redirects()
+                                .follow(true)
+                                .get(authorizeUrl);
+
+                System.out.println(
+                        "authorize status="
+                                + postLoginAuth.statusCode()
+                                + " location="
+                                + postLoginAuth.getHeader("Location"));
 
                 Response authorizationPage = postLoginAuth;
                 if (postLoginAuth.statusCode() == 302 && !isRedirectWithCode(postLoginAuth)) {
-                String consentUrl = resolveLocation(env.baseUrl, postLoginAuth.getHeader("Location"));
-                authorizationPage =
-                    RestAssured.given()
-                        .filter(session)
-                        .redirects()
-                        .follow(true)
-                        .get(consentUrl);
+                    String redirectLocation = postLoginAuth.getHeader("Location");
+                    if (redirectLocation == null) {
+                    throw new IllegalStateException(
+                        "Expected redirect after login but missing Location header. status="
+                            + postLoginAuth.statusCode()
+                            + " bodySnippet="
+                            + postLoginAuth
+                                .asString()
+                                .substring(
+                                    0,
+                                    Math.min(
+                                        300,
+                                        postLoginAuth.asString().length()))
+                            + " headers="
+                            + postLoginAuth.getHeaders());
+                    }
+
+                    String consentUrl = resolveLocation(env.baseUrl, redirectLocation);
+                    authorizationPage =
+                        RestAssured.given()
+                            .filter(session)
+                            .redirects()
+                            .follow(true)
+                            .get(consentUrl);
                 }
 
                 if (isRedirectWithCode(authorizationPage)) {
@@ -395,6 +428,18 @@ class OAuth2EndToEndTest {
 
     private static String encode(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
+    }
+
+    private static String toQuery(Map<String, String> params) {
+        StringBuilder sb = new StringBuilder();
+        params.forEach(
+                (k, v) -> {
+                    if (!sb.isEmpty()) {
+                        sb.append('&');
+                    }
+                    sb.append(encode(k)).append('=').append(encode(v));
+                });
+        return sb.toString();
     }
 
     private static String resolveLocation(String baseUrl, String location) {
