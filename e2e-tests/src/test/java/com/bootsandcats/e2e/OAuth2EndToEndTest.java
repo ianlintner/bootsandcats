@@ -123,6 +123,19 @@ class OAuth2EndToEndTest {
         AuthorizationResult completeAuthorizationCodePkceFlow() throws Exception {
             Pkce pkce = Pkce.create();
             String state = UUID.randomUUID().toString();
+            String authorizePath =
+                "/oauth2/authorize?response_type=code"
+                    + "&client_id="
+                    + env.confidentialClientId
+                    + "&redirect_uri="
+                    + encode(env.confidentialRedirectUri)
+                    + "&scope="
+                    + encode("openid profile email")
+                    + "&state="
+                    + state
+                    + "&code_challenge="
+                    + pkce.codeChallenge
+                    + "&code_challenge_method=S256";
 
             Response authInit =
                     RestAssured.given()
@@ -130,14 +143,7 @@ class OAuth2EndToEndTest {
                             .filter(session)
                             .redirects()
                             .follow(false)
-                            .queryParam("response_type", "code")
-                            .queryParam("client_id", env.confidentialClientId)
-                            .queryParam("redirect_uri", env.confidentialRedirectUri)
-                            .queryParam("scope", "openid profile email")
-                            .queryParam("state", state)
-                            .queryParam("code_challenge", pkce.codeChallenge)
-                            .queryParam("code_challenge_method", "S256")
-                            .get("/oauth2/authorize");
+                    .get(authorizePath);
 
             String loginUrl = resolveLocation(env.baseUrl, authInit.getHeader("Location"));
             Response loginPage =
@@ -156,8 +162,7 @@ class OAuth2EndToEndTest {
                             .formParams(loginForm.fields)
                             .post(loginForm.action);
 
-            String afterLoginLocation = loginSubmit.getHeader("Location");
-            String authorizeUrl = resolveLocation(env.baseUrl, afterLoginLocation);
+            String authorizeUrl = env.baseUrl + authorizePath;
 
                 Response postLoginAuth =
                     RestAssured.given()
