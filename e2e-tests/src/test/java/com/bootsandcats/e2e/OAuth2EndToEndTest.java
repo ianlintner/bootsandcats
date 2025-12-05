@@ -256,7 +256,20 @@ class OAuth2EndToEndTest {
 
         private AuthorizationResult exchangeCodeForTokens(Pkce pkce, Response response, String expectedState)
                 throws URISyntaxException {
-            String redirect = resolveLocation(env.baseUrl, response.getHeader("Location"));
+            String location = response.getHeader("Location");
+            if (location == null) {
+                // Try to follow up with a GET to the current page to see if a redirect is present
+                System.out.println("No Location header after consent submit, attempting to follow up with GET to capture redirect...");
+                Response followup = RestAssured.given()
+                    .redirects().follow(false)
+                    .cookies(response.getCookies())
+                    .get(response.getDetailedPath());
+                location = followup.getHeader("Location");
+                if (location == null) {
+                    throw new IllegalStateException("Missing redirect Location header after consent submit. Response body: " + response.asString().substring(0, Math.min(500, response.asString().length())));
+                }
+            }
+            String redirect = resolveLocation(env.baseUrl, location);
             URI uri = new URI(redirect);
             Map<String, String> params = QueryParams.from(uri.getQuery());
             assertThat(params.get("state")).isEqualTo(expectedState);
