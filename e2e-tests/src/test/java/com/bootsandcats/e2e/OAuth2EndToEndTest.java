@@ -6,14 +6,15 @@ import io.restassured.RestAssured;
 import io.restassured.filter.session.SessionFilter;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
-import java.net.URLEncoder;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.jsoup.Jsoup;
@@ -142,17 +143,20 @@ class OAuth2EndToEndTest {
 
             String loginUrl = env.baseUrl + "/login";
             ParsedForm loginForm = ParsedForm.parseFirstForm(loginPage.asString(), loginUrl);
-            loginForm.fields.put("username", env.username);
-            loginForm.fields.put("password", env.password);
+            loginForm.setSingle("username", env.username);
+            loginForm.setSingle("password", env.password);
 
-            Response loginSubmit =
+                var loginRequest =
                     RestAssured.given()
-                            .filter(session)
-                            .redirects()
-                            .follow(false)
-                            .contentType(ContentType.URLENC)
-                            .formParams(loginForm.fields)
-                            .post(loginForm.action);
+                        .filter(session)
+                        .redirects()
+                        .follow(false)
+                        .contentType(ContentType.URLENC);
+
+                loginForm.fields.forEach(
+                    (k, values) -> loginRequest.formParam(k, values.toArray()));
+
+                Response loginSubmit = loginRequest.post(loginForm.action);
 
                 System.out.println(
                     "loginSubmit status="
@@ -173,14 +177,14 @@ class OAuth2EndToEndTest {
                         + loginSubmit.getHeaders());
                 }
 
-            String authorizeUrl = env.baseUrl + authorizePath + "?" + toQuery(authorizeParams);
-
                 Response postLoginAuth =
-                        RestAssured.given()
-                                .filter(session)
-                                .redirects()
-                                .follow(true)
-                                .get(authorizeUrl);
+                    RestAssured.given()
+                        .baseUri(env.baseUrl)
+                        .filter(session)
+                        .redirects()
+                        .follow(true)
+                        .queryParams(authorizeParams)
+                        .get(authorizePath);
 
                 System.out.println(
                         "authorize status="
@@ -231,17 +235,21 @@ class OAuth2EndToEndTest {
                                     + authorizationPage.getHeaders());
                 }
 
-                ParsedForm consentForm = ParsedForm.parseFirstForm(authorizationBody, authorizeUrl);
-            consentForm.approveAllScopes();
+                    ParsedForm consentForm =
+                        ParsedForm.parseFirstForm(authorizationBody, env.baseUrl + authorizePath);
+                    consentForm.approveAllScopes();
 
-            Response consentSubmit =
-                    RestAssured.given()
+                    var consentRequest =
+                        RestAssured.given()
                             .filter(session)
                             .redirects()
                             .follow(false)
-                            .contentType(ContentType.URLENC)
-                            .formParams(consentForm.fields)
-                            .post(consentForm.action);
+                            .contentType(ContentType.URLENC);
+
+                    consentForm.fields.forEach(
+                        (k, values) -> consentRequest.formParam(k, values.toArray()));
+
+                    Response consentSubmit = consentRequest.post(consentForm.action);
 
             return exchangeCodeForTokens(pkce, consentSubmit, state);
         }
@@ -304,9 +312,9 @@ class OAuth2EndToEndTest {
 
     private static class ParsedForm {
         final String action;
-        final Map<String, String> fields;
+        final Map<String, List<String>> fields;
 
-        private ParsedForm(String action, Map<String, String> fields) {
+        private ParsedForm(String action, Map<String, List<String>> fields) {
             this.action = action;
             this.fields = fields;
         }
@@ -317,7 +325,7 @@ class OAuth2EndToEndTest {
             if (form == null) {
                 throw new IllegalStateException("No form found in response");
             }
-            Map<String, String> fields = new HashMap<>();
+            Map<String, List<String>> fields = new HashMap<>();
             Elements inputs = form.select("input");
             for (Element input : inputs) {
                 String name = input.attr("name");
@@ -328,27 +336,24 @@ class OAuth2EndToEndTest {
                 String value = input.attr("value");
                 if ("checkbox".equalsIgnoreCase(type)) {
                     if (input.hasAttr("checked") || name.startsWith("scope")) {
-                        fields.put(name, value.isBlank() ? "true" : value);
+                        fields
+                                .computeIfAbsent(name, k -> new ArrayList<>())
+                                .add(value.isBlank() ? "true" : value);
                     }
                     continue;
                 }
-                fields.put(name, value);
+                fields.computeIfAbsent(name, k -> new ArrayList<>()).add(value);
             }
             String action = form.hasAttr("action") ? form.absUrl("action") : baseUrl;
             return new ParsedForm(action, fields);
         }
 
         void approveAllScopes() {
-            Map<String, String> updated = new HashMap<>(fields);
-            fields.forEach(
-                    (k, v) -> {
-                        if (k.startsWith("scope")) {
-                            updated.put(k, "true");
-                        }
-                    });
-            updated.put("user_oauth_approval", "true");
-            fields.clear();
-            fields.putAll(updated);
+            fields.computeIfAbsent("user_oauth_approval", k -> new ArrayList<>()).add("true");
+        }
+
+        void setSingle(String key, String value) {
+            fields.put(key, new ArrayList<>(List.of(value)));
         }
     }
 
@@ -424,22 +429,6 @@ class OAuth2EndToEndTest {
     private static boolean isRedirectWithCode(Response response) {
         String location = response.getHeader("Location");
         return location != null && location.contains("code=");
-    }
-
-    private static String encode(String value) {
-        return URLEncoder.encode(value, StandardCharsets.UTF_8);
-    }
-
-    private static String toQuery(Map<String, String> params) {
-        StringBuilder sb = new StringBuilder();
-        params.forEach(
-                (k, v) -> {
-                    if (!sb.isEmpty()) {
-                        sb.append('&');
-                    }
-                    sb.append(encode(k)).append('=').append(encode(v));
-                });
-        return sb.toString();
     }
 
     private static String resolveLocation(String baseUrl, String location) {
