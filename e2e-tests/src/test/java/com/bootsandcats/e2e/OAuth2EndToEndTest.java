@@ -258,15 +258,29 @@ class OAuth2EndToEndTest {
                 throws URISyntaxException {
             String location = response.getHeader("Location");
             if (location == null) {
-                // Try to follow up with a GET to the current page to see if a redirect is present
-                System.out.println("No Location header after consent submit, attempting to follow up with GET to capture redirect...");
+                // Try to follow up with a GET to the consent form's action URL if available
+                System.out.println("No Location header after consent submit, attempting to follow up with GET to consent form action URL...");
+                String fallbackUrl = null;
+                try {
+                    // Try to parse the form action from the response body
+                    Document doc = Jsoup.parse(response.asString());
+                    Element form = doc.selectFirst("form");
+                    if (form != null && form.hasAttr("action")) {
+                        fallbackUrl = form.absUrl("action");
+                    }
+                } catch (Exception e) {
+                    // ignore, fallbackUrl will remain null
+                }
+                if (fallbackUrl == null || fallbackUrl.isBlank()) {
+                    throw new IllegalStateException("Missing redirect Location header after consent submit, and could not determine fallback URL. Response body: " + response.asString().substring(0, Math.min(500, response.asString().length())));
+                }
                 Response followup = RestAssured.given()
                     .redirects().follow(false)
                     .cookies(response.getCookies())
-                    .get(response.getDetailedPath());
+                    .get(fallbackUrl);
                 location = followup.getHeader("Location");
                 if (location == null) {
-                    throw new IllegalStateException("Missing redirect Location header after consent submit. Response body: " + response.asString().substring(0, Math.min(500, response.asString().length())));
+                    throw new IllegalStateException("Missing redirect Location header after consent submit and follow-up. Fallback URL: " + fallbackUrl + ". Response body: " + followup.asString().substring(0, Math.min(500, followup.asString().length())));
                 }
             }
             String redirect = resolveLocation(env.baseUrl, location);
