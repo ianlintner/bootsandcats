@@ -163,7 +163,7 @@ class OAuth2EndToEndTest {
                     RestAssured.given()
                         .filter(session)
                         .redirects()
-                        .follow(false)
+                            .follow(true)
                         .get(authorizeUrl);
 
                 Response authorizationPage = postLoginAuth;
@@ -173,7 +173,7 @@ class OAuth2EndToEndTest {
                     RestAssured.given()
                         .filter(session)
                         .redirects()
-                        .follow(false)
+                        .follow(true)
                         .get(consentUrl);
                 }
 

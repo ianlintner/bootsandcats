@@ -70,3 +70,4 @@ dependency-check-report.*
 .gradle
 
 .fake
+e2e-tests/jwk.json

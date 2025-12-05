@@ -13,6 +13,7 @@ public final class EcJwkGenerator {
 
     public static void main(String[] args) {
         JWKSet jwkSet = new JWKSet(JwkSupport.generateEcSigningKey());
-        System.out.println(JSONObjectUtils.toJSONString(jwkSet.toJSONObject(true)));
+        // include private key material for local/dev usage (do not commit to prod!)
+        System.out.println(JSONObjectUtils.toJSONString(jwkSet.toJSONObject(false)));
     }
 }
