@@ -185,7 +185,7 @@ class OAuth2EndToEndTest {
                 .baseUri(env.baseUrl)
                 .filter(session)
                 .cookies(cookies)
-                .redirects().follow(true)
+                .redirects().follow(false)
                 .queryParams(authorizeParams)
                 .get(authorizePath);
             cookies.putAll(postLoginAuth.getCookies());
