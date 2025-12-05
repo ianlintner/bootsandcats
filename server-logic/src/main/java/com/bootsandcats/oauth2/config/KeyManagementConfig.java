@@ -2,11 +2,12 @@ package com.bootsandcats.oauth2.config;
 
 import java.util.List;
 
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -25,15 +26,21 @@ public class KeyManagementConfig {
     }
 
     @Bean
-    @Primary
-    public AzureKeyVaultProperties azureKeyVaultProperties(AzureKeyVaultProperties properties) {
-        // Apply test customizers to the properties instance created by @EnableConfigurationProperties
-        if (customizers != null) {
-            for (AzureKeyVaultPropertiesCustomizer customizer : customizers) {
-                customizer.customize(properties);
+    public BeanPostProcessor azureKeyVaultPropertiesPostProcessor() {
+        return new BeanPostProcessor() {
+            @Override
+            public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+                if (bean instanceof AzureKeyVaultProperties properties) {
+                    // Apply customizers after the bean is fully initialized and configured
+                    if (customizers != null) {
+                        for (AzureKeyVaultPropertiesCustomizer customizer : customizers) {
+                            customizer.customize(properties);
+                        }
+                    }
+                }
+                return bean;
             }
-        }
-        return properties;
+        };
     }
 
     @Bean
