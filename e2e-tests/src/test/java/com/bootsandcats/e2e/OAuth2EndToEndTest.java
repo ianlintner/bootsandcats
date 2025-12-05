@@ -193,6 +193,7 @@ class OAuth2EndToEndTest {
             if (postLoginAuth.statusCode() == 200) {
                 String body = postLoginAuth.asString();
                 System.out.println("authorize 200 body: " + body.substring(0, Math.min(500, body.length())));
+                System.out.println("authorize 200 FULL body: " + body);
                 // Try to detect consent form
                 Document doc = Jsoup.parse(body);
                 Element consentForm = doc.selectFirst("form");
