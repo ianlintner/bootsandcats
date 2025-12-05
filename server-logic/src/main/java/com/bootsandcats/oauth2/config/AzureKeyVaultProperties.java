@@ -3,7 +3,6 @@ package com.bootsandcats.oauth2.config;
 import java.time.Duration;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 
 /** Configuration properties for Azure Key Vault backed JWK management. */
 @ConfigurationProperties(prefix = "azure.keyvault")

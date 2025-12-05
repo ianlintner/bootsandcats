@@ -1,8 +1,8 @@
 package com.bootsandcats.oauth2.config;
 
 /**
- * Callback interface that can customize {@link AzureKeyVaultProperties} after they have been
- * bound from configuration properties.
+ * Callback interface that can customize {@link AzureKeyVaultProperties} after they have been bound
+ * from configuration properties.
  */
 @FunctionalInterface
 public interface AzureKeyVaultPropertiesCustomizer {

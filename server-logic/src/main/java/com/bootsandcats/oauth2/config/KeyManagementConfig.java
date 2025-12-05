@@ -29,7 +29,8 @@ public class KeyManagementConfig {
     public BeanPostProcessor azureKeyVaultPropertiesPostProcessor() {
         return new BeanPostProcessor() {
             @Override
-            public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+            public Object postProcessAfterInitialization(Object bean, String beanName)
+                    throws BeansException {
                 if (bean instanceof AzureKeyVaultProperties properties) {
                     // Apply customizers after the bean is fully initialized and configured
                     if (customizers != null) {

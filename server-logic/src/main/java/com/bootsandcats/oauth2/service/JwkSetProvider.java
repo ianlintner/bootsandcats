@@ -171,10 +171,10 @@ public class JwkSetProvider {
                         keyVaultSettings.jwkSecretName(),
                         ex);
                 fallbackToStaticOrThrow(
-                    "Azure Key Vault secret '"
-                        + keyVaultSettings.jwkSecretName()
-                        + "' not found",
-                    ex);
+                        "Azure Key Vault secret '"
+                                + keyVaultSettings.jwkSecretName()
+                                + "' not found",
+                        ex);
             } catch (ParseException ex) {
                 LOGGER.error(
                         "FATAL: Failed to parse JWK Set from Azure Key Vault secret '{}'.",
@@ -184,26 +184,25 @@ public class JwkSetProvider {
             } catch (RuntimeException ex) {
                 LOGGER.error(
                         "FATAL: Unexpected error while loading JWK Set from Azure Key Vault.", ex);
-                fallbackToStaticOrThrow(
-                    "Unexpected error loading JWK from Azure Key Vault", ex);
+                fallbackToStaticOrThrow("Unexpected error loading JWK from Azure Key Vault", ex);
             }
         }
     }
 
-            private JWKSet fallbackToStaticOrThrow(String message) {
-            return fallbackToStaticOrThrow(message, null);
-            }
+    private JWKSet fallbackToStaticOrThrow(String message) {
+        return fallbackToStaticOrThrow(message, null);
+    }
 
-            private JWKSet fallbackToStaticOrThrow(String message, Exception cause) {
-            if (staticJwkSet != null) {
-                LOGGER.warn("{} Falling back to static JWK configuration.", message);
-                cachedKeyVaultSet = staticJwkSet;
-                cacheExpiresAt = Instant.now().plus(cacheTtl);
-                return staticJwkSet;
-            }
+    private JWKSet fallbackToStaticOrThrow(String message, Exception cause) {
+        if (staticJwkSet != null) {
+            LOGGER.warn("{} Falling back to static JWK configuration.", message);
+            cachedKeyVaultSet = staticJwkSet;
+            cacheExpiresAt = Instant.now().plus(cacheTtl);
+            return staticJwkSet;
+        }
 
-            throw new IllegalStateException(message, cause);
-            }
+        throw new IllegalStateException(message, cause);
+    }
 
     private long cachedKeyCount() {
         return cachedKeyVaultSet == null ? 0 : cachedKeyVaultSet.getKeys().size();
