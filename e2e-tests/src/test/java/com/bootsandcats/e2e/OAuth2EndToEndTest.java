@@ -6,6 +6,7 @@ import io.restassured.RestAssured;
 import io.restassured.filter.session.SessionFilter;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import java.net.URLEncoder;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -124,18 +125,18 @@ class OAuth2EndToEndTest {
             Pkce pkce = Pkce.create();
             String state = UUID.randomUUID().toString();
             String authorizePath =
-                "/oauth2/authorize?response_type=code"
-                    + "&client_id="
-                    + env.confidentialClientId
-                    + "&redirect_uri="
-                    + encode(env.confidentialRedirectUri)
-                    + "&scope="
-                    + encode("openid profile email")
-                    + "&state="
-                    + state
-                    + "&code_challenge="
-                    + pkce.codeChallenge
-                    + "&code_challenge_method=S256";
+                    "/oauth2/authorize?response_type=code"
+                            + "&client_id="
+                            + encode(env.confidentialClientId)
+                            + "&redirect_uri="
+                            + encode(env.confidentialRedirectUri)
+                            + "&scope="
+                            + encode("openid profile email")
+                            + "&state="
+                            + encode(state)
+                            + "&code_challenge="
+                            + encode(pkce.codeChallenge)
+                            + "&code_challenge_method=S256";
 
             Response authInit =
                     RestAssured.given()
@@ -390,6 +391,10 @@ class OAuth2EndToEndTest {
     private static boolean isRedirectWithCode(Response response) {
         String location = response.getHeader("Location");
         return location != null && location.contains("code=");
+    }
+
+    private static String encode(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 
     private static String resolveLocation(String baseUrl, String location) {
