@@ -160,8 +160,13 @@ class OAuth2EndToEndTest {
 
             String loginUrl = env.baseUrl + "/login";
             ParsedForm loginForm = ParsedForm.parseFirstForm(loginPage.asString(), loginUrl);
+
+            System.out.println("loginForm fields before set: " + loginForm.fields);
+            System.out.println("env.username: " + env.username + ", env.password: " + env.password);
             loginForm.setSingle("username", env.username);
             loginForm.setSingle("password", env.password);
+            System.out.println("loginForm fields after set: " + loginForm.fields);
+            System.out.println("login cookies: " + cookies);
 
                 var loginRequest =
                     RestAssured.given()
