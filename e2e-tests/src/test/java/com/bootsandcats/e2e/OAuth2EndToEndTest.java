@@ -192,36 +192,9 @@ class OAuth2EndToEndTest {
             System.out.println("authorize status=" + postLoginAuth.statusCode() + " location=" + postLoginAuth.getHeader("Location"));
             if (postLoginAuth.statusCode() == 200) {
                 String body = postLoginAuth.asString();
-                System.out.println("authorize 200 body: " + body.substring(0, Math.min(500, body.length())));
-                System.out.println("authorize 200 FULL body: " + body);
-                // Try to detect consent form
-                Document doc = Jsoup.parse(body);
-                Element consentForm = doc.selectFirst("form");
-                if (consentForm != null && (body.toLowerCase().contains("consent") || consentForm.html().toLowerCase().contains("consent"))) {
-                    System.out.println("Detected consent form, submitting consent...");
-                    ParsedForm parsedConsent = ParsedForm.parseFirstForm(body, env.baseUrl + authorizePath);
-                    System.out.println("Consent form action: " + parsedConsent.action);
-                    System.out.println("Consent form fields: " + parsedConsent.fields);
-                    parsedConsent.approveAllScopes();
-                    System.out.println("Consent form fields after approveAllScopes: " + parsedConsent.fields);
-                    var consentRequest = RestAssured.given()
-                        .filter(session)
-                        .cookies(cookies)
-                        .redirects().follow(false)
-                        .contentType(ContentType.URLENC);
-                    parsedConsent.fields.forEach((k, values) -> {
-                        for (String v : values) {
-                            consentRequest.formParam(k, v);
-                        }
-                    });
-                    Response consentSubmit = consentRequest.post(parsedConsent.action);
-                    cookies.putAll(consentSubmit.getCookies());
-                    return exchangeCodeForTokens(pkce, consentSubmit, state);
-                } else if (body.toLowerCase().contains("welcome") || body.toLowerCase().contains("home") || body.toLowerCase().contains("dashboard")) {
-                    throw new IllegalStateException("Authorize 200 returned home/dashboard page instead of consent or redirect. Body: " + body.substring(0, Math.min(300, body.length())));
-                } else {
-                    throw new IllegalStateException("Authorize 200 returned unknown page. Body: " + body.substring(0, Math.min(300, body.length())));
-                }
+                throw new IllegalStateException(
+                        "Authorization endpoint returned HTML instead of redirect (likely consent page). Consent interstitials must be disabled. Body snippet: "
+                                + body.substring(0, Math.min(500, body.length())));
             }
 
             Response authorizationPage = postLoginAuth;
@@ -243,23 +216,15 @@ class OAuth2EndToEndTest {
             if (isRedirectWithCode(authorizationPage)) {
                 return exchangeCodeForTokens(pkce, authorizationPage, state);
             }
-            String authorizationBody = authorizationPage.asString();
-            if (!authorizationBody.toLowerCase().contains("<form")) {
-                throw new IllegalStateException("Expected consent/login form but none found. status=" + authorizationPage.statusCode()
-                    + " bodySnippet=" + authorizationBody.substring(0, Math.min(300, authorizationBody.length()))
-                    + " headers=" + authorizationPage.getHeaders());
-            }
-            ParsedForm consentForm = ParsedForm.parseFirstForm(authorizationBody, env.baseUrl + authorizePath);
-            consentForm.approveAllScopes();
-            var consentRequest = RestAssured.given()
-                .filter(session)
-                .cookies(cookies)
-                .redirects().follow(false)
-                .contentType(ContentType.URLENC);
-            consentForm.fields.forEach((k, values) -> consentRequest.formParam(k, values.toArray()));
-            Response consentSubmit = consentRequest.post(consentForm.action);
-            cookies.putAll(consentSubmit.getCookies());
-            return exchangeCodeForTokens(pkce, consentSubmit, state);
+
+            throw new IllegalStateException(
+                    "Expected authorization redirect with code but received status="
+                            + authorizationPage.statusCode()
+                            + " headers="
+                            + authorizationPage.getHeaders()
+                            + " bodySnippet="
+                            + authorizationPage.asString().substring(
+                                    0, Math.min(300, authorizationPage.asString().length())));
         }
 
         private AuthorizationResult exchangeCodeForTokens(Pkce pkce, Response response, String expectedState)

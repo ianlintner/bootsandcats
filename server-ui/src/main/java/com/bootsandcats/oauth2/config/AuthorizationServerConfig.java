@@ -25,6 +25,8 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService;
+import org.springframework.security.oauth2.server.authorization.client.JdbcOAuth2AuthorizationConsentService;
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
@@ -43,6 +45,7 @@ import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 import com.bootsandcats.oauth2.log.AuthorizationDiagnosticsFilter;
 
 import com.bootsandcats.oauth2.security.FederatedIdentityAuthenticationSuccessHandler;
+import com.bootsandcats.oauth2.service.AutoApproveOAuth2AuthorizationConsentService;
 import com.bootsandcats.oauth2.service.JwkSetProvider;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
@@ -270,6 +273,16 @@ public class AuthorizationServerConfig {
 
         return repository;
     }
+
+        @Bean
+        public OAuth2AuthorizationConsentService authorizationConsentService(
+                        JdbcTemplate jdbcTemplate, RegisteredClientRepository registeredClientRepository) {
+                JdbcOAuth2AuthorizationConsentService delegate =
+                                new JdbcOAuth2AuthorizationConsentService(
+                                                jdbcTemplate, registeredClientRepository);
+                return new AutoApproveOAuth2AuthorizationConsentService(
+                                delegate, registeredClientRepository);
+        }
 
     private void registerClientIfMissing(
             JdbcRegisteredClientRepository repository,
