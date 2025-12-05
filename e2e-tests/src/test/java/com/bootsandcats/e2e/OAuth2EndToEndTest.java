@@ -256,6 +256,8 @@ class OAuth2EndToEndTest {
 
         private AuthorizationResult exchangeCodeForTokens(Pkce pkce, Response response, String expectedState)
                 throws URISyntaxException {
+            System.out.println("exchangeCodeForTokens: response status=" + response.statusCode() + " Location=" + response.getHeader("Location"));
+            System.out.println("exchangeCodeForTokens: response body snippet: " + response.asString().substring(0, Math.min(500, response.asString().length())));
             String location = response.getHeader("Location");
             if (location == null) {
                 // Try to follow up with a GET to the consent form's action URL if available
