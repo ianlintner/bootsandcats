@@ -18,7 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(TestOAuth2ClientConfiguration.class)
+@Import({TestOAuth2ClientConfiguration.class, TestKeyManagementConfig.class})
 class OpenApiConfigTest {
 
     @Autowired private MockMvc mockMvc;

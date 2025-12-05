@@ -26,7 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(TestOAuth2ClientConfiguration.class)
+@Import({TestOAuth2ClientConfiguration.class, TestKeyManagementConfig.class})
 class JwtTokenTest {
 
     @Autowired private MockMvc mockMvc;

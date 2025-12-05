@@ -17,7 +17,7 @@ import com.bootsandcats.oauth2.config.TestOAuth2ClientConfiguration;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(TestOAuth2ClientConfiguration.class)
+@Import({TestOAuth2ClientConfiguration.class, TestKeyManagementConfig.class})
 class UserInfoControllerTest {
 
     @Autowired private MockMvc mockMvc;
