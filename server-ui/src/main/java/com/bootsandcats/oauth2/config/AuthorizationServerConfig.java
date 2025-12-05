@@ -333,7 +333,7 @@ public class AuthorizationServerConfig {
                                 .build())
                 .clientSettings(
                         ClientSettings.builder()
-                                .requireAuthorizationConsent(true)
+                                .requireAuthorizationConsent(false)
                                 .requireProofKey(true)
                                 .build())
                 .build();
@@ -374,7 +374,7 @@ public class AuthorizationServerConfig {
                                 .build())
                 .clientSettings(
                         ClientSettings.builder()
-                                .requireAuthorizationConsent(true)
+                                .requireAuthorizationConsent(false)
                                 .requireProofKey(false)
                                 .build())
                 .build();
