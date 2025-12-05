@@ -138,29 +138,25 @@ class OAuth2EndToEndTest {
         AuthorizationResult completeAuthorizationCodePkceFlow() throws Exception {
             Pkce pkce = Pkce.create();
             String state = UUID.randomUUID().toString();
-            Map<String, String> authorizeParams =
-                Map.of(
-                    "response_type", "code",
-                    "client_id", env.confidentialClientId,
-                    "redirect_uri", env.confidentialRedirectUri,
-                    "scope", "openid profile email",
-                        "state", state,
-                        "nonce", UUID.randomUUID().toString(),
-                    "code_challenge", pkce.codeChallenge,
-                    "code_challenge_method", "S256");
+            Map<String, String> authorizeParams = Map.of(
+                "response_type", "code",
+                "client_id", env.confidentialClientId,
+                "redirect_uri", env.confidentialRedirectUri,
+                "scope", "openid profile email",
+                "state", state,
+                "nonce", UUID.randomUUID().toString(),
+                "code_challenge", pkce.codeChallenge,
+                "code_challenge_method", "S256"
+            );
 
             String authorizePath = "/oauth2/authorize";
 
-                Response loginPage =
-                    RestAssured.given().baseUri(env.baseUrl).filter(session).get("/login");
-
+            Response loginPage = RestAssured.given().baseUri(env.baseUrl).filter(session).get("/login");
             Map<String, String> cookies = new HashMap<>(loginPage.getCookies());
-            extractPreferredJSessionId(loginPage)
-                    .ifPresent((id) -> cookies.put("JSESSIONID", id));
+            extractPreferredJSessionId(loginPage).ifPresent((id) -> cookies.put("JSESSIONID", id));
 
             String loginUrl = env.baseUrl + "/login";
             ParsedForm loginForm = ParsedForm.parseFirstForm(loginPage.asString(), loginUrl);
-
             System.out.println("loginForm action: " + loginForm.action);
             System.out.println("loginForm fields before set: " + loginForm.fields);
             System.out.println("env.username: " + env.username + ", env.password: " + env.password);
@@ -169,127 +165,92 @@ class OAuth2EndToEndTest {
             System.out.println("loginForm fields after set: " + loginForm.fields);
             System.out.println("login cookies: " + cookies);
 
-                var loginRequest =
-                    RestAssured.given()
-                        .filter(session)
-                        .redirects()
-                        .follow(false)
-                        .contentType(ContentType.URLENC)
-                        .cookies(cookies);
+            var loginRequest = RestAssured.given()
+                .filter(session)
+                .redirects().follow(false)
+                .contentType(ContentType.URLENC)
+                .cookies(cookies);
+            loginForm.fields.forEach((k, values) -> loginRequest.formParam(k, values.toArray()));
+            Response loginSubmit = loginRequest.post(loginForm.action);
+            System.out.println("loginSubmit cookies: " + loginSubmit.getCookies());
+            cookies.putAll(loginSubmit.getCookies());
+            System.out.println("loginSubmit status=" + loginSubmit.statusCode() + " location=" + loginSubmit.getHeader("Location"));
+            if (loginSubmit.statusCode() >= 400) {
+                throw new IllegalStateException("Login failed. status=" + loginSubmit.statusCode()
+                    + " bodySnippet=" + loginSubmit.asString().substring(0, Math.min(300, loginSubmit.asString().length()))
+                    + " headers=" + loginSubmit.getHeaders());
+            }
 
-                loginForm.fields.forEach(
-                    (k, values) -> loginRequest.formParam(k, values.toArray()));
-
-                Response loginSubmit = loginRequest.post(loginForm.action);
-                System.out.println("loginSubmit cookies: " + loginSubmit.getCookies());
-
-                cookies.putAll(loginSubmit.getCookies());
-
-                System.out.println(
-                    "loginSubmit status="
-                        + loginSubmit.statusCode()
-                        + " location="
-                        + loginSubmit.getHeader("Location"));
-
-                if (loginSubmit.statusCode() >= 400) {
-                throw new IllegalStateException(
-                    "Login failed. status="
-                        + loginSubmit.statusCode()
-                        + " bodySnippet="
-                        + loginSubmit
-                            .asString()
-                            .substring(
-                                0, Math.min(300, loginSubmit.asString().length()))
-                        + " headers="
-                        + loginSubmit.getHeaders());
-                }
-
-                Response postLoginAuth =
-                    RestAssured.given()
-                        .baseUri(env.baseUrl)
+            Response postLoginAuth = RestAssured.given()
+                .baseUri(env.baseUrl)
+                .filter(session)
+                .cookies(cookies)
+                .redirects().follow(true)
+                .queryParams(authorizeParams)
+                .get(authorizePath);
+            cookies.putAll(postLoginAuth.getCookies());
+            System.out.println("authorize status=" + postLoginAuth.statusCode() + " location=" + postLoginAuth.getHeader("Location"));
+            if (postLoginAuth.statusCode() == 200) {
+                String body = postLoginAuth.asString();
+                System.out.println("authorize 200 body: " + body.substring(0, Math.min(500, body.length())));
+                // Try to detect consent form
+                Document doc = Jsoup.parse(body);
+                Element consentForm = doc.selectFirst("form");
+                if (consentForm != null && (body.toLowerCase().contains("consent") || consentForm.html().toLowerCase().contains("consent"))) {
+                    System.out.println("Detected consent form, submitting consent...");
+                    ParsedForm parsedConsent = ParsedForm.parseFirstForm(body, env.baseUrl + authorizePath);
+                    parsedConsent.approveAllScopes();
+                    var consentRequest = RestAssured.given()
                         .filter(session)
                         .cookies(cookies)
-                        .redirects()
-                        .follow(true)
-                        .queryParams(authorizeParams)
-                        .get(authorizePath);
-
-                cookies.putAll(postLoginAuth.getCookies());
-
-                System.out.println(
-                    "authorize status="
-                        + postLoginAuth.statusCode()
-                        + " location="
-                        + postLoginAuth.getHeader("Location"));
-                if (postLoginAuth.statusCode() == 200) {
-                    System.out.println("authorize 200 body: " + postLoginAuth.asString().substring(0, Math.min(500, postLoginAuth.asString().length())));
-                }
-
-                Response authorizationPage = postLoginAuth;
-                if (postLoginAuth.statusCode() == 302 && !isRedirectWithCode(postLoginAuth)) {
-                    String redirectLocation = postLoginAuth.getHeader("Location");
-                    if (redirectLocation == null) {
-                    throw new IllegalStateException(
-                        "Expected redirect after login but missing Location header. status="
-                            + postLoginAuth.statusCode()
-                            + " bodySnippet="
-                            + postLoginAuth
-                                .asString()
-                                .substring(
-                                    0,
-                                    Math.min(
-                                        300,
-                                        postLoginAuth.asString().length()))
-                            + " headers="
-                            + postLoginAuth.getHeaders());
-                    }
-
-                    String consentUrl = resolveLocation(env.baseUrl, redirectLocation);
-                    authorizationPage =
-                        RestAssured.given()
-                            .filter(session)
-                            .cookies(cookies)
-                            .redirects()
-                            .follow(true)
-                            .get(consentUrl);
-                }
-
-                cookies.putAll(authorizationPage.getCookies());
-
-                if (isRedirectWithCode(authorizationPage)) {
-                    return exchangeCodeForTokens(pkce, authorizationPage, state);
-                }
-
-                String authorizationBody = authorizationPage.asString();
-                if (!authorizationBody.toLowerCase().contains("<form")) {
-                    throw new IllegalStateException(
-                            "Expected consent/login form but none found. status="
-                                    + authorizationPage.statusCode()
-                                    + " bodySnippet="
-                                    + authorizationBody.substring(0, Math.min(300, authorizationBody.length()))
-                                    + " headers="
-                                    + authorizationPage.getHeaders());
-                }
-
-                    ParsedForm consentForm =
-                        ParsedForm.parseFirstForm(authorizationBody, env.baseUrl + authorizePath);
-                    consentForm.approveAllScopes();
-
-                    var consentRequest =
-                        RestAssured.given()
-                            .filter(session)
-                            .cookies(cookies)
-                            .redirects()
-                            .follow(false)
-                            .contentType(ContentType.URLENC);
-
-                    consentForm.fields.forEach(
-                        (k, values) -> consentRequest.formParam(k, values.toArray()));
-
-                    Response consentSubmit = consentRequest.post(consentForm.action);
-
+                        .redirects().follow(false)
+                        .contentType(ContentType.URLENC);
+                    parsedConsent.fields.forEach((k, values) -> consentRequest.formParam(k, values.toArray()));
+                    Response consentSubmit = consentRequest.post(parsedConsent.action);
                     cookies.putAll(consentSubmit.getCookies());
+                    return exchangeCodeForTokens(pkce, consentSubmit, state);
+                } else if (body.toLowerCase().contains("welcome") || body.toLowerCase().contains("home") || body.toLowerCase().contains("dashboard")) {
+                    throw new IllegalStateException("Authorize 200 returned home/dashboard page instead of consent or redirect. Body: " + body.substring(0, Math.min(300, body.length())));
+                } else {
+                    throw new IllegalStateException("Authorize 200 returned unknown page. Body: " + body.substring(0, Math.min(300, body.length())));
+                }
+            }
 
+            Response authorizationPage = postLoginAuth;
+            if (postLoginAuth.statusCode() == 302 && !isRedirectWithCode(postLoginAuth)) {
+                String redirectLocation = postLoginAuth.getHeader("Location");
+                if (redirectLocation == null) {
+                    throw new IllegalStateException("Expected redirect after login but missing Location header. status=" + postLoginAuth.statusCode()
+                        + " bodySnippet=" + postLoginAuth.asString().substring(0, Math.min(300, postLoginAuth.asString().length()))
+                        + " headers=" + postLoginAuth.getHeaders());
+                }
+                String consentUrl = resolveLocation(env.baseUrl, redirectLocation);
+                authorizationPage = RestAssured.given()
+                    .filter(session)
+                    .cookies(cookies)
+                    .redirects().follow(true)
+                    .get(consentUrl);
+            }
+            cookies.putAll(authorizationPage.getCookies());
+            if (isRedirectWithCode(authorizationPage)) {
+                return exchangeCodeForTokens(pkce, authorizationPage, state);
+            }
+            String authorizationBody = authorizationPage.asString();
+            if (!authorizationBody.toLowerCase().contains("<form")) {
+                throw new IllegalStateException("Expected consent/login form but none found. status=" + authorizationPage.statusCode()
+                    + " bodySnippet=" + authorizationBody.substring(0, Math.min(300, authorizationBody.length()))
+                    + " headers=" + authorizationPage.getHeaders());
+            }
+            ParsedForm consentForm = ParsedForm.parseFirstForm(authorizationBody, env.baseUrl + authorizePath);
+            consentForm.approveAllScopes();
+            var consentRequest = RestAssured.given()
+                .filter(session)
+                .cookies(cookies)
+                .redirects().follow(false)
+                .contentType(ContentType.URLENC);
+            consentForm.fields.forEach((k, values) -> consentRequest.formParam(k, values.toArray()));
+            Response consentSubmit = consentRequest.post(consentForm.action);
+            cookies.putAll(consentSubmit.getCookies());
             return exchangeCodeForTokens(pkce, consentSubmit, state);
         }
 
