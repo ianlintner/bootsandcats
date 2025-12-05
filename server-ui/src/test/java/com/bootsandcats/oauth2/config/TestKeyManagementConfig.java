@@ -17,10 +17,10 @@ import org.springframework.context.annotation.Profile;
 public class TestKeyManagementConfig {
 
     @Bean
-    public AzureKeyVaultProperties testAzureKeyVaultProperties() {
-        AzureKeyVaultProperties props = new AzureKeyVaultProperties();
-        props.setEnabled(false);
-        props.setStaticJwk(JwkSupport.generateEcSigningKey().toJSONString());
-        return props;
+    public AzureKeyVaultPropertiesCustomizer testAzureKeyVaultPropertiesCustomizer() {
+        return properties -> {
+            properties.setEnabled(false);
+            properties.setStaticJwk(JwkSupport.generateEcSigningKey().toJSONString());
+        };
     }
 }
