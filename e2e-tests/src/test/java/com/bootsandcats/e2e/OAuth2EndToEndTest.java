@@ -265,12 +265,18 @@ class OAuth2EndToEndTest {
                     // Try to parse the form action from the response body
                     Document doc = Jsoup.parse(response.asString());
                     Element form = doc.selectFirst("form");
-                    if (form != null && form.hasAttr("action")) {
-                        fallbackUrl = form.absUrl("action");
+                    if (form != null) {
+                        if (form.hasAttr("action")) {
+                            fallbackUrl = form.absUrl("action");
+                        } else {
+                            // No action attribute, fallback to the authorize endpoint
+                            fallbackUrl = env.baseUrl + "/oauth2/authorize";
+                        }
                     }
                 } catch (Exception e) {
                     // ignore, fallbackUrl will remain null
                 }
+                System.out.println("Consent fallback URL: " + fallbackUrl);
                 if (fallbackUrl == null || fallbackUrl.isBlank()) {
                     throw new IllegalStateException("Missing redirect Location header after consent submit, and could not determine fallback URL. Response body: " + response.asString().substring(0, Math.min(500, response.asString().length())));
                 }
