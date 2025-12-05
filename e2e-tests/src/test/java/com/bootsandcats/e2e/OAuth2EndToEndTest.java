@@ -178,10 +178,21 @@ class OAuth2EndToEndTest {
                 }
 
                 if (isRedirectWithCode(authorizationPage)) {
-                return exchangeCodeForTokens(pkce, authorizationPage, state);
+                    return exchangeCodeForTokens(pkce, authorizationPage, state);
                 }
 
-                ParsedForm consentForm = ParsedForm.parseFirstForm(authorizationPage.asString(), authorizeUrl);
+                String authorizationBody = authorizationPage.asString();
+                if (!authorizationBody.toLowerCase().contains("<form")) {
+                    throw new IllegalStateException(
+                            "Expected consent/login form but none found. status="
+                                    + authorizationPage.statusCode()
+                                    + " bodySnippet="
+                                    + authorizationBody.substring(0, Math.min(300, authorizationBody.length()))
+                                    + " headers="
+                                    + authorizationPage.getHeaders());
+                }
+
+                ParsedForm consentForm = ParsedForm.parseFirstForm(authorizationBody, authorizeUrl);
             consentForm.approveAllScopes();
 
             Response consentSubmit =
