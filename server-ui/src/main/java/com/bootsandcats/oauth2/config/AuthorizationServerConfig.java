@@ -33,9 +33,9 @@ import org.springframework.security.oauth2.server.authorization.config.annotatio
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
-import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.AuthorizationServerContextFilter;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
+import org.springframework.security.oauth2.server.authorization.web.OAuth2AuthorizationEndpointFilter;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
@@ -135,7 +135,7 @@ public class AuthorizationServerConfig {
                         (resourceServer) -> resourceServer.jwt(Customizer.withDefaults()));
 
         http.addFilterBefore(
-                new AuthorizationDiagnosticsFilter(), AuthorizationServerContextFilter.class);
+                new AuthorizationDiagnosticsFilter(), OAuth2AuthorizationEndpointFilter.class);
 
         return http.build();
     }
