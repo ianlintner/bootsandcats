@@ -209,7 +209,11 @@ class OAuth2EndToEndTest {
                         .cookies(cookies)
                         .redirects().follow(false)
                         .contentType(ContentType.URLENC);
-                    parsedConsent.fields.forEach((k, values) -> consentRequest.formParam(k, values.toArray()));
+                    parsedConsent.fields.forEach((k, values) -> {
+                        for (String v : values) {
+                            consentRequest.formParam(k, v);
+                        }
+                    });
                     Response consentSubmit = consentRequest.post(parsedConsent.action);
                     cookies.putAll(consentSubmit.getCookies());
                     return exchangeCodeForTokens(pkce, consentSubmit, state);
