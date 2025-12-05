@@ -39,6 +39,7 @@ public class KeyManagementConfig implements EnvironmentAware {
     }
 
     @Bean
+    @Primary
     public AzureKeyVaultProperties azureKeyVaultProperties() {
         Binder binder = new Binder(ConfigurationPropertySources.get(environment));
         BindHandler handler = new ValidationBindHandler();
