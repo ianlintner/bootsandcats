@@ -7,7 +7,6 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesBindin
 
 /** Configuration properties for Azure Key Vault backed JWK management. */
 @ConfigurationProperties(prefix = "azure.keyvault")
-@ConfigurationPropertiesBinding
 public class AzureKeyVaultProperties {
 
     private boolean enabled = false;
