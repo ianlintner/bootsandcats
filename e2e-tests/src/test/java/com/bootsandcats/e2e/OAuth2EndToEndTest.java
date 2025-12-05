@@ -161,6 +161,7 @@ class OAuth2EndToEndTest {
             String loginUrl = env.baseUrl + "/login";
             ParsedForm loginForm = ParsedForm.parseFirstForm(loginPage.asString(), loginUrl);
 
+            System.out.println("loginForm action: " + loginForm.action);
             System.out.println("loginForm fields before set: " + loginForm.fields);
             System.out.println("env.username: " + env.username + ", env.password: " + env.password);
             loginForm.setSingle("username", env.username);
@@ -180,6 +181,7 @@ class OAuth2EndToEndTest {
                     (k, values) -> loginRequest.formParam(k, values.toArray()));
 
                 Response loginSubmit = loginRequest.post(loginForm.action);
+                System.out.println("loginSubmit cookies: " + loginSubmit.getCookies());
 
                 cookies.putAll(loginSubmit.getCookies());
 
