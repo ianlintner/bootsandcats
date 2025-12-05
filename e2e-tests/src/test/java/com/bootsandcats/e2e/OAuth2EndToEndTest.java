@@ -217,10 +217,13 @@ class OAuth2EndToEndTest {
                 cookies.putAll(postLoginAuth.getCookies());
 
                 System.out.println(
-                        "authorize status="
-                                + postLoginAuth.statusCode()
-                                + " location="
-                                + postLoginAuth.getHeader("Location"));
+                    "authorize status="
+                        + postLoginAuth.statusCode()
+                        + " location="
+                        + postLoginAuth.getHeader("Location"));
+                if (postLoginAuth.statusCode() == 200) {
+                    System.out.println("authorize 200 body: " + postLoginAuth.asString().substring(0, Math.min(500, postLoginAuth.asString().length())));
+                }
 
                 Response authorizationPage = postLoginAuth;
                 if (postLoginAuth.statusCode() == 302 && !isRedirectWithCode(postLoginAuth)) {
