@@ -33,31 +33,14 @@ import org.springframework.security.oauth2.server.authorization.config.annotatio
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
+import org.springframework.security.oauth2.server.authorization.web.context.AuthorizationServerContextFilter;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
-import org.springframework.security.oauth2.server.authorization.web.OAuth2AuthorizationEndpointFilter;
-import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
-import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer.AuthorizationEndpoint;
-import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer.OidcConfigurer;
-import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer.TokenEndpoint;
-import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer.ClientAuthentication;
-import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer.OidcLogoutEndpoint;
 import com.bootsandcats.oauth2.log.AuthorizationDiagnosticsFilter;
-import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer.AuthorizationServerMetadataEndpoint;
-import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer.OidcUserInfoEndpoint;
-import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer.OidcClientRegistrationEndpoint;
-import org.springframework.security.oauth2.server.authorization.context.ProviderContextFilter;
-import org.springframework.security.web.authentication.ui.DefaultLoginPageGeneratingFilter;
-import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
-import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService;
-import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsent;
-import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 import com.bootsandcats.oauth2.security.FederatedIdentityAuthenticationSuccessHandler;
 import com.bootsandcats.oauth2.service.JwkSetProvider;
@@ -150,6 +133,9 @@ public class AuthorizationServerConfig {
                 // Accept access tokens for User Info and/or Client Registration
                 .oauth2ResourceServer(
                         (resourceServer) -> resourceServer.jwt(Customizer.withDefaults()));
+
+        http.addFilterBefore(
+                new AuthorizationDiagnosticsFilter(), AuthorizationServerContextFilter.class);
 
         return http.build();
     }
