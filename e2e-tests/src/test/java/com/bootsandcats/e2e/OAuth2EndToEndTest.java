@@ -199,7 +199,10 @@ class OAuth2EndToEndTest {
                 if (consentForm != null && (body.toLowerCase().contains("consent") || consentForm.html().toLowerCase().contains("consent"))) {
                     System.out.println("Detected consent form, submitting consent...");
                     ParsedForm parsedConsent = ParsedForm.parseFirstForm(body, env.baseUrl + authorizePath);
+                    System.out.println("Consent form action: " + parsedConsent.action);
+                    System.out.println("Consent form fields: " + parsedConsent.fields);
                     parsedConsent.approveAllScopes();
+                    System.out.println("Consent form fields after approveAllScopes: " + parsedConsent.fields);
                     var consentRequest = RestAssured.given()
                         .filter(session)
                         .cookies(cookies)
