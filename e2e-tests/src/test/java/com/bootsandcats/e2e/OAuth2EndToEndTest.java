@@ -16,6 +16,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -122,6 +123,18 @@ class OAuth2EndToEndTest {
             this.env = env;
         }
 
+        private Optional<String> extractPreferredJSessionId(Response response) {
+            List<String> setCookies = response.getHeaders().getValues("Set-Cookie");
+            if (setCookies == null) {
+                return Optional.empty();
+            }
+            return setCookies.stream()
+                    .filter(value -> value.startsWith("JSESSIONID=") && value.contains("Path=/"))
+                    .map(value -> value.split(";", 2)[0])
+                    .map(cookie -> cookie.substring("JSESSIONID=".length()))
+                    .findFirst();
+        }
+
         AuthorizationResult completeAuthorizationCodePkceFlow() throws Exception {
             Pkce pkce = Pkce.create();
             String state = UUID.randomUUID().toString();
@@ -141,6 +154,10 @@ class OAuth2EndToEndTest {
                 Response loginPage =
                     RestAssured.given().baseUri(env.baseUrl).filter(session).get("/login");
 
+            Map<String, String> cookies = new HashMap<>(loginPage.getCookies());
+            extractPreferredJSessionId(loginPage)
+                    .ifPresent((id) -> cookies.put("JSESSIONID", id));
+
             String loginUrl = env.baseUrl + "/login";
             ParsedForm loginForm = ParsedForm.parseFirstForm(loginPage.asString(), loginUrl);
             loginForm.setSingle("username", env.username);
@@ -151,12 +168,15 @@ class OAuth2EndToEndTest {
                         .filter(session)
                         .redirects()
                         .follow(false)
-                        .contentType(ContentType.URLENC);
+                        .contentType(ContentType.URLENC)
+                        .cookies(cookies);
 
                 loginForm.fields.forEach(
                     (k, values) -> loginRequest.formParam(k, values.toArray()));
 
                 Response loginSubmit = loginRequest.post(loginForm.action);
+
+                cookies.putAll(loginSubmit.getCookies());
 
                 System.out.println(
                     "loginSubmit status="
@@ -181,10 +201,13 @@ class OAuth2EndToEndTest {
                     RestAssured.given()
                         .baseUri(env.baseUrl)
                         .filter(session)
+                        .cookies(cookies)
                         .redirects()
                         .follow(true)
                         .queryParams(authorizeParams)
                         .get(authorizePath);
+
+                cookies.putAll(postLoginAuth.getCookies());
 
                 System.out.println(
                         "authorize status="
@@ -215,10 +238,13 @@ class OAuth2EndToEndTest {
                     authorizationPage =
                         RestAssured.given()
                             .filter(session)
+                            .cookies(cookies)
                             .redirects()
                             .follow(true)
                             .get(consentUrl);
                 }
+
+                cookies.putAll(authorizationPage.getCookies());
 
                 if (isRedirectWithCode(authorizationPage)) {
                     return exchangeCodeForTokens(pkce, authorizationPage, state);
@@ -242,6 +268,7 @@ class OAuth2EndToEndTest {
                     var consentRequest =
                         RestAssured.given()
                             .filter(session)
+                            .cookies(cookies)
                             .redirects()
                             .follow(false)
                             .contentType(ContentType.URLENC);
@@ -250,6 +277,8 @@ class OAuth2EndToEndTest {
                         (k, values) -> consentRequest.formParam(k, values.toArray()));
 
                     Response consentSubmit = consentRequest.post(consentForm.action);
+
+                    cookies.putAll(consentSubmit.getCookies());
 
             return exchangeCodeForTokens(pkce, consentSubmit, state);
         }
