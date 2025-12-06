@@ -245,7 +245,7 @@ public class AuthorizationServerConfig {
      */
     @Bean
     public RegisteredClientRepository registeredClientRepository(
-            JdbcTemplate jdbcTemplate, PasswordEncoder passwordEncoder, Flyway flyway) {
+            JdbcTemplate jdbcTemplate, PasswordEncoder passwordEncoder) {
         JdbcRegisteredClientRepository repository =
                 new JdbcRegisteredClientRepository(jdbcTemplate);
 
