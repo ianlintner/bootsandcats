@@ -12,6 +12,7 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
+import org.springframework.security.oauth2.server.authorization.jackson2.OAuth2AuthorizationServerJackson2Module;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -35,6 +36,7 @@ public class JpaRegisteredClientRepository implements RegisteredClientRepository
         ClassLoader classLoader = JpaRegisteredClientRepository.class.getClassLoader();
         List<Module> securityModules = SecurityJackson2Modules.getModules(classLoader);
         this.objectMapper.registerModules(securityModules);
+        this.objectMapper.registerModule(new OAuth2AuthorizationServerJackson2Module());
         this.objectMapper.registerModule(new JavaTimeModule());
     }
 
