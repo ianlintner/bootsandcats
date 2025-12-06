@@ -8,9 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 
-/**
- * Renders the custom themed login page used by the Authorization Server.
- */
+/** Renders the custom themed login page used by the Authorization Server. */
 @Controller
 public class LoginController {
 

@@ -28,6 +28,12 @@ spotless {
     }
 }
 
+// Ensure Spotless sees generated frontend assets as ready when it walks the repo
+// (Gradle 9 task validation flags implicit access to :profile-ui:npmInstall outputs).
+tasks.named("spotlessJava") {
+    dependsOn(":profile-ui:npmInstall")
+}
+
 subprojects {
     apply(plugin = "io.spring.dependency-management")
     apply(plugin = "java")
