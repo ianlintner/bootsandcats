@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign in · OAuth2 Authorization Server</title>
+    <link rel="stylesheet" th:href="@{/css/profile.css}" />
+</head>
+<body class="auth-page">
+<div class="auth-shell">
+    <section class="auth-card">
+        <div class="auth-meta">OAuth2 Authorization Server</div>
+        <h1>Welcome back</h1>
+        <p class="auth-subtitle">Shared profile theme, now on the server login screen.</p>
+
+        <div th:if="${param.error}" class="alert" role="alert">
+            <span>Authentication failed. Check your credentials and try again.</span>
+        </div>
+
+        <form th:action="@{/login}" method="post" class="form-grid">
+            <div class="form-field">
+                <label class="form-label" for="username">Username</label>
+                <input class="form-input" id="username" name="username" type="text" placeholder="user" required autofocus />
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="password">Password</label>
+                <input class="form-input" id="password" name="password" type="password" placeholder="••••••••" required />
+            </div>
+
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <button type="submit" class="primary-button">Sign in</button>
+            <p class="helper-text">
+                Demo users: <span class="badge-soft">user / password</span> · <span class="badge-soft">admin / admin</span>
+            </p>
+        </form>
+
+        <div class="auth-footer">
+            <a class="secondary-link" href="/docs/index.html">Read the docs →</a>
+            <span class="small-print">ES256 tokens · PKCE · OIDC ready</span>
+        </div>
+    </section>
+
+    <section class="auth-card provider-card">
+        <div class="auth-meta">Federated login</div>
+        <h2>Sign in with a provider</h2>
+        <p class="auth-subtitle">Reuse the same theme while delegating sign-in.</p>
+
+        <div class="provider-grid">
+            <a th:if="${githubEnabled}" class="provider-button github" href="/oauth2/authorization/github">Continue with GitHub</a>
+            <a th:if="${googleEnabled}" class="provider-button google" href="/oauth2/authorization/google">Continue with Google</a>
+            <a th:if="${azureEnabled}" class="provider-button azure" href="/oauth2/authorization/azure">Continue with Microsoft Entra</a>
+        </div>
+
+        <p class="helper-text" th:if="${githubEnabled or googleEnabled or azureEnabled}">
+            Buttons hide automatically when a provider client ID is not configured.
+        </p>
+        <p class="helper-text" th:unless="${githubEnabled or googleEnabled or azureEnabled}">
+            Configure provider client IDs (github/google/azure) to enable federated login buttons.
+        </p>
+        <p class="small-print">CSRF protection remains enabled; token endpoints stay exempt per security config.</p>
+    </section>
+</div>
+</body>
+</html>
