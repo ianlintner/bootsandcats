@@ -13,6 +13,7 @@ labels:
 resources:
   - deployment.yaml
   - postgres.yaml
+  - redis.yaml
   - pdb.yaml
   - canary-deployment.yaml
   - virtualservices.yaml
