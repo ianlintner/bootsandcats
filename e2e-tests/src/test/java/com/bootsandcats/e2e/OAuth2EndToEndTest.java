@@ -39,12 +39,13 @@ import org.apache.logging.log4j.Logger;
 
 class OAuth2EndToEndTest {
 
-    private static TestEnvironment env;
-    private static final Path LOG_PATH =
+        private static TestEnvironment env;
+        private static final Path LOG_PATH =
             Paths.get(System.getProperty("java.io.tmpdir"), "oauth2-e2e.log");
-    private static final HttpClient HTTP_CLIENT =
+        private static final int BANNER_WIDTH = 72;
+        private static final HttpClient HTTP_CLIENT =
             HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build();
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+        private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
         private static final Logger LOGGER = LogManager.getLogger(OAuth2EndToEndTest.class);
 
     @BeforeAll
@@ -59,7 +60,11 @@ class OAuth2EndToEndTest {
         } catch (Exception ignored) {
         }
         env = TestEnvironment.fromEnv(baseUrl);
-        log("Starting OAuth2 E2E test. baseUrl=%s", env.baseUrl);
+        logBanner("OAuth2 E2E :: Authorization Code + PKCE");
+        log("baseUrl=%s", env.baseUrl);
+        log("clientId=%s redirectUri=%s", env.confidentialClientId, env.confidentialRedirectUri);
+        log("username=%s", env.username);
+        logDivider("Begin flow");
     }
 
     @Test
@@ -67,6 +72,8 @@ class OAuth2EndToEndTest {
     void authorizationCodePkceFlow_endToEnd() throws Exception {
         AuthorizationClient client = new AuthorizationClient(env);
         AuthorizationResult result = client.completeAuthorizationCodePkceFlow();
+
+        logDivider("Step 4 :: Userinfo / Refresh / Introspect / Revoke");
 
         assertThat(result.accessToken).isNotBlank();
         assertThat(result.refreshToken).isNotBlank();
@@ -160,7 +167,7 @@ class OAuth2EndToEndTest {
                             "S256");
 
             String authorizePath = "/oauth2/authorize";
-
+            logDivider("Step 1 :: Login");
             HttpResult loginPage = get(env.baseUrl + "/login", Map.of(), cookies, false);
             log("GET /login -> status=%d cookies=%s", loginPage.statusCode(), cookies);
 
@@ -174,8 +181,8 @@ class OAuth2EndToEndTest {
             log("loginForm fields after set=%s", loginForm.fields);
             log("login cookies=%s", cookies);
 
-            HttpResult loginSubmit = postForm(loginForm.action, loginForm.fields, Map.of(), cookies, false);
-            log("POST %s -> status=%d location=%s cookies=%s",
+                HttpResult loginSubmit = postForm(loginForm.action, loginForm.fields, Map.of(), cookies, false);
+                log("POST %s -> status=%d location=%s cookies=%s",
                     loginForm.action,
                     loginSubmit.statusCode(),
                     loginSubmit.location(),
@@ -189,7 +196,7 @@ class OAuth2EndToEndTest {
                                 + " headers="
                                 + loginSubmit.headers());
             }
-
+            logDivider("Step 2 :: Authorize & Consent");
             String authorizeUrl = env.baseUrl + authorizePath + "?" + encodeQuery(authorizeParams);
             HttpResult postLoginAuth = get(authorizeUrl, Map.of(), cookies, false);
             log("GET %s -> status=%d location=%s", authorizePath, postLoginAuth.statusCode(), postLoginAuth.location());
@@ -225,8 +232,8 @@ class OAuth2EndToEndTest {
                 authorizationPage = get(consentUrl, Map.of(), cookies, true);
                 log("Follow consent %s -> status=%d location=%s", consentUrl, authorizationPage.statusCode(), authorizationPage.location());
             }
-
             if (isRedirectWithCode(authorizationPage)) {
+                logDivider("Step 3 :: Token Exchange");
                 return exchangeCodeForTokens(pkce, authorizationPage, state, cookies);
             }
 
@@ -312,6 +319,9 @@ class OAuth2EndToEndTest {
             String accessToken = tokenJson.path("access_token").asText();
             String refreshToken = tokenJson.path("refresh_token").asText();
             String idToken = tokenJson.path("id_token").asText();
+
+                log("Tokens received (lengths): access=%d refresh=%d id=%d",
+                    accessToken.length(), refreshToken.length(), idToken.length());
 
             return new AuthorizationResult(accessToken, refreshToken, idToken);
         }
@@ -484,6 +494,36 @@ class OAuth2EndToEndTest {
             // As a fallback, write to stdout if file logging fails
             System.out.println("[E2E-LOG-FALLBACK] " + line + " error=" + e.getMessage());
         }
+    }
+
+    private static void logBanner(String title) {
+        log("\n%s\n%s\n%s",
+                bannerLine('┏', '━', '┓'),
+                bannerContent(title),
+                bannerLine('┗', '━', '┛'));
+    }
+
+    private static void logDivider(String label) {
+        String divider = "─".repeat(Math.min(48, BANNER_WIDTH));
+        if (label == null || label.isBlank()) {
+            log(divider);
+        } else {
+            log("%s %s %s", divider, label, divider);
+        }
+    }
+
+    private static String bannerLine(char left, char fill, char right) {
+        return left + String.valueOf(fill).repeat(BANNER_WIDTH - 2) + right;
+    }
+
+    private static String bannerContent(String title) {
+        String trimmed = title == null ? "" : title.strip();
+        int innerWidth = BANNER_WIDTH - 4;
+        String truncated = trimmed.length() > innerWidth ? trimmed.substring(0, innerWidth) : trimmed;
+        int paddingTotal = innerWidth - truncated.length();
+        int leftPad = paddingTotal / 2;
+        int rightPad = paddingTotal - leftPad;
+        return "┃ " + " ".repeat(leftPad) + truncated + " ".repeat(rightPad) + " ┃";
     }
 
     private static class ParsedForm {
