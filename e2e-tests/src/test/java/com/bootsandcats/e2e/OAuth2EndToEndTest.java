@@ -7,6 +7,11 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
+import java.time.Instant;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -32,6 +37,8 @@ import io.restassured.response.Response;
 class OAuth2EndToEndTest {
 
     private static TestEnvironment env;
+    private static final Path LOG_PATH =
+            Paths.get(System.getProperty("java.io.tmpdir"), "oauth2-e2e.log");
 
     @BeforeAll
     static void setup() {
@@ -39,8 +46,12 @@ class OAuth2EndToEndTest {
         Assumptions.assumeTrue(
                 baseUrl != null && !baseUrl.isBlank(),
                 "Skipping E2E tests because E2E_BASE_URL is not set");
+        try {
+            Files.deleteIfExists(LOG_PATH);
+        } catch (Exception ignored) {
+        }
         env = TestEnvironment.fromEnv(baseUrl);
-        // Verbose request/response logging handled per-request with log().all()
+        log("Starting OAuth2 E2E test. baseUrl=%s", env.baseUrl);
     }
 
     @Test
@@ -54,29 +65,25 @@ class OAuth2EndToEndTest {
         assertThat(result.idToken).isNotBlank();
 
         Response userInfoResponse =
-                RestAssured.given()
-                .log()
-                .all()
-                        .baseUri(env.baseUrl)
-                        .auth()
-                        .oauth2(result.accessToken)
-                        .get("/userinfo");
+            RestAssured.given()
+                .baseUri(env.baseUrl)
+                .auth()
+                .oauth2(result.accessToken)
+                .get("/userinfo");
 
         assertThat(userInfoResponse.statusCode()).isEqualTo(200);
         assertThat(userInfoResponse.jsonPath().getString("sub")).isNotBlank();
 
         // Refresh token
         Response refreshResponse =
-                RestAssured.given()
-                .log()
-                .all()
-                        .baseUri(env.baseUrl)
-                        .contentType(ContentType.URLENC)
-                        .formParam("client_id", env.confidentialClientId)
-                        .formParam("client_secret", env.confidentialClientSecret)
-                        .formParam("grant_type", "refresh_token")
-                        .formParam("refresh_token", result.refreshToken)
-                        .post("/oauth2/token");
+            RestAssured.given()
+                .baseUri(env.baseUrl)
+                .contentType(ContentType.URLENC)
+                .formParam("client_id", env.confidentialClientId)
+                .formParam("client_secret", env.confidentialClientSecret)
+                .formParam("grant_type", "refresh_token")
+                .formParam("refresh_token", result.refreshToken)
+                .post("/oauth2/token");
 
         assertThat(refreshResponse.statusCode()).isEqualTo(200);
         String refreshedAccessToken = refreshResponse.jsonPath().getString("access_token");
@@ -84,46 +91,40 @@ class OAuth2EndToEndTest {
 
         // Introspect should show active
         Response introspectResponse =
-                RestAssured.given()
-                .log()
-                .all()
-                        .baseUri(env.baseUrl)
-                        .contentType(ContentType.URLENC)
-                        .formParam("client_id", env.confidentialClientId)
-                        .formParam("client_secret", env.confidentialClientSecret)
-                        .formParam("token", refreshedAccessToken)
-                        .formParam("token_type_hint", "access_token")
-                        .post("/oauth2/introspect");
+            RestAssured.given()
+                .baseUri(env.baseUrl)
+                .contentType(ContentType.URLENC)
+                .formParam("client_id", env.confidentialClientId)
+                .formParam("client_secret", env.confidentialClientSecret)
+                .formParam("token", refreshedAccessToken)
+                .formParam("token_type_hint", "access_token")
+                .post("/oauth2/introspect");
 
         assertThat(introspectResponse.statusCode()).isEqualTo(200);
         assertThat(introspectResponse.jsonPath().getBoolean("active")).isTrue();
 
         // Revoke access token
         Response revokeResponse =
-                RestAssured.given()
-                .log()
-                .all()
-                        .baseUri(env.baseUrl)
-                        .contentType(ContentType.URLENC)
-                        .formParam("client_id", env.confidentialClientId)
-                        .formParam("client_secret", env.confidentialClientSecret)
-                        .formParam("token", refreshedAccessToken)
-                        .formParam("token_type_hint", "access_token")
-                        .post("/oauth2/revoke");
+            RestAssured.given()
+                .baseUri(env.baseUrl)
+                .contentType(ContentType.URLENC)
+                .formParam("client_id", env.confidentialClientId)
+                .formParam("client_secret", env.confidentialClientSecret)
+                .formParam("token", refreshedAccessToken)
+                .formParam("token_type_hint", "access_token")
+                .post("/oauth2/revoke");
 
         assertThat(revokeResponse.statusCode()).isIn(200, 204);
 
         Response introspectAfterRevoke =
-                RestAssured.given()
-                .log()
-                .all()
-                        .baseUri(env.baseUrl)
-                        .contentType(ContentType.URLENC)
-                        .formParam("client_id", env.confidentialClientId)
-                        .formParam("client_secret", env.confidentialClientSecret)
-                        .formParam("token", refreshedAccessToken)
-                        .formParam("token_type_hint", "access_token")
-                        .post("/oauth2/introspect");
+            RestAssured.given()
+                .baseUri(env.baseUrl)
+                .contentType(ContentType.URLENC)
+                .formParam("client_id", env.confidentialClientId)
+                .formParam("client_secret", env.confidentialClientSecret)
+                .formParam("token", refreshedAccessToken)
+                .formParam("token_type_hint", "access_token")
+                .post("/oauth2/introspect");
 
         assertThat(introspectAfterRevoke.statusCode()).isEqualTo(200);
         assertThat(introspectAfterRevoke.jsonPath().getBoolean("active")).isFalse();
