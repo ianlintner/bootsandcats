@@ -34,6 +34,8 @@ import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 class OAuth2EndToEndTest {
 
@@ -43,6 +45,7 @@ class OAuth2EndToEndTest {
     private static final HttpClient HTTP_CLIENT =
             HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+        private static final Logger LOGGER = LogManager.getLogger(OAuth2EndToEndTest.class);
 
     @BeforeAll
     static void setup() {
@@ -459,6 +462,7 @@ class OAuth2EndToEndTest {
     private static void log(String message, Object... args) {
         String formatted = args.length == 0 ? message : String.format(message, args);
         String line = "[" + Instant.now() + "] " + formatted + System.lineSeparator();
+        LOGGER.info(formatted);
         try {
             Files.writeString(
                     LOG_PATH,
