@@ -23,6 +23,13 @@ class AuthorizationServerConfigTest {
 
     @Autowired private PasswordEncoder passwordEncoder;
 
+    @Autowired(required = false) private org.flywaydb.core.Flyway flyway;
+
+    @Test
+    void flywayShouldBePresent() {
+        assertThat(flyway).as("Flyway bean should be present").isNotNull();
+    }
+
     @Test
     void registeredClientRepository_shouldContainDemoClient() {
         RegisteredClient client = registeredClientRepository.findByClientId("demo-client");
