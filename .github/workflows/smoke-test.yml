@@ -33,7 +33,7 @@ jobs:
           gradle-version: '9.0.0'
 
       - name: Build application JAR
-        run: gradle :server-ui:bootJar -x test --no-daemon --build-cache --parallel
+        run: gradle :server-ui:bootJar :profile-ui:bootJar -x test --no-daemon --build-cache --parallel
 
       - name: Start Docker Compose environment
         run: |
@@ -44,6 +44,11 @@ jobs:
         run: |
           echo "OAuth2 server health status:"
           curl -s http://localhost:9000/actuator/health | jq .
+
+      - name: Show profile-ui health status
+        run: |
+          echo "Profile UI health status:"
+          curl -s http://localhost:8080/actuator/health | jq .
 
       - name: Run smoke tests
         id: smoke-tests
@@ -200,6 +205,7 @@ jobs:
           docker compose logs oauth2-server > build/smoke-test-results/docker-logs/oauth2-server.log 2>&1 || true
           docker compose logs postgres > build/smoke-test-results/docker-logs/postgres.log 2>&1 || true
           docker compose logs otel-collector > build/smoke-test-results/docker-logs/otel-collector.log 2>&1 || true
+          docker compose logs profile-ui > build/smoke-test-results/docker-logs/profile-ui.log 2>&1 || true
 
       - name: Stop Docker Compose environment
         if: always()

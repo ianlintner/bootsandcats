@@ -15,7 +15,7 @@ services:
       - OTEL_SDK_DISABLED=true
       - SPRING_AUTOCONFIGURE_EXCLUDE=io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration
       # OAuth2 configuration for CI/testing (use secrets in real production)
-      - OAUTH2_ISSUER_URL=http://localhost:9000
+      - OAUTH2_ISSUER_URL=http://host.docker.internal:9000
       - OAUTH2_DEMO_CLIENT_SECRET=demo-secret
       - OAUTH2_M2M_CLIENT_SECRET=m2m-secret
       - OAUTH2_DEMO_USER_PASSWORD=password
@@ -30,6 +30,8 @@ services:
       - SERVER_SSL_ENABLED=false
       - AZURE_KEYVAULT_ENABLED=false
       - AZURE_KEYVAULT_STATIC_JWK={"keys":[{"kty":"EC","d":"1gpnMBNXbXOf7CvKai8zZVrt0p89tqBYDxCiTLrV40g","use":"sig","crv":"P-256","kid":"728d1378-6c1a-41bb-9f5b-89af3082f4b2","x":"tTKtyqNAFGxXmsPlctnDEQoS_U1wMECEl9_U1o5IYE4","y":"zHA4qo3n2R8Wq7ujiFCjoj5-eQYfRctIH_ad6HCqe80","alg":"ES256"}]}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       postgres:
         condition: service_healthy
@@ -66,6 +68,33 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+
+  profile-ui:
+    build:
+      context: .
+      dockerfile: profile-ui/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - OAUTH2_ISSUER_URI=http://host.docker.internal:9000
+      - OAUTH2_CLIENT_ID=profile-ui
+      - OAUTH2_CLIENT_SECRET=${OAUTH2_CLIENT_SECRET:-demo-secret}
+      - OAUTH2_USERINFO_PATH=/userinfo
+      - OAUTH2_HEALTH_PATH=/actuator/health
+      - SERVER_FORWARD_HEADERS_STRATEGY=native
+      - OTEL_SDK_DISABLED=true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      oauth2-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
