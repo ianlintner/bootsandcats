@@ -126,6 +126,12 @@ spec:
             secretKeyRef:
               name: oauth2-jwk-secret
               key: static-jwk
+        - name: SPRING_BOOT_ADMIN_CLIENT_URL
+          value: "http://localhost:9000"
+        - name: SPRING_BOOT_ADMIN_CLIENT_INSTANCE_SERVICE_BASE_URL
+          value: "http://localhost:9000"
+        - name: SPRING_BOOT_ADMIN_CONTEXT_PATH
+          value: "/"
         - name: SERVER_SSL_ENABLED
           value: "false"
         # Redis Session Configuration
