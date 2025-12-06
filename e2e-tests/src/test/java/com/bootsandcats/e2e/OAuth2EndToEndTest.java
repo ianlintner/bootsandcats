@@ -4,14 +4,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.SecureRandom;
-import java.time.Instant;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -19,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -29,17 +34,17 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import io.restassured.RestAssured;
-import io.restassured.config.CsrfConfig;
-import io.restassured.filter.session.SessionFilter;
-import io.restassured.http.ContentType;
-import io.restassured.response.Response;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 class OAuth2EndToEndTest {
 
     private static TestEnvironment env;
     private static final Path LOG_PATH =
             Paths.get(System.getProperty("java.io.tmpdir"), "oauth2-e2e.log");
+    private static final HttpClient HTTP_CLIENT =
+            HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @BeforeAll
     static void setup() {
