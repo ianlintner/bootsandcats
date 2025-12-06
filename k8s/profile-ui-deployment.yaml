@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: canary-app
+  name: profile-ui
   namespace: default
   labels:
-    app: canary-app
+    app: profile-ui
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: canary-app
+      app: profile-ui
   template:
     metadata:
       labels:
-        app: canary-app
+        app: profile-ui
     spec:
       containers:
-      - name: canary-app
-        image: gabby.azurecr.io/canary-app:latest
+      - name: profile-ui
+        image: gabby.azurecr.io/profile-ui:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -28,7 +28,7 @@ spec:
         - name: OAUTH2_ISSUER_URI
           value: "https://oauth2.cat-herding.net"
         - name: OAUTH2_CLIENT_ID
-          value: "canary-app"
+          value: "profile-ui"
         - name: OAUTH2_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
@@ -45,11 +45,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: canary-app
+  name: profile-ui
   namespace: default
 spec:
   selector:
-    app: canary-app
+    app: profile-ui
   ports:
   - port: 80
     targetPort: 8080
