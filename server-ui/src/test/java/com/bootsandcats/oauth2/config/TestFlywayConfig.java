@@ -19,7 +19,8 @@ public class TestFlywayConfig {
     @Primary
     public Flyway testFlyway(DataSource dataSource) {
         Flyway flyway =
-                Flyway.configure()
+            Flyway.configure()
+                .baselineOnMigrate(true)
                 .locations("classpath:db/migration")
                 .dataSource(dataSource)
                 .load();
