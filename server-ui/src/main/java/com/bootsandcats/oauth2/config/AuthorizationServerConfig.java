@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -244,7 +245,7 @@ public class AuthorizationServerConfig {
      */
     @Bean
     public RegisteredClientRepository registeredClientRepository(
-            JdbcTemplate jdbcTemplate, PasswordEncoder passwordEncoder) {
+            JdbcTemplate jdbcTemplate, PasswordEncoder passwordEncoder, Flyway flyway) {
         JdbcRegisteredClientRepository repository =
                 new JdbcRegisteredClientRepository(jdbcTemplate);
 
