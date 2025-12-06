@@ -29,6 +29,8 @@ spec:
           value: "https://oauth2.cat-herding.net"
         - name: OAUTH2_CLIENT_ID
           value: "canary-app"
+        - name: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY
+          value: "DEBUG"
         - name: OAUTH2_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
