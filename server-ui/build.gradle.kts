@@ -1,5 +1,5 @@
 plugins {
-    id("org.springframework.boot") version "3.4.1"
+    id("org.springframework.boot")
     id("io.spring.dependency-management")
     id("java")
 }
