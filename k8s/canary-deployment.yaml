@@ -25,14 +25,8 @@ spec:
         env:
         - name: SERVER_FORWARD_HEADERS_STRATEGY
           value: "native"
-        - name: OAUTH2_AUTHORIZATION_URI
-          value: "https://oauth2.cat-herding.net/oauth2/authorize"
-        - name: OAUTH2_TOKEN_URI
-          value: "https://oauth2.cat-herding.net/oauth2/token"
-        - name: OAUTH2_JWK_SET_URI
-          value: "https://oauth2.cat-herding.net/oauth2/jwks"
-        - name: OAUTH2_USERINFO_URI
-          value: "https://oauth2.cat-herding.net/userinfo"
+        - name: OAUTH2_ISSUER_URI
+          value: "https://oauth2.cat-herding.net"
         - name: OAUTH2_CLIENT_ID
           value: "canary-app"
         - name: OAUTH2_CLIENT_SECRET
