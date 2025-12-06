@@ -40,6 +40,7 @@ class OAuth2EndToEndTest {
                 baseUrl != null && !baseUrl.isBlank(),
                 "Skipping E2E tests because E2E_BASE_URL is not set");
         env = TestEnvironment.fromEnv(baseUrl);
+        // Verbose request/response logging handled per-request with log().all()
     }
 
     @Test
@@ -54,6 +55,8 @@ class OAuth2EndToEndTest {
 
         Response userInfoResponse =
                 RestAssured.given()
+                .log()
+                .all()
                         .baseUri(env.baseUrl)
                         .auth()
                         .oauth2(result.accessToken)
@@ -65,6 +68,8 @@ class OAuth2EndToEndTest {
         // Refresh token
         Response refreshResponse =
                 RestAssured.given()
+                .log()
+                .all()
                         .baseUri(env.baseUrl)
                         .contentType(ContentType.URLENC)
                         .formParam("client_id", env.confidentialClientId)
@@ -80,6 +85,8 @@ class OAuth2EndToEndTest {
         // Introspect should show active
         Response introspectResponse =
                 RestAssured.given()
+                .log()
+                .all()
                         .baseUri(env.baseUrl)
                         .contentType(ContentType.URLENC)
                         .formParam("client_id", env.confidentialClientId)
@@ -94,6 +101,8 @@ class OAuth2EndToEndTest {
         // Revoke access token
         Response revokeResponse =
                 RestAssured.given()
+                .log()
+                .all()
                         .baseUri(env.baseUrl)
                         .contentType(ContentType.URLENC)
                         .formParam("client_id", env.confidentialClientId)
@@ -106,6 +115,8 @@ class OAuth2EndToEndTest {
 
         Response introspectAfterRevoke =
                 RestAssured.given()
+                .log()
+                .all()
                         .baseUri(env.baseUrl)
                         .contentType(ContentType.URLENC)
                         .formParam("client_id", env.confidentialClientId)
@@ -162,8 +173,13 @@ class OAuth2EndToEndTest {
 
             String authorizePath = "/oauth2/authorize";
 
-            Response loginPage =
-                    RestAssured.given().baseUri(env.baseUrl).filter(session).get("/login");
+                Response loginPage =
+                    RestAssured.given()
+                        .log()
+                        .all()
+                        .baseUri(env.baseUrl)
+                        .filter(session)
+                        .get("/login");
             Map<String, String> cookies = new HashMap<>(loginPage.getCookies());
             extractPreferredJSessionId(loginPage).ifPresent((id) -> cookies.put("JSESSIONID", id));
 
@@ -179,6 +195,8 @@ class OAuth2EndToEndTest {
 
             var loginRequest =
                     RestAssured.given()
+                        .log()
+                        .all()
                             .filter(session)
                             .redirects()
                             .follow(false)
@@ -208,6 +226,8 @@ class OAuth2EndToEndTest {
 
             Response postLoginAuth =
                     RestAssured.given()
+                        .log()
+                        .all()
                             .baseUri(env.baseUrl)
                             .filter(session)
                             .cookies(cookies)
@@ -248,6 +268,8 @@ class OAuth2EndToEndTest {
                 String consentUrl = resolveLocation(env.baseUrl, redirectLocation);
                 authorizationPage =
                         RestAssured.given()
+                        .log()
+                        .all()
                                 .filter(session)
                                 .cookies(cookies)
                                 .redirects()
@@ -315,6 +337,8 @@ class OAuth2EndToEndTest {
                 }
                 Response followup =
                         RestAssured.given()
+                        .log()
+                        .all()
                                 .redirects()
                                 .follow(false)
                                 .cookies(response.getCookies())
@@ -340,6 +364,8 @@ class OAuth2EndToEndTest {
 
             Response tokenResponse =
                     RestAssured.given()
+                        .log()
+                        .all()
                             .baseUri(env.baseUrl)
                             .contentType(ContentType.URLENC)
                             .formParam("client_id", env.confidentialClientId)
