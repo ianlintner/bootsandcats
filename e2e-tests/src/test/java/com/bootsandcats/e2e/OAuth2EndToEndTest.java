@@ -176,28 +176,25 @@ class OAuth2EndToEndTest {
 
                 Response loginPage =
                     RestAssured.given()
-                        .log()
-                        .all()
                         .baseUri(env.baseUrl)
                         .filter(session)
                         .get("/login");
+            log("GET /login -> status=%d cookies=%s", loginPage.statusCode(), loginPage.getCookies());
             Map<String, String> cookies = new HashMap<>(loginPage.getCookies());
             extractPreferredJSessionId(loginPage).ifPresent((id) -> cookies.put("JSESSIONID", id));
 
             String loginUrl = env.baseUrl + "/login";
             ParsedForm loginForm = ParsedForm.parseFirstForm(loginPage.asString(), loginUrl);
-            System.out.println("loginForm action: " + loginForm.action);
-            System.out.println("loginForm fields before set: " + loginForm.fields);
-            System.out.println("env.username: " + env.username + ", env.password: " + env.password);
+            log("loginForm action=%s", loginForm.action);
+            log("loginForm fields before set=%s", loginForm.fields);
+            log("credentials username=%s password=****", env.username);
             loginForm.setSingle("username", env.username);
             loginForm.setSingle("password", env.password);
-            System.out.println("loginForm fields after set: " + loginForm.fields);
-            System.out.println("login cookies: " + cookies);
+            log("loginForm fields after set=%s", loginForm.fields);
+            log("login cookies=%s", cookies);
 
             var loginRequest =
                     RestAssured.given()
-                        .log()
-                        .all()
                             .filter(session)
                             .redirects()
                             .follow(false)
@@ -205,13 +202,12 @@ class OAuth2EndToEndTest {
                             .cookies(cookies);
             loginForm.fields.forEach((k, values) -> loginRequest.formParam(k, values.toArray()));
             Response loginSubmit = loginRequest.post(loginForm.action);
-            System.out.println("loginSubmit cookies: " + loginSubmit.getCookies());
+            log("POST %s -> status=%d location=%s cookies=%s",
+                    loginForm.action,
+                    loginSubmit.statusCode(),
+                    loginSubmit.getHeader("Location"),
+                    loginSubmit.getCookies());
             cookies.putAll(loginSubmit.getCookies());
-            System.out.println(
-                    "loginSubmit status="
-                            + loginSubmit.statusCode()
-                            + " location="
-                            + loginSubmit.getHeader("Location"));
             if (loginSubmit.statusCode() >= 400) {
                 throw new IllegalStateException(
                         "Login failed. status="
@@ -227,8 +223,6 @@ class OAuth2EndToEndTest {
 
             Response postLoginAuth =
                     RestAssured.given()
-                        .log()
-                        .all()
                             .baseUri(env.baseUrl)
                             .filter(session)
                             .cookies(cookies)
@@ -237,11 +231,7 @@ class OAuth2EndToEndTest {
                             .queryParams(authorizeParams)
                             .get(authorizePath);
             cookies.putAll(postLoginAuth.getCookies());
-            System.out.println(
-                    "authorize status="
-                            + postLoginAuth.statusCode()
-                            + " location="
-                            + postLoginAuth.getHeader("Location"));
+            log("GET %s -> status=%d location=%s", authorizePath, postLoginAuth.statusCode(), postLoginAuth.getHeader("Location"));
             if (postLoginAuth.statusCode() == 200) {
                 String body = postLoginAuth.asString();
                 throw new IllegalStateException(
@@ -269,13 +259,12 @@ class OAuth2EndToEndTest {
                 String consentUrl = resolveLocation(env.baseUrl, redirectLocation);
                 authorizationPage =
                         RestAssured.given()
-                        .log()
-                        .all()
                                 .filter(session)
                                 .cookies(cookies)
                                 .redirects()
                                 .follow(true)
                                 .get(consentUrl);
+                log("Follow consent %s -> status=%d location=%s", consentUrl, authorizationPage.statusCode(), authorizationPage.getHeader("Location"));
             }
             cookies.putAll(authorizationPage.getCookies());
             if (isRedirectWithCode(authorizationPage)) {
@@ -338,8 +327,6 @@ class OAuth2EndToEndTest {
                 }
                 Response followup =
                         RestAssured.given()
-                        .log()
-                        .all()
                                 .redirects()
                                 .follow(false)
                                 .cookies(response.getCookies())
@@ -365,8 +352,6 @@ class OAuth2EndToEndTest {
 
             Response tokenResponse =
                     RestAssured.given()
-                        .log()
-                        .all()
                             .baseUri(env.baseUrl)
                             .contentType(ContentType.URLENC)
                             .formParam("client_id", env.confidentialClientId)
@@ -378,6 +363,7 @@ class OAuth2EndToEndTest {
                             .post("/oauth2/token");
 
             assertThat(tokenResponse.statusCode()).isEqualTo(200);
+            log("POST /oauth2/token (code exchange) -> status=%d", tokenResponse.statusCode());
 
             String accessToken = tokenResponse.jsonPath().getString("access_token");
             String refreshToken = tokenResponse.jsonPath().getString("refresh_token");
