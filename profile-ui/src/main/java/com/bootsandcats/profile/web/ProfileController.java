@@ -30,6 +30,7 @@ public class ProfileController {
                     OAuth2AuthorizedClient authorizedClient) {
         boolean authenticated = principal != null;
         model.addAttribute("authenticated", authenticated);
+        model.addAttribute("userInfo", Map.of());
 
         OAuth2ServerHealth health = serverClientService.fetchHealth().orElse(null);
         model.addAttribute("serverHealth", health);
