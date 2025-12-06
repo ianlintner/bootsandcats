@@ -6,7 +6,7 @@ This repository now includes a Gradle multi-project scaffold alongside existing 
 - `server-dao`: Data access and persistence (JDBC/JPA).
 - `server-logic`: Business logic and security; depends on `server-dao`.
 - `server-ui`: Spring Boot app (authorization server and APIs); depends on `server-logic`.
-- `canary-app`: Lightweight Spring Boot app for canary deployments.
+- `profile-ui`: Lightweight Spring Boot app for profile UI deployments.
 
 ## Next Steps
 1. Generate Gradle wrapper and verify build.
@@ -28,8 +28,8 @@ gradle wrapper
 # Run UI server (auth server)
 ./gradlew :server-ui:bootRun
 
-# Run canary app
-./gradlew :canary-app:bootRun
+# Run profile UI app
+./gradlew :profile-ui:bootRun
 ```
 
 ## Notes

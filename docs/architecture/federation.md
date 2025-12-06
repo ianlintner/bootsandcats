@@ -7,15 +7,15 @@ This project adds federated login support to the OAuth2 Authorization Server, en
 - The Authorization Server (AS) is Spring Authorization Server with OIDC and JWT.
 - Federated providers are configured via Spring Security OAuth2 Client.
 - On successful federated login, a `FederatedIdentityAuthenticationSuccessHandler` persists user info to `app_users`.
-- The Canary App is a simple OIDC client that displays the authenticated user’s info and token.
+- The Profile UI is a simple OIDC client that displays the authenticated user’s profile and claims.
 
 ## Flow
 
-1. User visits Canary App and clicks “Login via Authorization Server”.
-2. Canary App redirects to AS `/oauth2/authorize` (OIDC).
+1. User visits Profile UI and clicks “Login via Authorization Server”.
+2. Profile UI redirects to AS `/oauth2/authorize` (OIDC).
 3. AS login page offers federated buttons (GitHub/Google/Azure) or local login.
-4. After successful auth, AS issues ID/Access token, and redirects back to Canary App.
-5. Canary App shows claims, ID token, and a logout button.
+4. After successful auth, AS issues ID/Access token, and redirects back to Profile UI.
+5. Profile UI shows claims, ID token, and a logout button.
 
 ## Data Model
 
@@ -38,16 +38,15 @@ Environment variables (in Kubernetes via `oauth2-app-secrets`):
 
 Application properties (`server-ui/src/main/resources/application.properties`) map these to Spring’s OAuth2 client registrations.
 
-### Canary App
+### Profile UI
 
-- Configured to call the Authorization Server directly via internal Service endpoints:
-  - `authorization-uri`, `token-uri`, `jwk-set-uri`, `user-info-uri`
-- Registration uses `demo-client` configured in the AS.
+- Uses issuer discovery (`OAUTH2_ISSUER_URI`) to locate the Authorization Server.
+- Registration uses the `profile-ui` client configured in the AS.
 
 ## Kubernetes
 
 - `k8s/deployment.yaml` — AS deployment; federated env vars marked optional to avoid startup failure if secrets are missing.
-- `k8s/canary-deployment.yaml` — Canary App deployment; uses `OAUTH2_ISSUER_URI` or explicit endpoints.
+- `k8s/profile-ui-deployment.yaml` — Profile UI deployment; uses `OAUTH2_ISSUER_URI` or explicit endpoints.
 
 ## Observability
 

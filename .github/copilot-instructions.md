@@ -62,7 +62,7 @@ This is a Spring Boot OAuth2 Authorization Server with OpenID Connect (OIDC), PK
 server-ui/          # Main Spring Boot application (UI, controllers, security config)
 server-logic/       # Business logic services
 server-dao/         # Data access layer (JPA entities, repositories)
-canary-app/         # Canary deployment test application
+profile-ui/         # Profile UI deployment test application
 ```
 
 ## Static Analysis
