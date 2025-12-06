@@ -462,7 +462,7 @@ class OAuth2EndToEndTest {
     private static void log(String message, Object... args) {
         String formatted = args.length == 0 ? message : String.format(message, args);
         String line = "[" + Instant.now() + "] " + formatted + System.lineSeparator();
-        LOGGER.info(formatted);
+        LOGGER.debug(formatted);
         try {
             Files.writeString(
                     LOG_PATH,
