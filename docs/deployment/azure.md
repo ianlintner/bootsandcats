@@ -520,56 +520,59 @@ spec:
 
 ## Observability with Azure Monitor
 
-## Canary App Deployment (OIDC Client)
+## Profile UI Deployment (OIDC Client)
 
-The canary app is a simple Spring Boot web client that signs in via the authorization server and displays the authenticated user's claims. It is useful for end-to-end smoke testing in AKS.
+Profile UI is a lightweight Spring Boot web client that signs in via the authorization server and displays the authenticated user's profile and claims. It is useful for end-to-end smoke testing in AKS.
 
-### Canary App Config
+### Profile UI Config
 
-In cluster environments, prefer configuring explicit OAuth2 endpoints to the internal service DNS rather than relying on external issuer discovery:
+Use issuer discovery by default. Override via environment variables to point at your ingress or the internal service DNS.
 
 ```properties
-spring.security.oauth2.client.registration.canary-client.client-id=canary-client
-spring.security.oauth2.client.registration.canary-client.client-secret=<set via env>
-spring.security.oauth2.client.registration.canary-client.authorization-grant-type=authorization_code
-spring.security.oauth2.client.registration.canary-client.redirect-uri={baseUrl}/login/oauth2/code/{registrationId}
-spring.security.oauth2.client.registration.canary-client.scope=openid,profile,email
-spring.security.oauth2.client.registration.canary-client.client-name=Canary Client
+spring.security.oauth2.client.registration.oauth2-server.client-id=profile-ui
+spring.security.oauth2.client.registration.oauth2-server.client-secret=<set via env>
+spring.security.oauth2.client.registration.oauth2-server.authorization-grant-type=authorization_code
+spring.security.oauth2.client.registration.oauth2-server.redirect-uri={baseUrl}/login/oauth2/code/{registrationId}
+spring.security.oauth2.client.registration.oauth2-server.scope=openid,profile,email
+spring.security.oauth2.client.registration.oauth2-server.client-name=Profile UI
 
-spring.security.oauth2.client.provider.canary-provider.authorization-uri=http://oauth2-server.oauth2-system.svc.cluster.local:9000/oauth2/authorize
-spring.security.oauth2.client.provider.canary-provider.token-uri=http://oauth2-server.oauth2-system.svc.cluster.local:9000/oauth2/token
-spring.security.oauth2.client.provider.canary-provider.jwk-set-uri=http://oauth2-server.oauth2-system.svc.cluster.local:9000/oauth2/jwks
-spring.security.oauth2.client.provider.canary-provider.user-info-uri=http://oauth2-server.oauth2-system.svc.cluster.local:9000/userinfo
-spring.security.oauth2.client.registration.canary-client.provider=canary-provider
+spring.security.oauth2.client.provider.oauth2-server.issuer-uri=https://oauth2.cat-herding.net
+spring.security.oauth2.client.provider.oauth2-server.user-name-attribute=sub
 ```
 
-### Canary App Deployment YAML
+For in-cluster calls without external DNS, set `OAUTH2_ISSUER_URI=http://oauth2-server.oauth2-system.svc.cluster.local:9000`.
+
+### Profile UI Deployment YAML
 
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: canary-app
+  name: profile-ui
   namespace: oauth2-system
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: canary-app
+      app: profile-ui
   template:
     metadata:
       labels:
-        app: canary-app
+        app: profile-ui
     spec:
       containers:
-        - name: canary-app
-          image: ghcr.io/ianlintner/bootsandcats/canary-app:latest
+        - name: profile-ui
+          image: ghcr.io/ianlintner/bootsandcats/profile-ui:latest
           ports:
             - containerPort: 8080
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: prod
-            - name: CANARY_CLIENT_SECRET
+            - name: OAUTH2_ISSUER_URI
+              value: https://oauth2.cat-herding.net
+            - name: OAUTH2_CLIENT_ID
+              value: profile-ui
+            - name: OAUTH2_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: oauth2-server-secrets
@@ -581,26 +584,26 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: canary-app
+  name: profile-ui
   namespace: oauth2-system
 spec:
   selector:
-    app: canary-app
+    app: profile-ui
   ports:
     - port: 80
       targetPort: 8080
       protocol: TCP
 ```
 
-### Canary Troubleshooting
+### Profile UI Troubleshooting
 
-- If the canary app shows issuer mismatch or fails OIDC discovery, ensure you configured explicit endpoints pointing to `oauth2-server.oauth2-system.svc.cluster.local:9000` as above.
+- If the profile UI shows issuer mismatch or fails OIDC discovery, verify `OAUTH2_ISSUER_URI` matches the Authorization Server host (ingress or internal service DNS).
 - If login buttons for GitHub, Google, or Azure return errors, verify provider secrets exist in Key Vault and were synced to the `oauth2-server-secrets` Kubernetes Secret via CSI provider.
 - Check pod logs:
 
 ```bash
 kubectl logs deploy/oauth2-server -n oauth2-system
-kubectl logs deploy/canary-app -n oauth2-system
+kubectl logs deploy/profile-ui -n oauth2-system
 ```
 
 ### Application Insights Integration
