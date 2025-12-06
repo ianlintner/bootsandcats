@@ -30,6 +30,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import io.restassured.RestAssured;
+import io.restassured.config.CsrfConfig;
 import io.restassured.filter.session.SessionFilter;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -50,6 +51,7 @@ class OAuth2EndToEndTest {
             Files.deleteIfExists(LOG_PATH);
         } catch (Exception ignored) {
         }
+        RestAssured.config = RestAssured.config().csrfConfig(CsrfConfig.csrfConfig().csrfEnabled(false));
         env = TestEnvironment.fromEnv(baseUrl);
         log("Starting OAuth2 E2E test. baseUrl=%s", env.baseUrl);
     }
