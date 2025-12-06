@@ -1,52 +1,116 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
-    <title>Canary App</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; }
-        .card { border: 1px solid #ccc; padding: 20px; border-radius: 5px; margin-top: 20px; }
-        pre { background: #f4f4f4; padding: 10px; overflow-x: auto; }
-    </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile UI</title>
+    <link rel="stylesheet" th:href="@{/css/profile.css}" />
 </head>
-<body>
-<div class="container">
-    <h1>Canary Application</h1>
-    <div th:if="${name}">
-        <div class="card">
-            <h2>Welcome, <span th:text="${name}">User</span>!</h2>
-            <p>Email: <span th:text="${email}">email@example.com</span></p>
-            <p>
-                <strong>Authenticated via:</strong>
-                <span th:text="${attributes['iss']} ?: 'Authorization Server'"></span>
-            </p>
-            
-            <h3>Claims</h3>
-            <pre th:text="${attributes}"></pre>
-            
-            <h3>ID Token</h3>
-            <pre th:text="${idToken}"></pre>
-            
-            <form action="/logout" method="post">
-                <button type="submit">Logout</button>
+<body class="bg-surface text-foreground min-h-screen">
+<div class="max-w-6xl mx-auto px-4 py-10 space-y-8">
+    <header class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div class="space-y-1">
+            <p class="text-sm font-semibold uppercase tracking-wide text-indigo-500">Profile UI</p>
+            <h1 class="text-3xl font-bold">Your connected identity</h1>
+            <p class="text-slate-600 dark:text-slate-300">View the claims issued by the Authorization Server for your account.</p>
+        </div>
+        <div class="flex gap-3" th:if="${authenticated}">
+            <form action="/logout" method="post" class="flex">
+                <button type="submit" class="px-4 py-2 rounded-lg bg-slate-200 text-slate-900 font-medium shadow hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">Logout</button>
             </form>
         </div>
-    </div>
-    <div th:unless="${name}">
-        <p>You are not logged in.</p>
-        <div class="card">
-            <h3>Sign in</h3>
-            <p>
-                <a href="/oauth2/authorization/oauth2-server" style="display:inline-block;padding:10px 14px;border:1px solid #444;border-radius:4px;text-decoration:none;">Login via Authorization Server</a>
-            </p>
-            <p style="font-size: 0.9em; color: #555;">
-                Federated login (GitHub, Google, Azure) is available from the Authorization Server login page.
-            </p>
+        <div class="flex gap-3" th:unless="${authenticated}">
+            <a href="/oauth2/authorization/oauth2-server" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold shadow hover:bg-indigo-700">Login via Authorization Server</a>
         </div>
-        <p style="font-size: 0.9em; color: #555;">
-            This will redirect you to the Authorization Server which supports federated login (GitHub, Google, Azure).
-        </p>
-    </div>
+    </header>
+
+    <section th:if="${authenticated}" class="space-y-6">
+        <div class="profile-hero flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div class="flex items-center gap-4">
+                <div class="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-xl font-bold">
+                    <span th:text="${#strings.isEmpty(profile.displayName) ? 'U' : #strings.substring(profile.displayName, 0, 1)}">U</span>
+                </div>
+                <div class="space-y-1">
+                    <p class="text-sm opacity-90">Subject: <span class="font-mono" th:text="${profile.subject}">sub</span></p>
+                    <h2 class="text-2xl font-semibold" th:text="${profile.displayName}">User Name</h2>
+                    <p class="text-sm opacity-90" th:text="${profile.email}">user@example.com</p>
+                    <p class="text-sm opacity-90">Issuer: <span th:text="${profile.issuer}">Authorization Server</span></p>
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-2" th:if="${authorities}">
+                <span class="badge" th:each="auth : ${authorities}" th:text="${auth.authority}">SCOPE_read</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="profile-card space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-slate-500">Profile</p>
+                        <h3 class="text-xl font-semibold">Identity summary</h3>
+                    </div>
+                    <span class="badge">OIDC</span>
+                </div>
+                <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <dt class="text-slate-500">Display name</dt>
+                        <dd class="font-medium" th:text="${profile.displayName}">User Name</dd>
+                    </div>
+                    <div>
+                        <dt class="text-slate-500">Email</dt>
+                        <dd class="font-medium" th:text="${profile.email}">user@example.com</dd>
+                    </div>
+                    <div>
+                        <dt class="text-slate-500">Subject (sub)</dt>
+                        <dd class="font-mono text-xs" th:text="${profile.subject}">sub</dd>
+                    </div>
+                    <div>
+                        <dt class="text-slate-500">Issuer (iss)</dt>
+                        <dd class="font-mono text-xs" th:text="${profile.issuer}">https://issuer</dd>
+                    </div>
+                </dl>
+            </div>
+
+            <div class="profile-card space-y-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-slate-500">ID Token</p>
+                        <h3 class="text-xl font-semibold">Signed token</h3>
+                    </div>
+                </div>
+                <div class="token-block" th:text="${idToken}"></div>
+            </div>
+        </div>
+
+        <div class="profile-card space-y-3">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-slate-500">Claims</p>
+                    <h3 class="text-xl font-semibold">Everything issued for you</h3>
+                </div>
+            </div>
+            <div class="claim-grid">
+                <div class="border border-slate-200 dark:border-slate-800 rounded-lg p-3 bg-white dark:bg-surface/80" th:each="entry : ${claims}">
+                    <p class="text-xs uppercase tracking-wide text-slate-500" th:text="${entry.key}">claim</p>
+                    <p class="font-mono text-sm break-all" th:text="${#objects.toJson(entry.value)}">value</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section th:unless="${authenticated}">
+        <div class="profile-card space-y-4">
+            <div class="space-y-1">
+                <p class="text-sm text-slate-500">Profile UI</p>
+                <h2 class="text-2xl font-semibold">Sign in to view your profile</h2>
+                <p class="text-slate-600 dark:text-slate-300">This micro-app uses the Authorization Server for login. Federated providers (GitHub, Google, Azure) are available on the server's login page.</p>
+            </div>
+            <div class="flex flex-wrap gap-3">
+                <a href="/oauth2/authorization/oauth2-server" class="px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold shadow hover:bg-indigo-700">Login via Authorization Server</a>
+                <a href="/actuator/health" class="px-4 py-2 rounded-lg bg-slate-200 text-slate-800 font-medium hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">Health check</a>
+            </div>
+        </div>
+    </section>
 </div>
 </body>
 </html>
