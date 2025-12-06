@@ -125,11 +125,32 @@ Returns claims about the authenticated user using the access token.
 
 #### Request
 
-```http
-GET /userinfo HTTP/1.1
-Host: auth.example.com
-Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
-```
+=== "HTTP"
+
+    ```http
+    GET /userinfo HTTP/1.1
+    Host: auth.example.com
+    Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
+    ```
+
+=== "Curl"
+
+    ```bash
+    curl -X GET http://localhost:9000/userinfo \
+      -H "Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+    ```
+
+=== "Python"
+
+    ```python
+    import requests
+
+    url = "http://localhost:9000/userinfo"
+    headers = {"Authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."}
+
+    response = requests.get(url, headers=headers)
+    print(response.json())
+    ```
 
 #### Response
 

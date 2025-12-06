@@ -116,17 +116,50 @@ Exchange an authorization code for tokens.
 
 **Example Request:**
 
-```http
-POST /oauth2/token HTTP/1.1
-Host: auth.example.com
-Content-Type: application/x-www-form-urlencoded
+=== "HTTP"
 
-grant_type=authorization_code&
-code=SplxlOBeZQQYbYS6WxSbIA&
-redirect_uri=https://app.example.com/callback&
-client_id=public-client&
-code_verifier=dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk
-```
+    ```http
+    POST /oauth2/token HTTP/1.1
+    Host: auth.example.com
+    Content-Type: application/x-www-form-urlencoded
+
+    grant_type=authorization_code&
+    code=SplxlOBeZQQYbYS6WxSbIA&
+    redirect_uri=https://app.example.com/callback&
+    client_id=public-client&
+    code_verifier=dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk
+    ```
+
+=== "Curl"
+
+    ```bash
+    curl -X POST http://localhost:9000/oauth2/token \
+      -H "Content-Type: application/x-www-form-urlencoded" \
+      -d "grant_type=authorization_code" \
+      -d "code=SplxlOBeZQQYbYS6WxSbIA" \
+      -d "redirect_uri=https://app.example.com/callback" \
+      -d "client_id=public-client" \
+      -d "code_verifier=dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+    ```
+
+=== "Python"
+
+    ```python
+    import requests
+
+    url = "http://localhost:9000/oauth2/token"
+    payload = {
+        "grant_type": "authorization_code",
+        "code": "SplxlOBeZQQYbYS6WxSbIA",
+        "redirect_uri": "https://app.example.com/callback",
+        "client_id": "public-client",
+        "code_verifier": "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+    }
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+
+    response = requests.post(url, data=payload, headers=headers)
+    print(response.json())
+    ```
 
 **Example Response:**
 
@@ -154,15 +187,45 @@ Request an access token using client credentials.
 
 **Example Request:**
 
-```http
-POST /oauth2/token HTTP/1.1
-Host: auth.example.com
-Authorization: Basic bTJtLWNsaWVudDptMm0tc2VjcmV0
-Content-Type: application/x-www-form-urlencoded
+=== "HTTP"
 
-grant_type=client_credentials&
-scope=api:read%20api:write
-```
+    ```http
+    POST /oauth2/token HTTP/1.1
+    Host: auth.example.com
+    Authorization: Basic bTJtLWNsaWVudDptMm0tc2VjcmV0
+    Content-Type: application/x-www-form-urlencoded
+
+    grant_type=client_credentials&
+    scope=api:read%20api:write
+    ```
+
+=== "Curl"
+
+    ```bash
+    curl -X POST http://localhost:9000/oauth2/token \
+      -u "m2m-client:m2m-secret" \
+      -H "Content-Type: application/x-www-form-urlencoded" \
+      -d "grant_type=client_credentials" \
+      -d "scope=api:read api:write"
+    ```
+
+=== "Python"
+
+    ```python
+    import requests
+    from requests.auth import HTTPBasicAuth
+
+    url = "http://localhost:9000/oauth2/token"
+    payload = {
+        "grant_type": "client_credentials",
+        "scope": "api:read api:write"
+    }
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+    auth = HTTPBasicAuth("m2m-client", "m2m-secret")
+
+    response = requests.post(url, data=payload, headers=headers, auth=auth)
+    print(response.json())
+    ```
 
 **Example Response:**
 

@@ -18,6 +18,29 @@ A production-ready Spring Boot OAuth2 Authorization Server with OpenID Connect (
 - **OWASP Security** - Security best practices implemented
 - **Docker Support** - Container-ready with multi-stage builds
 
+## Architecture
+
+### Authorization Code Flow with PKCE
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Client as Client App
+    participant AuthServer as Auth Server
+    
+    User->>Client: Click "Login"
+    Client->>Client: Generate Code Verifier & Challenge
+    Client->>AuthServer: Redirect to /oauth2/authorize (code_challenge)
+    AuthServer->>User: Login Page
+    User->>AuthServer: Enter Credentials
+    AuthServer->>User: Consent Page
+    User->>AuthServer: Approve
+    AuthServer->>Client: Redirect with Auth Code
+    Client->>AuthServer: POST /oauth2/token (code + code_verifier)
+    AuthServer->>Client: Return Access Token & ID Token
+    Client->>Client: Validate ID Token
+```
+
 ## Quick Start
 
 ### Prerequisites
@@ -78,6 +101,21 @@ docker run -p 9000:9000 oauth2-server
 |----------|----------|-------|
 | `user` | `password` | USER |
 | `admin` | `admin` | USER, ADMIN |
+
+## Connect
+
+To quickly test the server, you can use the Client Credentials flow to get a token:
+
+```bash
+curl -X POST http://localhost:9000/oauth2/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials" \
+  -d "client_id=m2m-client" \
+  -d "client_secret=m2m-secret" \
+  -d "scope=message.read"
+```
+
+For more detailed examples in different languages (Java, Python, JavaScript), see the [Client Onboarding Guide](docs/api/client-onboarding.md).
 
 ## Endpoints
 

@@ -17,37 +17,113 @@ The OAuth2 Authorization Server supports the following grant types:
 
 ---
 
-## Java / Spring Boot
+## Client Configuration Examples
 
-### Using Spring Security OAuth2 Client
+=== "Java (Spring Boot)"
 
-Add the dependency to your `pom.xml`:
+    ### Using Spring Security OAuth2 Client
 
-```xml
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-oauth2-client</artifactId>
-</dependency>
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
-</dependency>
-```
+    Add the dependency to your `pom.xml`:
 
-Configure your `application.yml`:
+    ```xml
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-oauth2-client</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+    </dependency>
+    ```
 
-```yaml
-spring:
-  security:
-    oauth2:
-      client:
-        registration:
-          oauth2-server:
-            client-id: demo-client
-            client-secret: ${OAUTH2_CLIENT_SECRET}
-            authorization-grant-type: authorization_code
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-            scope: openid,profile,email
+    Configure your `application.yml`:
+
+    ```yaml
+    spring:
+      security:
+        oauth2:
+          client:
+            registration:
+              oauth2-server:
+                client-id: demo-client
+                client-secret: ${OAUTH2_CLIENT_SECRET}
+                authorization-grant-type: authorization_code
+                redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+                scope: openid,profile,email
+            provider:
+              oauth2-server:
+                issuer-uri: http://localhost:9000
+    ```
+
+=== "Python"
+
+    ### Using Authlib
+
+    Install the library:
+
+    ```bash
+    pip install Authlib requests
+    ```
+
+    Configure the client:
+
+    ```python
+    from authlib.integrations.requests_client import OAuth2Session
+
+    client_id = 'demo-client'
+    client_secret = 'demo-secret'
+    authorization_base_url = 'http://localhost:9000/oauth2/authorize'
+    token_url = 'http://localhost:9000/oauth2/token'
+
+    client = OAuth2Session(client_id, client_secret, scope='openid profile email')
+    
+    # 1. Redirect user to provider
+    uri, state = client.create_authorization_url(authorization_base_url)
+    print(f'Please go to {uri} and authorize access.')
+
+    # 2. Get the authorization response URL
+    authorization_response = input('Enter the full callback URL: ')
+
+    # 3. Fetch the access token
+    token = client.fetch_token(token_url, authorization_response=authorization_response)
+    print(token)
+    ```
+
+=== "JavaScript (Node.js)"
+
+    ### Using openid-client
+
+    Install the library:
+
+    ```bash
+    npm install openid-client
+    ```
+
+    Configure the client:
+
+    ```javascript
+    const { Issuer } = require('openid-client');
+
+    (async () => {
+      const issuer = await Issuer.discover('http://localhost:9000');
+      
+      const client = new issuer.Client({
+        client_id: 'demo-client',
+        client_secret: 'demo-secret',
+        redirect_uris: ['http://localhost:3000/cb'],
+        response_types: ['code'],
+      });
+
+      // 1. Get authorization URL
+      const url = client.authorizationUrl({
+        scope: 'openid profile email',
+      });
+      console.log('Authorize at:', url);
+
+      // 2. After callback, exchange code for token
+      // const tokenSet = await client.callback('http://localhost:3000/cb', params, { code_verifier });
+    })();
+    ```
         provider:
           oauth2-server:
             issuer-uri: http://localhost:9000
