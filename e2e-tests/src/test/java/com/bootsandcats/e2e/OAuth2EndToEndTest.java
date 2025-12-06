@@ -308,6 +308,26 @@ class OAuth2EndToEndTest {
 
     private record AuthorizationResult(String accessToken, String refreshToken, String idToken) {}
 
+    private record HttpResult(int statusCode, String body, Map<String, List<String>> headers) {
+        String header(String name) {
+            List<String> values = headers.get(name);
+            return (values == null || values.isEmpty()) ? null : values.get(0);
+        }
+
+        String location() {
+            return header("Location");
+        }
+
+        static HttpResult from(HttpResponse<String> response) {
+            Map<String, List<String>> normalizedHeaders =
+                    new java.util.TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+            response.headers()
+                    .map()
+                    .forEach((key, value) -> normalizedHeaders.put(key, List.copyOf(value)));
+            return new HttpResult(response.statusCode(), response.body(), normalizedHeaders);
+        }
+    }
+
     private static class QueryParams {
         static Map<String, String> from(String query) {
             Map<String, String> result = new HashMap<>();
@@ -326,6 +346,116 @@ class OAuth2EndToEndTest {
         private static String decode(String value) {
             return java.net.URLDecoder.decode(value, java.nio.charset.StandardCharsets.UTF_8);
         }
+    }
+
+    private static String encodeQuery(Map<String, String> params) {
+        return params.entrySet().stream()
+                .map(e -> urlEncode(e.getKey()) + "=" + urlEncode(e.getValue()))
+                .collect(Collectors.joining("&"));
+    }
+
+    private static String encodeForm(Map<String, List<String>> params) {
+        return params.entrySet().stream()
+                .flatMap(
+                        entry ->
+                                entry.getValue().stream()
+                                        .map(value -> urlEncode(entry.getKey()) + "=" + urlEncode(value)))
+                .collect(Collectors.joining("&"));
+    }
+
+    private static String urlEncode(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
+    }
+
+    private static HttpResult get(
+            String url, Map<String, String> headers, Map<String, String> cookies, boolean followRedirects)
+            throws Exception {
+        return send("GET", url, headers, cookies, null, followRedirects);
+    }
+
+    private static HttpResult postForm(
+            String url,
+            Map<String, List<String>> formParams,
+            Map<String, String> headers,
+            Map<String, String> cookies,
+            boolean followRedirects)
+            throws Exception {
+        Map<String, String> mergedHeaders = new HashMap<>(headers);
+        mergedHeaders.put("Content-Type", "application/x-www-form-urlencoded");
+        HttpRequest.BodyPublisher body =
+                HttpRequest.BodyPublishers.ofString(encodeForm(formParams));
+        return send("POST", url, mergedHeaders, cookies, body, followRedirects);
+    }
+
+    private static HttpResult send(
+            String method,
+            String url,
+            Map<String, String> headers,
+            Map<String, String> cookies,
+            HttpRequest.BodyPublisher body,
+            boolean followRedirects)
+            throws Exception {
+        Map<String, String> cookieStore = new HashMap<>(cookies);
+        HttpResult result = sendOnce(method, URI.create(url), headers, cookieStore, body);
+
+        int hops = 0;
+        while (followRedirects && isRedirectStatus(result.statusCode()) && result.location() != null && hops < 5) {
+            hops++;
+            String nextUrl = resolveLocation(env.baseUrl, result.location());
+            result = sendOnce("GET", URI.create(nextUrl), headers, cookieStore, null);
+        }
+
+        cookies.clear();
+        cookies.putAll(cookieStore);
+        return result;
+    }
+
+    private static HttpResult sendOnce(
+            String method,
+            URI uri,
+            Map<String, String> headers,
+            Map<String, String> cookies,
+            HttpRequest.BodyPublisher body)
+            throws Exception {
+        HttpRequest.Builder builder =
+                HttpRequest.newBuilder()
+                        .uri(uri)
+                        .method(method, body == null ? HttpRequest.BodyPublishers.noBody() : body);
+
+        if (headers != null) {
+            headers.forEach(builder::header);
+        }
+
+        if (cookies != null && !cookies.isEmpty()) {
+            builder.header("Cookie", cookieHeader(cookies));
+        }
+
+        HttpResponse<String> response = HTTP_CLIENT.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+        if (cookies != null) {
+            mergeCookiesFromResponse(response, cookies);
+        }
+        return HttpResult.from(response);
+    }
+
+    private static void mergeCookiesFromResponse(HttpResponse<String> response, Map<String, String> cookies) {
+        List<String> setCookies = response.headers().allValues("Set-Cookie");
+        for (String setCookie : setCookies) {
+            String[] parts = setCookie.split(";", 2);
+            String[] kv = parts[0].split("=", 2);
+            if (kv.length == 2) {
+                cookies.put(kv[0], kv[1]);
+            }
+        }
+    }
+
+    private static String cookieHeader(Map<String, String> cookies) {
+        return cookies.entrySet().stream()
+                .map(entry -> entry.getKey() + "=" + entry.getValue())
+                .collect(Collectors.joining("; "));
+    }
+
+    private static boolean isRedirectStatus(int statusCode) {
+        return statusCode >= 300 && statusCode < 400;
     }
 
     private static void log(String message, Object... args) {
@@ -459,8 +589,8 @@ class OAuth2EndToEndTest {
         }
     }
 
-    private static boolean isRedirectWithCode(Response response) {
-        String location = response.getHeader("Location");
+    private static boolean isRedirectWithCode(HttpResult response) {
+        String location = response.location();
         return location != null && location.contains("code=");
     }
 
