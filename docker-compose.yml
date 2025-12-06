@@ -22,6 +22,14 @@ services:
       - OAUTH2_ADMIN_USER_PASSWORD=admin
       # Override ddl-auto for CI (creates schema automatically)
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      # Spring Boot Admin Configuration
+      - SPRING_BOOT_ADMIN_CLIENT_URL=http://localhost:9000
+      - SPRING_BOOT_ADMIN_CLIENT_INSTANCE_SERVICE_BASE_URL=http://localhost:9000
+      - SPRING_BOOT_ADMIN_CONTEXT_PATH=/
+      # Security Configuration
+      - SERVER_SSL_ENABLED=false
+      - AZURE_KEYVAULT_ENABLED=false
+      - AZURE_KEYVAULT_STATIC_JWK={"keys":[{"kty":"EC","d":"1gpnMBNXbXOf7CvKai8zZVrt0p89tqBYDxCiTLrV40g","use":"sig","crv":"P-256","kid":"728d1378-6c1a-41bb-9f5b-89af3082f4b2","x":"tTKtyqNAFGxXmsPlctnDEQoS_U1wMECEl9_U1o5IYE4","y":"zHA4qo3n2R8Wq7ujiFCjoj5-eQYfRctIH_ad6HCqe80","alg":"ES256"}]}
     depends_on:
       postgres:
         condition: service_healthy
