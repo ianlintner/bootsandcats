@@ -23,6 +23,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import com.bootsandcats.oauth2.config.TestKeyManagementConfig;
 import com.bootsandcats.oauth2.config.TestOAuth2ClientConfiguration;
+import com.bootsandcats.oauth2.config.TestObjectMapperConfig;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -30,7 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @SpringBootTest
 // @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import({TestOAuth2ClientConfiguration.class, TestKeyManagementConfig.class})
+@Import({TestOAuth2ClientConfiguration.class, TestKeyManagementConfig.class, TestObjectMapperConfig.class})
 class JwtTokenTest {
 
     @Autowired private WebApplicationContext context;

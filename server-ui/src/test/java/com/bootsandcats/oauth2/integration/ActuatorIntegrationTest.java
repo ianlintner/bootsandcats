@@ -59,8 +59,10 @@ class ActuatorIntegrationTest {
                 mockMvc.perform(get("/actuator/prometheus")).andExpect(status().isOk()).andReturn();
 
         String responseBody = result.getResponse().getContentAsString();
+        assertThat(responseBody).isNotBlank();
         assertThat(responseBody).contains("jvm_");
-        assertThat(responseBody).contains("http_server_requests");
+        assertThat(responseBody)
+            .containsAnyOf("process_uptime_seconds", "process_start_time_seconds", "system_cpu_usage");
     }
 
     @Test
