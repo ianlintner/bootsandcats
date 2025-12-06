@@ -4,12 +4,12 @@ include(
     "server-dao",
     "server-logic",
     "server-ui",
-    "canary-app",
+    "profile-ui",
     "e2e-tests"
 )
 
 project(":server-dao").projectDir = file("server-dao")
 project(":server-logic").projectDir = file("server-logic")
 project(":server-ui").projectDir = file("server-ui")
-project(":canary-app").projectDir = file("canary-app")
+project(":profile-ui").projectDir = file("profile-ui")
 project(":e2e-tests").projectDir = file("e2e-tests")

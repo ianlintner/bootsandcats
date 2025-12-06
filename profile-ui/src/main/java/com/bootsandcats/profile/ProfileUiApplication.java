@@ -1,4 +1,4 @@
-package com.bootsandcats.canary;
+package com.bootsandcats.profile;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -9,9 +9,9 @@ import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoderFactory;
 
 @SpringBootApplication
-public class CanaryApplication {
+public class ProfileUiApplication {
     public static void main(String[] args) {
-        SpringApplication.run(CanaryApplication.class, args);
+        SpringApplication.run(ProfileUiApplication.class, args);
     }
 
     @Bean
