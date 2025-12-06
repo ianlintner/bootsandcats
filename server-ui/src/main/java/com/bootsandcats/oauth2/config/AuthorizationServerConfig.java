@@ -188,7 +188,11 @@ public class AuthorizationServerConfig {
                 .csrf(
                         csrf ->
                                 csrf.ignoringRequestMatchers(
-                                        "/oauth2/token", "/oauth2/introspect", "/oauth2/revoke"));
+                                        "/oauth2/token",
+                                        "/oauth2/introspect",
+                                        "/oauth2/revoke",
+                                        "/instances",
+                                        "/instances/**"));
 
         return http.build();
     }
