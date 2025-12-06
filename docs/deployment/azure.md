@@ -218,7 +218,7 @@ az keyvault secret set --vault-name $KEY_VAULT_NAME --name oauth2-m2m-client-sec
 az keyvault secret set --vault-name $KEY_VAULT_NAME --name redis-password --value "$REDIS_KEY"
 
 # Generate and store the EC JWK used for ES256 token signing
-./mvnw -q exec:java -Dexec.mainClass=com.bootsandcats.oauth2.tools.EcJwkGenerator > jwk.json
+./gradlew :server-ui:run --args="com.bootsandcats.oauth2.tools.EcJwkGenerator" -q > jwk.json
 az keyvault secret set --vault-name $KEY_VAULT_NAME --name oauth2-jwk --file jwk.json
 rm jwk.json
 ```

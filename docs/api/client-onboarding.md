@@ -23,17 +23,13 @@ The OAuth2 Authorization Server supports the following grant types:
 
     ### Using Spring Security OAuth2 Client
 
-    Add the dependency to your `pom.xml`:
+    Add the dependency to your `build.gradle.kts`:
 
-    ```xml
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-oauth2-client</artifactId>
-    </dependency>
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
-    </dependency>
+    ```kotlin
+    dependencies {
+        implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
+        implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+    }
     ```
 
     Configure your `application.yml`:

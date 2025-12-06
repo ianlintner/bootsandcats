@@ -381,14 +381,14 @@ graph TB
 
 ```bash
 # Run OWASP dependency check
-./mvnw org.owasp:dependency-check-maven:check
+./gradlew dependencyCheckAnalyze
 ```
 
 ### SpotBugs with FindSecBugs
 
 ```bash
 # Run security-focused static analysis
-./mvnw spotbugs:check
+./gradlew spotbugsMain
 ```
 
 ### Container Scanning

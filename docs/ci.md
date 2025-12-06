@@ -9,13 +9,13 @@ This project uses GitHub Actions. The pipeline is optimized for fast feedback an
   - Jobs (in order):
     1. Build & Unit Tests
        - Java 21 via Temurin
-       - Caching: Maven dependencies (actions/setup-java cache=maven)
-       - Formatting check (spotless:check)
+       - Caching: Gradle dependencies (actions/setup-java cache=gradle)
+       - Formatting check (spotlessCheck)
        - Unit tests with JaCoCo coverage and rule (>=70%)
-       - Uploads: surefire and JaCoCo reports; packaged JAR artifact
+       - Uploads: test reports and JaCoCo reports; packaged JAR artifact
     2. Integration Tests
-       - Runs Failsafe tests only (`*IT.java`, `*IntegrationTest.java`)
-       - Uploads: failsafe reports
+       - Runs integration tests (`*IT.java`, `*IntegrationTest.java`)
+       - Uploads: test reports
     3. Static Analysis
        - SpotBugs (with FindSecBugs), strict fail on findings
        - Uploads: XML/HTML reports
@@ -36,7 +36,7 @@ This project uses GitHub Actions. The pipeline is optimized for fast feedback an
 - Manual Load Test (`.github/workflows/load-test.yml`)
   - Trigger: manual (workflow_dispatch)
   - Parameters: `users`, `durationSeconds`
-  - Runs Gatling via `-Pload-test` and uploads results
+  - Runs Gatling load tests and uploads results
 
 - Security Scan (`.github/workflows/security.yml`)
   - Triggers: weekly schedule + manual
@@ -44,8 +44,8 @@ This project uses GitHub Actions. The pipeline is optimized for fast feedback an
   - Runs OWASP Dependency-Check and uploads reports
 
 ## Performance Optimizations
-- Maven dependency caching via setup-java
-- Multi-threaded Maven (`-T 1C`) where safe
+- Gradle dependency caching via setup-java
+- Parallel test execution where safe
 - Artifact reuse (JAR built once; smoke and deploy jobs reuse it)
 - Docker build reuses packaged JAR (no rebuild in container)
 - Concurrency control cancels superseded runs for same ref
@@ -85,8 +85,8 @@ See `k8s/README.md` for detailed Azure/AKS setup instructions.
 To reproduce the smoke test locally:
 
 ```bash
-./mvnw -DskipTests package
-OTEL_SDK_DISABLED=true java -jar target/*.jar --server.port=9000 &
+./gradlew build -x test
+OTEL_SDK_DISABLED=true java -jar server-ui/build/libs/*.jar --server.port=9000 &
 APP_PID=$!
 for i in {1..60}; do curl -fsS http://localhost:9000/actuator/health | grep -q '"status"\s*:\s*"UP"' && echo healthy && break; sleep 2; done
 curl -fsS http://localhost:9000/.well-known/openid-configuration -o discovery.json

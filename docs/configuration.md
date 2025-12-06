@@ -459,7 +459,7 @@ classDiagram
 
 ```bash
 # Validate configuration
-./mvnw spring-boot:run -Dspring-boot.run.arguments="--spring.config.location=classpath:application.properties"
+./gradlew :server-ui:bootRun --args="--spring.config.location=classpath:application.properties"
 
 # Check effective configuration
 curl http://localhost:9000/actuator/configprops
