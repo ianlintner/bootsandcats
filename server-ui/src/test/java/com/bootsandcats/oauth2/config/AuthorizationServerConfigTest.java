@@ -23,7 +23,8 @@ class AuthorizationServerConfigTest {
 
     @Autowired private PasswordEncoder passwordEncoder;
 
-    @Autowired(required = false) private org.flywaydb.core.Flyway flyway;
+    @Autowired(required = false)
+    private org.flywaydb.core.Flyway flyway;
 
     @Test
     void flywayShouldBePresent() {

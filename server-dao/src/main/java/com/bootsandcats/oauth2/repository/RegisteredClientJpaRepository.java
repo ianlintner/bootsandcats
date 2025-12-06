@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import com.bootsandcats.oauth2.model.RegisteredClientEntity;
 
 @Repository
-public interface RegisteredClientJpaRepository extends JpaRepository<RegisteredClientEntity, String> {
+public interface RegisteredClientJpaRepository
+        extends JpaRepository<RegisteredClientEntity, String> {
     Optional<RegisteredClientEntity> findByClientId(String clientId);
 }
