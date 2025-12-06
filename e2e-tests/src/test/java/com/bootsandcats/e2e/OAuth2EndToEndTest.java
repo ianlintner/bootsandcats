@@ -20,6 +20,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -34,7 +35,11 @@ class OAuth2EndToEndTest {
 
     @BeforeAll
     static void setup() {
-        env = TestEnvironment.fromEnv();
+        String baseUrl = System.getenv("E2E_BASE_URL");
+        Assumptions.assumeTrue(
+                baseUrl != null && !baseUrl.isBlank(),
+                "Skipping E2E tests because E2E_BASE_URL is not set");
+        env = TestEnvironment.fromEnv(baseUrl);
     }
 
     @Test
@@ -473,8 +478,7 @@ class OAuth2EndToEndTest {
             this.password = password;
         }
 
-        static TestEnvironment fromEnv() {
-            String baseUrl = getEnv("E2E_BASE_URL", "http://localhost:9000");
+        static TestEnvironment fromEnv(String baseUrl) {
             String clientId = getEnv("E2E_CLIENT_ID", "demo-client");
             String clientSecret = getEnv("E2E_CLIENT_SECRET", "demo-secret");
             String redirectUri = getEnv("E2E_REDIRECT_URI", "http://localhost:8080/callback");
