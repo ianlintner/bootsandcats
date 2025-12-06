@@ -18,6 +18,7 @@ public class SecurityHeadersConfig {
         http.headers(
                 headers ->
                         headers.contentTypeOptions(contentTypeOptions -> {})
+                                .cacheControl(cache -> {})
                                 .frameOptions(frameOptions -> frameOptions.deny())
                                 .xssProtection(
                                         xss ->

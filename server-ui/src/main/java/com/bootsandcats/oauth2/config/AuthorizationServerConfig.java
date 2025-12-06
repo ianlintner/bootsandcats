@@ -72,7 +72,8 @@ public class AuthorizationServerConfig {
      */
     @Bean
     @Order(1)
-    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
+    public SecurityFilterChain authorizationServerSecurityFilterChain(
+            HttpSecurity http, SecurityHeadersConfig securityHeadersConfig)
             throws Exception {
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
                 new OAuth2AuthorizationServerConfigurer();
@@ -124,6 +125,8 @@ public class AuthorizationServerConfig {
         http.addFilterBefore(
                 new AuthorizationDiagnosticsFilter(), SecurityContextHolderFilter.class);
 
+        securityHeadersConfig.configureSecurityHeaders(http);
+
         return http.build();
     }
 
@@ -138,7 +141,8 @@ public class AuthorizationServerConfig {
     public SecurityFilterChain defaultSecurityFilterChain(
             HttpSecurity http,
             FederatedIdentityAuthenticationSuccessHandler
-                    federatedIdentityAuthenticationSuccessHandler)
+                    federatedIdentityAuthenticationSuccessHandler,
+            SecurityHeadersConfig securityHeadersConfig)
             throws Exception {
         http.authorizeHttpRequests(
                         (authorize) ->
@@ -180,6 +184,8 @@ public class AuthorizationServerConfig {
                                         "/oauth2/revoke",
                                         "/instances",
                                         "/instances/**"));
+
+        securityHeadersConfig.configureSecurityHeaders(http);
 
         return http.build();
     }

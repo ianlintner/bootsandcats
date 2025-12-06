@@ -1,8 +1,5 @@
 package com.bootsandcats.oauth2.controller;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -18,6 +15,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import com.bootsandcats.oauth2.dto.UserInfoResponse;
 
 /** User Info Controller for OIDC userinfo endpoint. */
 @RestController
@@ -46,7 +45,7 @@ public class UserInfoController {
                         content =
                                 @Content(
                                         mediaType = "application/json",
-                                        schema = @Schema(implementation = Map.class),
+                                        schema = @Schema(implementation = UserInfoResponse.class),
                                         examples =
                                                 @ExampleObject(
                                                         value =
@@ -63,24 +62,20 @@ public class UserInfoController {
                         description = "Unauthorized - Invalid or missing access token",
                         content = @Content)
             })
-    public ResponseEntity<Map<String, Object>> userinfo(@AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<UserInfoResponse> userinfo(@AuthenticationPrincipal Jwt jwt) {
         if (jwt == null) {
             return ResponseEntity.status(401).build();
         }
 
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("sub", jwt.getSubject());
+        String sub = jwt.getSubject();
+        String name = jwt.getClaim("name");
+        String email = jwt.getClaim("email");
+        String preferredUsername = jwt.getClaim("preferred_username");
 
-        if (jwt.getClaim("name") != null) {
-            claims.put("name", jwt.getClaim("name"));
-        }
-        if (jwt.getClaim("email") != null) {
-            claims.put("email", jwt.getClaim("email"));
-        }
-        if (jwt.getClaim("preferred_username") != null) {
-            claims.put("preferred_username", jwt.getClaim("preferred_username"));
-        }
+        // Include the raw claims map for compatibility while providing typed fields
+        UserInfoResponse response =
+                new UserInfoResponse(sub, name, email, preferredUsername, jwt.getClaims());
 
-        return ResponseEntity.ok(claims);
+        return ResponseEntity.ok(response);
     }
 }
