@@ -8,6 +8,7 @@ dependencies {
     implementation(project(":server-logic"))
     implementation(project(":server-dao"))
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.security:spring-security-oauth2-authorization-server:1.3.4")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
