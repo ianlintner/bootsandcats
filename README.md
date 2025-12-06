@@ -46,7 +46,7 @@ sequenceDiagram
 ### Prerequisites
 
 - Java 21 (LTS) or higher
-- Maven 3.8+
+- Gradle 9.0+ (or use the included Gradle wrapper)
 - Docker (optional)
 
 ### Running Locally
@@ -57,11 +57,11 @@ git clone https://github.com/ianlintner/bootsandcats.git
 cd bootsandcats
 
 # Build and run
-./mvnw spring-boot:run
+./gradlew :server-ui:bootRun
 
 # Or build and run JAR
-./mvnw package
-java -jar target/oauth2-server-1.0.0-SNAPSHOT.jar
+./gradlew build
+java -jar server-ui/build/libs/server-ui-1.0.0-SNAPSHOT.jar
 ```
 
 The server will start on `http://localhost:9000`.
@@ -219,16 +219,16 @@ curl -X POST http://localhost:9000/oauth2/introspect \
 
 ```bash
 # Run unit tests
-./mvnw test
+./gradlew test
 
 # Run integration tests
-./mvnw verify
+./gradlew check
 
 # Run all tests with coverage report
-./mvnw verify jacoco:report
+./gradlew jacocoTestReport
 
 # Run load tests (requires running server)
-./mvnw gatling:test -Pload-test
+./gradlew gatlingRun
 ```
 
 ## Security
@@ -251,10 +251,10 @@ curl -X POST http://localhost:9000/oauth2/introspect \
 
 ```bash
 # Run OWASP dependency check
-./mvnw org.owasp:dependency-check-maven:check
+./gradlew dependencyCheckAnalyze
 
 # Run SpotBugs with FindSecBugs
-./mvnw spotbugs:check
+./gradlew spotbugsMain
 ```
 
 ## Observability
@@ -319,39 +319,31 @@ See `SETUP.md` for detailed instructions and manual setup steps.
 
 ```
 bootsandcats/
-├── src/
-│   ├── main/
-│   │   ├── java/com/bootsandcats/oauth2/
-│   │   │   ├── OAuth2AuthorizationServerApplication.java
-│   │   │   ├── config/
-│   │   │   │   ├── AuthorizationServerConfig.java
-│   │   │   │   ├── OpenTelemetryConfig.java
-│   │   │   │   └── SecurityHeadersConfig.java
-│   │   │   ├── controller/
-│   │   │   │   ├── UserInfoController.java
-│   │   │   │   └── CustomErrorController.java
-│   │   │   └── service/
-│   │   │       └── OAuth2MetricsService.java
-│   │   └── resources/
-│   │       ├── application.properties
-│   │       └── application-prod.properties
-│   └── test/
-│       ├── java/com/bootsandcats/oauth2/
-│       │   ├── config/
-│       │   ├── controller/
-│       │   ├── integration/
-│       │   ├── load/
-│       │   ├── security/
-│       │   └── service/
-│       └── resources/
-│           └── application-test.properties
+├── server-ui/          # Main Spring Boot application (UI, controllers, security config)
+│   ├── src/main/java/com/bootsandcats/oauth2/
+│   │   ├── OAuth2AuthorizationServerApplication.java
+│   │   ├── config/
+│   │   ├── controller/
+│   │   └── service/
+│   └── src/main/resources/
+│       ├── application.properties
+│       └── application-prod.properties
+├── server-logic/       # Business logic services
+│   └── src/main/java/
+├── server-dao/         # Data access layer (JPA entities, repositories)
+│   └── src/main/java/
+├── canary-app/         # Canary deployment test application
+│   └── src/main/java/
+├── e2e-tests/          # End-to-end integration tests
+│   └── src/test/java/
 ├── .github/workflows/
 │   ├── ci.yml
 │   ├── security.yml
 │   └── load-test.yml
 ├── Dockerfile
 ├── docker-compose.yml
-├── pom.xml
+├── build.gradle.kts
+├── settings.gradle.kts
 └── README.md
 ```
 
@@ -364,17 +356,17 @@ MIT License
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Run tests: `./mvnw verify`
-5. Format code: `./mvnw spotless:apply`
+4. Run tests: `./gradlew check`
+5. Format code: `./gradlew spotlessApply`
 6. Submit a pull request
 
 ## Pre-commit Quality Gate
 
-To prevent commits that break the main quality bars, the repository ships with a Git pre-commit hook that runs the following Maven goals in order:
+To prevent commits that break the main quality bars, the repository ships with a Git pre-commit hook that runs the following Gradle tasks in order:
 
-- `./mvnw spotless:check` – verifies formatting
-- `./mvnw spotbugs:check` – runs static analysis / linting
-- `./mvnw verify` – builds the project and executes tests
+- `./gradlew spotlessCheck` – verifies formatting
+- `./gradlew spotbugsMain` – runs static analysis / linting
+- `./gradlew check` – builds the project and executes tests
 
 ### Installation
 

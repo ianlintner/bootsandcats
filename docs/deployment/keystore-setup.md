@@ -69,7 +69,7 @@ The keystore and password are stored as GitHub repository secrets for CI/CD:
 - name: Run tests with SSL
   env:
     SSL_KEYSTORE_PASSWORD: ${{ secrets.SSL_KEYSTORE_PASSWORD }}
-  run: ./mvnw test
+  run: ./gradlew test
 ```
 
 ## Kubernetes Deployment

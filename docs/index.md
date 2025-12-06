@@ -156,8 +156,8 @@ sequenceDiagram
 
 | Component | Technology |
 |-----------|------------|
-| Framework | Spring Boot 3.2 |
-| OAuth2 Server | Spring Authorization Server 1.2 |
+| Framework | Spring Boot 3.4 |
+| OAuth2 Server | Spring Authorization Server 1.4 |
 | Database | PostgreSQL 15 |
 | Cache | Redis (optional) |
 | Metrics | Micrometer + Prometheus |

@@ -5,7 +5,7 @@ This guide will help you get the OAuth2 Authorization Server up and running quic
 ## Prerequisites
 
 - **Java 21 (LTS)** or higher
-- **Maven 3.8+** (or use the included Maven wrapper)
+- **Gradle 9.0+** (or use the included Gradle wrapper)
 - **Docker** (optional, for containerized deployment)
 - **PostgreSQL 15** (for production, H2 is used for development)
 
@@ -19,11 +19,11 @@ git clone https://github.com/ianlintner/bootsandcats.git
 cd bootsandcats
 
 # Build and run
-./mvnw spring-boot:run
+./gradlew :server-ui:bootRun
 
 # Or build JAR and run
-./mvnw package
-java -jar target/oauth2-server-1.0.0-SNAPSHOT.jar
+./gradlew build
+java -jar server-ui/build/libs/server-ui-1.0.0-SNAPSHOT.jar
 ```
 
 The server will start on `http://localhost:9000`.
@@ -211,8 +211,18 @@ loading the JSON Web Key (JWK) from **Azure Key Vault**:
 
 1. Generate a new EC JWK (includes private key):
 
+    The EcJwkGenerator utility is available in the server-logic module. The easiest way to generate the JWK:
+
     ```bash
-    ./mvnw -q exec:java -Dexec.mainClass=com.bootsandcats.oauth2.tools.EcJwkGenerator > jwk.json
+    # Option 1: Build the full application and run the utility
+    ./gradlew build
+    java -jar server-ui/build/libs/server-ui-*.jar \
+      --spring.main.web-application-type=none \
+      --spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration \
+      com.bootsandcats.oauth2.tools.EcJwkGenerator > jwk.json
+    
+    # Option 2: Use the Azure Key Vault pre-generated key (recommended for production)
+    # Keys are automatically loaded from Azure Key Vault when AZURE_KEYVAULT_ENABLED=true
     ```
 
 2. Upload the JWK set to Key Vault (replace `KEY_VAULT_NAME` with your vault):

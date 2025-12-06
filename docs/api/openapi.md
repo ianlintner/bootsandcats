@@ -167,11 +167,11 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           
       - name: Start Application
-        run: ./mvnw spring-boot:start -DskipTests &
+        run: ./gradlew :server-ui:bootRun &
         
       - name: Wait for Application
         run: sleep 30
