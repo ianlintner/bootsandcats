@@ -1,11 +1,11 @@
-# Canary App
+# Profile UI
 
-The Canary App is a simple Spring Boot web application used to validate end-to-end authentication via the Authorization Server. It shows the authenticated user’s details, claims, and ID token, and includes a logout button.
+Profile UI is a Spring Boot micro-app used to validate end-to-end authentication via the Authorization Server. It shows the authenticated user’s details, claims, and ID token, and includes a logout button. Styling is provided via TailwindCSS with `@ianlintner/theme`.
 
 ## Build
 
 ```bash
-./gradlew :canary-app:bootJar
+./gradlew :profile-ui:bootJar
 ```
 
 ## Container Image
@@ -15,9 +15,9 @@ Build a Linux/AMD64 image from your Apple Silicon workstation using BuildKit, th
 ```bash
 docker buildx build \
 	--platform linux/amd64 \
-	-t gabby.azurecr.io/canary-app:latest \
-	-f canary-app/Dockerfile \
-	canary-app \
+	-t gabby.azurecr.io/profile-ui:latest \
+	-f profile-ui/Dockerfile \
+	profile-ui \
 	--push
 ```
 
@@ -26,30 +26,37 @@ docker buildx build \
 ## Deploy
 
 ```bash
-kubectl apply -f k8s/canary-deployment.yaml
-kubectl rollout status deployment/canary-app
-kubectl get pods -l app=canary-app -o wide
+kubectl apply -f k8s/profile-ui-deployment.yaml
+kubectl rollout status deployment/profile-ui
+kubectl get pods -l app=profile-ui -o wide
 ```
 
 ## Configuration
 
-The Canary App uses explicit endpoints to talk to the AS’s internal Service in the cluster:
+Profile UI relies on issuer discovery for the Authorization Server. Override via environment variables when deploying:
 
-- `authorization-uri`: `http://oauth2-server:9000/oauth2/authorize`
-- `token-uri`: `http://oauth2-server:9000/oauth2/token`
-- `jwk-set-uri`: `http://oauth2-server:9000/oauth2/jwks`
-- `user-info-uri`: `http://oauth2-server:9000/userinfo`
+- `OAUTH2_ISSUER_URI` (default `https://oauth2.cat-herding.net`)
+- `OAUTH2_CLIENT_ID` (default `profile-ui`)
+- `OAUTH2_CLIENT_SECRET` (defaults to the demo secret in `oauth2-app-secrets`)
 
-These are parameterized in `canary-app/src/main/resources/application.properties` with environment variables so they can be adjusted as needed.
+These are parameterized in `profile-ui/src/main/resources/application.properties` so they can be adjusted as needed.
+
+The Tailwind-based styling is built during `processResources`, but you can run it manually while iterating on UI changes:
+
+```bash
+cd profile-ui
+npm install
+npm run build:css
+```
 
 ## Test
 
-- Access the Canary App Service (via port-forward or ingress) and click “Login via Authorization Server”.
+- Access the Profile UI Service (via port-forward or ingress) and click “Login via Authorization Server”.
 - Authenticate using local credentials or one of the federated providers.
-- On success, you’ll see user attributes and the ID token.
+- On success, you’ll see your profile summary, claims, and ID token.
 
 ## Troubleshooting
 
-- `ImagePullBackOff`: Confirm ACR image `gabby.azurecr.io/canary-app:latest` exists and AKS has permission to pull.
-- Issuer mismatch / discovery issues: The app is configured to use explicit endpoints to the internal Service to avoid DNS dependencies.
-- Federation errors: Ensure secrets in `oauth2-app-secrets` include provider keys.
+- `ImagePullBackOff`: Confirm ACR image `gabby.azurecr.io/profile-ui:latest` exists and AKS has permission to pull.
+- Issuer mismatch / discovery issues: ensure `OAUTH2_ISSUER_URI` matches the Authorization Server ingress.
+- Federation errors: ensure secrets in `oauth2-app-secrets` include provider keys.
