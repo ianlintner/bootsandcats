@@ -34,5 +34,5 @@ gradle wrapper
 
 ## Notes
 - Java 21 toolchain is configured.
-- Spring Boot 3.2.x baseline; tweak dependency versions to match your current POM if needed.
+- Spring Boot 3.4.x baseline with latest dependencies.
 - Tests use JUnit Platform; migrate test sources similarly into their respective modules.

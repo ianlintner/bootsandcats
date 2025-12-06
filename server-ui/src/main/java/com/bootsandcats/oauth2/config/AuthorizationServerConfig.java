@@ -35,13 +35,13 @@ import org.springframework.security.oauth2.server.authorization.settings.ClientS
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
-import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
-import com.bootsandcats.oauth2.log.AuthorizationDiagnosticsFilter;
 
+import com.bootsandcats.oauth2.log.AuthorizationDiagnosticsFilter;
 import com.bootsandcats.oauth2.security.FederatedIdentityAuthenticationSuccessHandler;
 import com.bootsandcats.oauth2.service.JwkSetProvider;
 import com.nimbusds.jose.jwk.source.JWKSource;
@@ -270,7 +270,6 @@ public class AuthorizationServerConfig {
 
         return repository;
     }
-
 
     private void registerClientIfMissing(
             JdbcRegisteredClientRepository repository,
