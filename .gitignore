@@ -72,3 +72,4 @@ dependency-check-report.*
 .fake
 e2e-tests/jwk.json
 test_output*.txt
+node_modules

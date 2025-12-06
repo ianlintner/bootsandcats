@@ -1,4 +1,4 @@
-@import "@ianlintner/theme/styles.css";
+@import "@ianlintner/theme/dist/styles.css";
 
 @tailwind base;
 @tailwind components;
@@ -9,7 +9,7 @@
 }
 
 .profile-card {
-  @apply bg-white/90 dark:bg-surface shadow-lg rounded-xl border border-slate-200/60 dark:border-slate-800/60 p-6;
+  @apply bg-white/90 dark:bg-slate-900/70 shadow-lg rounded-xl border border-slate-200/60 dark:border-slate-800/60 p-6;
 }
 
 .claim-grid {
