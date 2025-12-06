@@ -60,9 +60,8 @@ class OAuth2EndToEndTest {
                 RestAssured.given()
                         .baseUri(env.baseUrl)
                         .contentType(ContentType.URLENC)
-                        .auth()
-                        .preemptive()
-                        .basic(env.confidentialClientId, env.confidentialClientSecret)
+                .formParam("client_id", env.confidentialClientId)
+                .formParam("client_secret", env.confidentialClientSecret)
                         .formParam("grant_type", "refresh_token")
                         .formParam("refresh_token", result.refreshToken)
                         .post("/oauth2/token");
@@ -75,10 +74,9 @@ class OAuth2EndToEndTest {
         Response introspectResponse =
                 RestAssured.given()
                         .baseUri(env.baseUrl)
-                        .auth()
-                        .preemptive()
-                        .basic(env.confidentialClientId, env.confidentialClientSecret)
                         .contentType(ContentType.URLENC)
+                .formParam("client_id", env.confidentialClientId)
+                .formParam("client_secret", env.confidentialClientSecret)
                         .formParam("token", refreshedAccessToken)
                         .formParam("token_type_hint", "access_token")
                         .post("/oauth2/introspect");
@@ -90,10 +88,9 @@ class OAuth2EndToEndTest {
         Response revokeResponse =
                 RestAssured.given()
                         .baseUri(env.baseUrl)
-                        .auth()
-                        .preemptive()
-                        .basic(env.confidentialClientId, env.confidentialClientSecret)
                         .contentType(ContentType.URLENC)
+                .formParam("client_id", env.confidentialClientId)
+                .formParam("client_secret", env.confidentialClientSecret)
                         .formParam("token", refreshedAccessToken)
                         .formParam("token_type_hint", "access_token")
                         .post("/oauth2/revoke");
@@ -103,10 +100,9 @@ class OAuth2EndToEndTest {
         Response introspectAfterRevoke =
                 RestAssured.given()
                         .baseUri(env.baseUrl)
-                        .auth()
-                        .preemptive()
-                        .basic(env.confidentialClientId, env.confidentialClientSecret)
                         .contentType(ContentType.URLENC)
+                .formParam("client_id", env.confidentialClientId)
+                .formParam("client_secret", env.confidentialClientSecret)
                         .formParam("token", refreshedAccessToken)
                         .formParam("token_type_hint", "access_token")
                         .post("/oauth2/introspect");
@@ -275,9 +271,8 @@ class OAuth2EndToEndTest {
                     RestAssured.given()
                             .baseUri(env.baseUrl)
                             .contentType(ContentType.URLENC)
-                            .auth()
-                            .preemptive()
-                            .basic(env.confidentialClientId, env.confidentialClientSecret)
+                        .formParam("client_id", env.confidentialClientId)
+                        .formParam("client_secret", env.confidentialClientSecret)
                             .formParam("grant_type", "authorization_code")
                             .formParam("code", code)
                             .formParam("redirect_uri", env.confidentialRedirectUri)
