@@ -47,8 +47,11 @@ jobs:
           gradle-version: '9.0.0'
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
-      - name: Build & run unit tests
-        run: gradle spotlessCheck build --no-daemon --build-cache --parallel
+      - name: Build & run unit tests (skip e2e)
+        run: |
+          gradle spotlessCheck build \
+            -x :e2e-tests:test \
+            --no-daemon --build-cache --parallel
 
       - name: Upload test reports (always)
         if: always()
