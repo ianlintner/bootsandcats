@@ -73,8 +73,7 @@ public class AuthorizationServerConfig {
     @Bean
     @Order(1)
     public SecurityFilterChain authorizationServerSecurityFilterChain(
-            HttpSecurity http, SecurityHeadersConfig securityHeadersConfig)
-            throws Exception {
+            HttpSecurity http, SecurityHeadersConfig securityHeadersConfig) throws Exception {
         OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
                 new OAuth2AuthorizationServerConfigurer();
 

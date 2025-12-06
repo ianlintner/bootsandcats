@@ -7,11 +7,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.bootsandcats.oauth2.dto.ErrorResponse;
+
 import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
-
-import com.bootsandcats.oauth2.dto.ErrorResponse;
 
 /**
  * Custom Error Controller for handling application errors.
