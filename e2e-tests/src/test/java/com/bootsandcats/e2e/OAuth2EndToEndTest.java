@@ -286,20 +286,16 @@ class OAuth2EndToEndTest {
 
         private AuthorizationResult exchangeCodeForTokens(
                 Pkce pkce, Response response, String expectedState) throws URISyntaxException {
-            System.out.println(
-                    "exchangeCodeForTokens: response status="
-                            + response.statusCode()
-                            + " Location="
-                            + response.getHeader("Location"));
-            System.out.println(
-                    "exchangeCodeForTokens: response body snippet: "
-                            + response.asString()
-                                    .substring(0, Math.min(500, response.asString().length())));
+                log(
+                    "exchangeCodeForTokens: status=%d location=%s bodySnippet=%s",
+                    response.statusCode(),
+                    response.getHeader("Location"),
+                    response.asString().substring(0, Math.min(500, response.asString().length())));
             String location = response.getHeader("Location");
             if (location == null) {
                 // Try to follow up with a GET to the consent form's action URL if available
-                System.out.println(
-                        "No Location header after consent submit, attempting to follow up with GET to consent form action URL...");
+                log(
+                    "No Location header after consent submit, attempting follow-up GET to consent form action URL...");
                 String fallbackUrl = null;
                 try {
                     // Try to parse the form action from the response body
@@ -316,7 +312,7 @@ class OAuth2EndToEndTest {
                 } catch (Exception e) {
                     // ignore, fallbackUrl will remain null
                 }
-                System.out.println("Consent fallback URL: " + fallbackUrl);
+                log("Consent fallback URL: %s", fallbackUrl);
                 if (fallbackUrl == null || fallbackUrl.isBlank()) {
                     throw new IllegalStateException(
                             "Missing redirect Location header after consent submit, and could not determine fallback URL. Response body: "
@@ -392,6 +388,22 @@ class OAuth2EndToEndTest {
 
         private static String decode(String value) {
             return java.net.URLDecoder.decode(value, java.nio.charset.StandardCharsets.UTF_8);
+        }
+    }
+
+    private static void log(String message, Object... args) {
+        String formatted = args.length == 0 ? message : String.format(message, args);
+        String line = "[" + Instant.now() + "] " + formatted + System.lineSeparator();
+        try {
+            Files.writeString(
+                    LOG_PATH,
+                    line,
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.APPEND,
+                    StandardOpenOption.WRITE);
+        } catch (Exception e) {
+            // As a fallback, write to stdout if file logging fails
+            System.out.println("[E2E-LOG-FALLBACK] " + line + " error=" + e.getMessage());
         }
     }
 
