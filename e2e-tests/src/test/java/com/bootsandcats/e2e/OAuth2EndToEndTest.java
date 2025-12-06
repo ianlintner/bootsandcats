@@ -50,9 +50,10 @@ class OAuth2EndToEndTest {
     @BeforeAll
     static void setup() {
         String baseUrl = System.getenv("E2E_BASE_URL");
-        Assumptions.assumeTrue(
-                baseUrl != null && !baseUrl.isBlank(),
-                "Skipping E2E tests because E2E_BASE_URL is not set");
+        if (baseUrl == null || baseUrl.isBlank()) {
+            LOGGER.warn("Skipping E2E tests because E2E_BASE_URL is not set");
+            Assumptions.assumeTrue(false, "E2E_BASE_URL is not set");
+        }
         try {
             Files.deleteIfExists(LOG_PATH);
         } catch (Exception ignored) {
