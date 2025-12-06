@@ -211,8 +211,18 @@ loading the JSON Web Key (JWK) from **Azure Key Vault**:
 
 1. Generate a new EC JWK (includes private key):
 
+    The EcJwkGenerator utility is available in the server-logic module. The easiest way to generate the JWK:
+
     ```bash
-    ./gradlew :server-ui:run --args="com.bootsandcats.oauth2.tools.EcJwkGenerator" -q > jwk.json
+    # Option 1: Build the full application and run the utility
+    ./gradlew build
+    java -jar server-ui/build/libs/server-ui-*.jar \
+      --spring.main.web-application-type=none \
+      --spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration \
+      com.bootsandcats.oauth2.tools.EcJwkGenerator > jwk.json
+    
+    # Option 2: Use the Azure Key Vault pre-generated key (recommended for production)
+    # Keys are automatically loaded from Azure Key Vault when AZURE_KEYVAULT_ENABLED=true
     ```
 
 2. Upload the JWK set to Key Vault (replace `KEY_VAULT_NAME` with your vault):
