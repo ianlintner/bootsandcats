@@ -1,13 +1,9 @@
 package com.bootsandcats.oauth2.log;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.lang.NonNull;
@@ -15,9 +11,15 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 /**
- * Diagnostic filter that logs incoming /oauth2/authorize requests with parameters and authentication
- * state. This is intended for troubleshooting and should not log credentials or token values.
+ * Diagnostic filter that logs incoming /oauth2/authorize requests with parameters and
+ * authentication state. This is intended for troubleshooting and should not log credentials or
+ * token values.
  */
 public class AuthorizationDiagnosticsFilter extends OncePerRequestFilter {
 

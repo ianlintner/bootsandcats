@@ -3,6 +3,8 @@ package com.bootsandcats.oauth2;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import de.codecentric.boot.admin.server.config.EnableAdminServer;
+
 /**
  * Main Spring Boot Application for OAuth2 Authorization Server.
  *
@@ -17,6 +19,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * </ul>
  */
 @SpringBootApplication
+@EnableAdminServer
 public class OAuth2AuthorizationServerApplication {
 
     public static void main(String[] args) {

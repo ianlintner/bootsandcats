@@ -2,10 +2,6 @@ package com.bootsandcats.e2e;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.restassured.RestAssured;
-import io.restassured.filter.session.SessionFilter;
-import io.restassured.http.ContentType;
-import io.restassured.response.Response;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -18,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -25,6 +22,11 @@ import org.jsoup.select.Elements;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import io.restassured.RestAssured;
+import io.restassured.filter.session.SessionFilter;
+import io.restassured.http.ContentType;
+import io.restassured.response.Response;
 
 class OAuth2EndToEndTest {
 
@@ -60,8 +62,8 @@ class OAuth2EndToEndTest {
                 RestAssured.given()
                         .baseUri(env.baseUrl)
                         .contentType(ContentType.URLENC)
-                .formParam("client_id", env.confidentialClientId)
-                .formParam("client_secret", env.confidentialClientSecret)
+                        .formParam("client_id", env.confidentialClientId)
+                        .formParam("client_secret", env.confidentialClientSecret)
                         .formParam("grant_type", "refresh_token")
                         .formParam("refresh_token", result.refreshToken)
                         .post("/oauth2/token");
@@ -75,8 +77,8 @@ class OAuth2EndToEndTest {
                 RestAssured.given()
                         .baseUri(env.baseUrl)
                         .contentType(ContentType.URLENC)
-                .formParam("client_id", env.confidentialClientId)
-                .formParam("client_secret", env.confidentialClientSecret)
+                        .formParam("client_id", env.confidentialClientId)
+                        .formParam("client_secret", env.confidentialClientSecret)
                         .formParam("token", refreshedAccessToken)
                         .formParam("token_type_hint", "access_token")
                         .post("/oauth2/introspect");
@@ -89,8 +91,8 @@ class OAuth2EndToEndTest {
                 RestAssured.given()
                         .baseUri(env.baseUrl)
                         .contentType(ContentType.URLENC)
-                .formParam("client_id", env.confidentialClientId)
-                .formParam("client_secret", env.confidentialClientSecret)
+                        .formParam("client_id", env.confidentialClientId)
+                        .formParam("client_secret", env.confidentialClientSecret)
                         .formParam("token", refreshedAccessToken)
                         .formParam("token_type_hint", "access_token")
                         .post("/oauth2/revoke");
@@ -101,8 +103,8 @@ class OAuth2EndToEndTest {
                 RestAssured.given()
                         .baseUri(env.baseUrl)
                         .contentType(ContentType.URLENC)
-                .formParam("client_id", env.confidentialClientId)
-                .formParam("client_secret", env.confidentialClientSecret)
+                        .formParam("client_id", env.confidentialClientId)
+                        .formParam("client_secret", env.confidentialClientSecret)
                         .formParam("token", refreshedAccessToken)
                         .formParam("token_type_hint", "access_token")
                         .post("/oauth2/introspect");
@@ -134,20 +136,29 @@ class OAuth2EndToEndTest {
         AuthorizationResult completeAuthorizationCodePkceFlow() throws Exception {
             Pkce pkce = Pkce.create();
             String state = UUID.randomUUID().toString();
-            Map<String, String> authorizeParams = Map.of(
-                "response_type", "code",
-                "client_id", env.confidentialClientId,
-                "redirect_uri", env.confidentialRedirectUri,
-                "scope", "openid profile email",
-                "state", state,
-                "nonce", UUID.randomUUID().toString(),
-                "code_challenge", pkce.codeChallenge,
-                "code_challenge_method", "S256"
-            );
+            Map<String, String> authorizeParams =
+                    Map.of(
+                            "response_type",
+                            "code",
+                            "client_id",
+                            env.confidentialClientId,
+                            "redirect_uri",
+                            env.confidentialRedirectUri,
+                            "scope",
+                            "openid profile email",
+                            "state",
+                            state,
+                            "nonce",
+                            UUID.randomUUID().toString(),
+                            "code_challenge",
+                            pkce.codeChallenge,
+                            "code_challenge_method",
+                            "S256");
 
             String authorizePath = "/oauth2/authorize";
 
-            Response loginPage = RestAssured.given().baseUri(env.baseUrl).filter(session).get("/login");
+            Response loginPage =
+                    RestAssured.given().baseUri(env.baseUrl).filter(session).get("/login");
             Map<String, String> cookies = new HashMap<>(loginPage.getCookies());
             extractPreferredJSessionId(loginPage).ifPresent((id) -> cookies.put("JSESSIONID", id));
 
@@ -161,31 +172,50 @@ class OAuth2EndToEndTest {
             System.out.println("loginForm fields after set: " + loginForm.fields);
             System.out.println("login cookies: " + cookies);
 
-            var loginRequest = RestAssured.given()
-                .filter(session)
-                .redirects().follow(false)
-                .contentType(ContentType.URLENC)
-                .cookies(cookies);
+            var loginRequest =
+                    RestAssured.given()
+                            .filter(session)
+                            .redirects()
+                            .follow(false)
+                            .contentType(ContentType.URLENC)
+                            .cookies(cookies);
             loginForm.fields.forEach((k, values) -> loginRequest.formParam(k, values.toArray()));
             Response loginSubmit = loginRequest.post(loginForm.action);
             System.out.println("loginSubmit cookies: " + loginSubmit.getCookies());
             cookies.putAll(loginSubmit.getCookies());
-            System.out.println("loginSubmit status=" + loginSubmit.statusCode() + " location=" + loginSubmit.getHeader("Location"));
+            System.out.println(
+                    "loginSubmit status="
+                            + loginSubmit.statusCode()
+                            + " location="
+                            + loginSubmit.getHeader("Location"));
             if (loginSubmit.statusCode() >= 400) {
-                throw new IllegalStateException("Login failed. status=" + loginSubmit.statusCode()
-                    + " bodySnippet=" + loginSubmit.asString().substring(0, Math.min(300, loginSubmit.asString().length()))
-                    + " headers=" + loginSubmit.getHeaders());
+                throw new IllegalStateException(
+                        "Login failed. status="
+                                + loginSubmit.statusCode()
+                                + " bodySnippet="
+                                + loginSubmit
+                                        .asString()
+                                        .substring(
+                                                0, Math.min(300, loginSubmit.asString().length()))
+                                + " headers="
+                                + loginSubmit.getHeaders());
             }
 
-            Response postLoginAuth = RestAssured.given()
-                .baseUri(env.baseUrl)
-                .filter(session)
-                .cookies(cookies)
-                .redirects().follow(false)
-                .queryParams(authorizeParams)
-                .get(authorizePath);
+            Response postLoginAuth =
+                    RestAssured.given()
+                            .baseUri(env.baseUrl)
+                            .filter(session)
+                            .cookies(cookies)
+                            .redirects()
+                            .follow(false)
+                            .queryParams(authorizeParams)
+                            .get(authorizePath);
             cookies.putAll(postLoginAuth.getCookies());
-            System.out.println("authorize status=" + postLoginAuth.statusCode() + " location=" + postLoginAuth.getHeader("Location"));
+            System.out.println(
+                    "authorize status="
+                            + postLoginAuth.statusCode()
+                            + " location="
+                            + postLoginAuth.getHeader("Location"));
             if (postLoginAuth.statusCode() == 200) {
                 String body = postLoginAuth.asString();
                 throw new IllegalStateException(
@@ -197,16 +227,27 @@ class OAuth2EndToEndTest {
             if (postLoginAuth.statusCode() == 302 && !isRedirectWithCode(postLoginAuth)) {
                 String redirectLocation = postLoginAuth.getHeader("Location");
                 if (redirectLocation == null) {
-                    throw new IllegalStateException("Expected redirect after login but missing Location header. status=" + postLoginAuth.statusCode()
-                        + " bodySnippet=" + postLoginAuth.asString().substring(0, Math.min(300, postLoginAuth.asString().length()))
-                        + " headers=" + postLoginAuth.getHeaders());
+                    throw new IllegalStateException(
+                            "Expected redirect after login but missing Location header. status="
+                                    + postLoginAuth.statusCode()
+                                    + " bodySnippet="
+                                    + postLoginAuth
+                                            .asString()
+                                            .substring(
+                                                    0,
+                                                    Math.min(
+                                                            300, postLoginAuth.asString().length()))
+                                    + " headers="
+                                    + postLoginAuth.getHeaders());
                 }
                 String consentUrl = resolveLocation(env.baseUrl, redirectLocation);
-                authorizationPage = RestAssured.given()
-                    .filter(session)
-                    .cookies(cookies)
-                    .redirects().follow(true)
-                    .get(consentUrl);
+                authorizationPage =
+                        RestAssured.given()
+                                .filter(session)
+                                .cookies(cookies)
+                                .redirects()
+                                .follow(true)
+                                .get(consentUrl);
             }
             cookies.putAll(authorizationPage.getCookies());
             if (isRedirectWithCode(authorizationPage)) {
@@ -219,18 +260,29 @@ class OAuth2EndToEndTest {
                             + " headers="
                             + authorizationPage.getHeaders()
                             + " bodySnippet="
-                            + authorizationPage.asString().substring(
-                                    0, Math.min(300, authorizationPage.asString().length())));
+                            + authorizationPage
+                                    .asString()
+                                    .substring(
+                                            0,
+                                            Math.min(300, authorizationPage.asString().length())));
         }
 
-        private AuthorizationResult exchangeCodeForTokens(Pkce pkce, Response response, String expectedState)
-                throws URISyntaxException {
-            System.out.println("exchangeCodeForTokens: response status=" + response.statusCode() + " Location=" + response.getHeader("Location"));
-            System.out.println("exchangeCodeForTokens: response body snippet: " + response.asString().substring(0, Math.min(500, response.asString().length())));
+        private AuthorizationResult exchangeCodeForTokens(
+                Pkce pkce, Response response, String expectedState) throws URISyntaxException {
+            System.out.println(
+                    "exchangeCodeForTokens: response status="
+                            + response.statusCode()
+                            + " Location="
+                            + response.getHeader("Location"));
+            System.out.println(
+                    "exchangeCodeForTokens: response body snippet: "
+                            + response.asString()
+                                    .substring(0, Math.min(500, response.asString().length())));
             String location = response.getHeader("Location");
             if (location == null) {
                 // Try to follow up with a GET to the consent form's action URL if available
-                System.out.println("No Location header after consent submit, attempting to follow up with GET to consent form action URL...");
+                System.out.println(
+                        "No Location header after consent submit, attempting to follow up with GET to consent form action URL...");
                 String fallbackUrl = null;
                 try {
                     // Try to parse the form action from the response body
@@ -249,15 +301,29 @@ class OAuth2EndToEndTest {
                 }
                 System.out.println("Consent fallback URL: " + fallbackUrl);
                 if (fallbackUrl == null || fallbackUrl.isBlank()) {
-                    throw new IllegalStateException("Missing redirect Location header after consent submit, and could not determine fallback URL. Response body: " + response.asString().substring(0, Math.min(500, response.asString().length())));
+                    throw new IllegalStateException(
+                            "Missing redirect Location header after consent submit, and could not determine fallback URL. Response body: "
+                                    + response.asString()
+                                            .substring(
+                                                    0,
+                                                    Math.min(500, response.asString().length())));
                 }
-                Response followup = RestAssured.given()
-                    .redirects().follow(false)
-                    .cookies(response.getCookies())
-                    .get(fallbackUrl);
+                Response followup =
+                        RestAssured.given()
+                                .redirects()
+                                .follow(false)
+                                .cookies(response.getCookies())
+                                .get(fallbackUrl);
                 location = followup.getHeader("Location");
                 if (location == null) {
-                    throw new IllegalStateException("Missing redirect Location header after consent submit and follow-up. Fallback URL: " + fallbackUrl + ". Response body: " + followup.asString().substring(0, Math.min(500, followup.asString().length())));
+                    throw new IllegalStateException(
+                            "Missing redirect Location header after consent submit and follow-up. Fallback URL: "
+                                    + fallbackUrl
+                                    + ". Response body: "
+                                    + followup.asString()
+                                            .substring(
+                                                    0,
+                                                    Math.min(500, followup.asString().length())));
                 }
             }
             String redirect = resolveLocation(env.baseUrl, location);
@@ -271,8 +337,8 @@ class OAuth2EndToEndTest {
                     RestAssured.given()
                             .baseUri(env.baseUrl)
                             .contentType(ContentType.URLENC)
-                        .formParam("client_id", env.confidentialClientId)
-                        .formParam("client_secret", env.confidentialClientSecret)
+                            .formParam("client_id", env.confidentialClientId)
+                            .formParam("client_secret", env.confidentialClientSecret)
                             .formParam("grant_type", "authorization_code")
                             .formParam("code", code)
                             .formParam("redirect_uri", env.confidentialRedirectUri)
@@ -300,9 +366,7 @@ class OAuth2EndToEndTest {
             for (String pair : query.split("&")) {
                 String[] kv = pair.split("=", 2);
                 if (kv.length == 2) {
-                    result.put(
-                            decode(kv[0]),
-                            decode(kv[1]));
+                    result.put(decode(kv[0]), decode(kv[1]));
                 }
             }
             return result;
@@ -339,8 +403,7 @@ class OAuth2EndToEndTest {
                 String value = input.attr("value");
                 if ("checkbox".equalsIgnoreCase(type)) {
                     if (input.hasAttr("checked") || name.startsWith("scope")) {
-                        fields
-                                .computeIfAbsent(name, k -> new ArrayList<>())
+                        fields.computeIfAbsent(name, k -> new ArrayList<>())
                                 .add(value.isBlank() ? "true" : value);
                     }
                     continue;
@@ -417,7 +480,8 @@ class OAuth2EndToEndTest {
             String redirectUri = getEnv("E2E_REDIRECT_URI", "http://localhost:8080/callback");
             String username = getEnv("E2E_USERNAME", "user");
             String password = getEnv("E2E_PASSWORD", "password");
-            return new TestEnvironment(baseUrl, clientId, clientSecret, redirectUri, username, password);
+            return new TestEnvironment(
+                    baseUrl, clientId, clientSecret, redirectUri, username, password);
         }
 
         private static String getEnv(String key, String defaultValue) {
