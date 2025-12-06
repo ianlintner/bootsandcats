@@ -146,15 +146,15 @@ public class DataInitializer {
                 .build();
     }
 
-        private RegisteredClient buildProfileUiClient(String encodedSecret, String id) {
+    private RegisteredClient buildProfileUiClient(String encodedSecret, String id) {
         return RegisteredClient.withId(id)
-                                .clientId("profile-ui")
+                .clientId("profile-ui")
                 .clientSecret(encodedSecret)
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-                                .redirectUri("http://localhost:8080/login/oauth2/code/oauth2-server")
-                                .redirectUri("http://127.0.0.1:8080/login/oauth2/code/oauth2-server")
+                .redirectUri("http://localhost:8080/login/oauth2/code/oauth2-server")
+                .redirectUri("http://127.0.0.1:8080/login/oauth2/code/oauth2-server")
                 .scope(OidcScopes.OPENID)
                 .scope(OidcScopes.PROFILE)
                 .scope(OidcScopes.EMAIL)

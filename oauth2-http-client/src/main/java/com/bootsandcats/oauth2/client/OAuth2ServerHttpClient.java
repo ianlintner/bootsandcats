@@ -2,16 +2,16 @@ package com.bootsandcats.oauth2.client;
 
 import java.time.Duration;
 import java.util.Map;
+
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
+
 import reactor.core.publisher.Mono;
 
-/**
- * Lightweight HTTP client for interacting with the OAuth2 Authorization Server.
- */
+/** Lightweight HTTP client for interacting with the OAuth2 Authorization Server. */
 public class OAuth2ServerHttpClient {
 
     private static final ParameterizedTypeReference<Map<String, Object>> MAP_TYPE =
@@ -20,8 +20,7 @@ public class OAuth2ServerHttpClient {
     private final WebClient webClient;
     private final OAuth2ServerClientProperties properties;
 
-    public OAuth2ServerHttpClient(
-            WebClient webClient, OAuth2ServerClientProperties properties) {
+    public OAuth2ServerHttpClient(WebClient webClient, OAuth2ServerClientProperties properties) {
         this.webClient = webClient;
         this.properties = properties;
     }

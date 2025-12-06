@@ -62,7 +62,8 @@ class ActuatorIntegrationTest {
         assertThat(responseBody).isNotBlank();
         assertThat(responseBody).contains("jvm_");
         assertThat(responseBody)
-            .containsAnyOf("process_uptime_seconds", "process_start_time_seconds", "system_cpu_usage");
+                .containsAnyOf(
+                        "process_uptime_seconds", "process_start_time_seconds", "system_cpu_usage");
     }
 
     @Test

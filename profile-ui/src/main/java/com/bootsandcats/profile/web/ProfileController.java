@@ -3,13 +3,15 @@ package com.bootsandcats.profile.web;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.annotation.RegisteredOAuth2AuthorizedClient;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+
 import com.bootsandcats.oauth2.client.OAuth2ServerHealth;
 import com.bootsandcats.profile.service.OAuth2ServerClientService;
 

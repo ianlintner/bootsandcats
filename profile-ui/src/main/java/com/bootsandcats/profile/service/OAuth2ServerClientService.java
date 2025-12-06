@@ -1,12 +1,14 @@
 package com.bootsandcats.profile.service;
 
-import com.bootsandcats.oauth2.client.OAuth2ServerHealth;
-import com.bootsandcats.oauth2.client.OAuth2ServerHttpClient;
 import java.util.Map;
 import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import com.bootsandcats.oauth2.client.OAuth2ServerHealth;
+import com.bootsandcats.oauth2.client.OAuth2ServerHttpClient;
 
 /**
  * Thin facade around the shared OAuth2 server HTTP client to expose resilient operations for the

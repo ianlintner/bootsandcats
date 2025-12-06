@@ -23,30 +23,30 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 class OAuth2EndToEndTest {
 
-        private static TestEnvironment env;
-        private static final Path LOG_PATH =
+    private static TestEnvironment env;
+    private static final Path LOG_PATH =
             Paths.get(System.getProperty("java.io.tmpdir"), "oauth2-e2e.log");
-        private static final int BANNER_WIDTH = 72;
-        private static final HttpClient HTTP_CLIENT =
+    private static final int BANNER_WIDTH = 72;
+    private static final HttpClient HTTP_CLIENT =
             HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build();
-        private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-        private static final Logger LOGGER = LogManager.getLogger(OAuth2EndToEndTest.class);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final Logger LOGGER = LogManager.getLogger(OAuth2EndToEndTest.class);
 
     @BeforeAll
     static void setup() {
@@ -80,11 +80,11 @@ class OAuth2EndToEndTest {
         assertThat(result.idToken).isNotBlank();
 
         HttpResult userInfoResponse =
-            get(
-                env.baseUrl + "/userinfo",
-                Map.of("Authorization", "Bearer " + result.accessToken),
-                new HashMap<>(),
-                false);
+                get(
+                        env.baseUrl + "/userinfo",
+                        Map.of("Authorization", "Bearer " + result.accessToken),
+                        new HashMap<>(),
+                        false);
 
         assertThat(userInfoResponse.statusCode()).isEqualTo(200);
         JsonNode userInfoJson = OBJECT_MAPPER.readTree(userInfoResponse.body());
@@ -98,10 +98,16 @@ class OAuth2EndToEndTest {
         refreshParams.put("refresh_token", List.of(result.refreshToken));
 
         HttpResult refreshResponse =
-            postForm(env.baseUrl + "/oauth2/token", refreshParams, Map.of(), new HashMap<>(), false);
+                postForm(
+                        env.baseUrl + "/oauth2/token",
+                        refreshParams,
+                        Map.of(),
+                        new HashMap<>(),
+                        false);
 
         assertThat(refreshResponse.statusCode()).isEqualTo(200);
-        String refreshedAccessToken = OBJECT_MAPPER.readTree(refreshResponse.body()).path("access_token").asText();
+        String refreshedAccessToken =
+                OBJECT_MAPPER.readTree(refreshResponse.body()).path("access_token").asText();
         assertThat(refreshedAccessToken).isNotBlank();
 
         // Introspect should show active
@@ -112,10 +118,16 @@ class OAuth2EndToEndTest {
         introspectParams.put("token_type_hint", List.of("access_token"));
 
         HttpResult introspectResponse =
-            postForm(env.baseUrl + "/oauth2/introspect", introspectParams, Map.of(), new HashMap<>(), false);
+                postForm(
+                        env.baseUrl + "/oauth2/introspect",
+                        introspectParams,
+                        Map.of(),
+                        new HashMap<>(),
+                        false);
 
         assertThat(introspectResponse.statusCode()).isEqualTo(200);
-        assertThat(OBJECT_MAPPER.readTree(introspectResponse.body()).path("active").asBoolean()).isTrue();
+        assertThat(OBJECT_MAPPER.readTree(introspectResponse.body()).path("active").asBoolean())
+                .isTrue();
 
         // Revoke access token
         Map<String, List<String>> revokeParams = new HashMap<>();
@@ -125,15 +137,26 @@ class OAuth2EndToEndTest {
         revokeParams.put("token_type_hint", List.of("access_token"));
 
         HttpResult revokeResponse =
-            postForm(env.baseUrl + "/oauth2/revoke", revokeParams, Map.of(), new HashMap<>(), false);
+                postForm(
+                        env.baseUrl + "/oauth2/revoke",
+                        revokeParams,
+                        Map.of(),
+                        new HashMap<>(),
+                        false);
 
         assertThat(revokeResponse.statusCode()).isIn(200, 204);
 
         HttpResult introspectAfterRevoke =
-            postForm(env.baseUrl + "/oauth2/introspect", introspectParams, Map.of(), new HashMap<>(), false);
+                postForm(
+                        env.baseUrl + "/oauth2/introspect",
+                        introspectParams,
+                        Map.of(),
+                        new HashMap<>(),
+                        false);
 
         assertThat(introspectAfterRevoke.statusCode()).isEqualTo(200);
-        assertThat(OBJECT_MAPPER.readTree(introspectAfterRevoke.body()).path("active").asBoolean()).isFalse();
+        assertThat(OBJECT_MAPPER.readTree(introspectAfterRevoke.body()).path("active").asBoolean())
+                .isFalse();
     }
 
     private static class AuthorizationClient {
@@ -181,34 +204,46 @@ class OAuth2EndToEndTest {
             log("loginForm fields after set=%s", loginForm.fields);
             log("login cookies=%s", cookies);
 
-                HttpResult loginSubmit = postForm(loginForm.action, loginForm.fields, Map.of(), cookies, false);
-                log("POST %s -> status=%d location=%s cookies=%s",
-                    loginForm.action,
-                    loginSubmit.statusCode(),
-                    loginSubmit.location(),
-                    cookies);
+            HttpResult loginSubmit =
+                    postForm(loginForm.action, loginForm.fields, Map.of(), cookies, false);
+            log(
+                    "POST %s -> status=%d location=%s cookies=%s",
+                    loginForm.action, loginSubmit.statusCode(), loginSubmit.location(), cookies);
             if (loginSubmit.statusCode() >= 400) {
                 throw new IllegalStateException(
                         "Login failed. status="
                                 + loginSubmit.statusCode()
                                 + " bodySnippet="
-                                + loginSubmit.body().substring(0, Math.min(300, loginSubmit.body().length()))
+                                + loginSubmit
+                                        .body()
+                                        .substring(0, Math.min(300, loginSubmit.body().length()))
                                 + " headers="
                                 + loginSubmit.headers());
             }
             logDivider("Step 2 :: Authorize & Consent");
             String authorizeUrl = env.baseUrl + authorizePath + "?" + encodeQuery(authorizeParams);
             HttpResult postLoginAuth = get(authorizeUrl, Map.of(), cookies, false);
-            log("GET %s -> status=%d location=%s", authorizePath, postLoginAuth.statusCode(), postLoginAuth.location());
+            log(
+                    "GET %s -> status=%d location=%s",
+                    authorizePath, postLoginAuth.statusCode(), postLoginAuth.location());
             HttpResult authorizationPage = postLoginAuth;
             if (postLoginAuth.statusCode() == 200) {
                 String body = postLoginAuth.body();
                 try {
-                    ParsedForm consentForm = ParsedForm.parseFirstForm(body, env.baseUrl + authorizePath);
+                    ParsedForm consentForm =
+                            ParsedForm.parseFirstForm(body, env.baseUrl + authorizePath);
                     consentForm.approveAllScopes();
                     log("Consent form action=%s fields=%s", consentForm.action, consentForm.fields);
-                    authorizationPage = postForm(consentForm.action, consentForm.fields, Map.of(), cookies, false);
-                    log("POST consent -> status=%d location=%s", authorizationPage.statusCode(), authorizationPage.location());
+                    authorizationPage =
+                            postForm(
+                                    consentForm.action,
+                                    consentForm.fields,
+                                    Map.of(),
+                                    cookies,
+                                    false);
+                    log(
+                            "POST consent -> status=%d location=%s",
+                            authorizationPage.statusCode(), authorizationPage.location());
                 } catch (Exception e) {
                     throw new IllegalStateException(
                             "Authorization endpoint returned HTML instead of redirect and consent auto-submit failed. Body snippet: "
@@ -224,13 +259,18 @@ class OAuth2EndToEndTest {
                             "Expected redirect after login but missing Location header. status="
                                     + postLoginAuth.statusCode()
                                     + " bodySnippet="
-                                    + postLoginAuth.body().substring(0, Math.min(300, postLoginAuth.body().length()))
+                                    + postLoginAuth
+                                            .body()
+                                            .substring(
+                                                    0, Math.min(300, postLoginAuth.body().length()))
                                     + " headers="
                                     + postLoginAuth.headers());
                 }
                 String consentUrl = resolveLocation(env.baseUrl, redirectLocation);
                 authorizationPage = get(consentUrl, Map.of(), cookies, true);
-                log("Follow consent %s -> status=%d location=%s", consentUrl, authorizationPage.statusCode(), authorizationPage.location());
+                log(
+                        "Follow consent %s -> status=%d location=%s",
+                        consentUrl, authorizationPage.statusCode(), authorizationPage.location());
             }
             if (isRedirectWithCode(authorizationPage)) {
                 logDivider("Step 3 :: Token Exchange");
@@ -243,7 +283,10 @@ class OAuth2EndToEndTest {
                             + " headers="
                             + authorizationPage.headers()
                             + " bodySnippet="
-                            + authorizationPage.body().substring(0, Math.min(300, authorizationPage.body().length())));
+                            + authorizationPage
+                                    .body()
+                                    .substring(
+                                            0, Math.min(300, authorizationPage.body().length())));
         }
 
         private AuthorizationResult exchangeCodeForTokens(
@@ -277,9 +320,7 @@ class OAuth2EndToEndTest {
                     throw new IllegalStateException(
                             "Missing redirect Location header after consent submit, and could not determine fallback URL. Response body: "
                                     + response.body()
-                                            .substring(
-                                                    0,
-                                                    Math.min(500, response.body().length())));
+                                            .substring(0, Math.min(500, response.body().length())));
                 }
                 HttpResult followup = get(fallbackUrl, Map.of(), cookies, false);
                 location = followup.location();
@@ -289,9 +330,7 @@ class OAuth2EndToEndTest {
                                     + fallbackUrl
                                     + ". Response body: "
                                     + followup.body()
-                                            .substring(
-                                                    0,
-                                                    Math.min(500, followup.body().length())));
+                                            .substring(0, Math.min(500, followup.body().length())));
                 }
             }
 
@@ -310,7 +349,8 @@ class OAuth2EndToEndTest {
             tokenParams.put("redirect_uri", List.of(env.confidentialRedirectUri));
             tokenParams.put("code_verifier", List.of(pkce.codeVerifier));
 
-            HttpResult tokenResponse = postForm(env.baseUrl + "/oauth2/token", tokenParams, Map.of(), cookies, false);
+            HttpResult tokenResponse =
+                    postForm(env.baseUrl + "/oauth2/token", tokenParams, Map.of(), cookies, false);
 
             assertThat(tokenResponse.statusCode()).isEqualTo(200);
             log("POST /oauth2/token (code exchange) -> status=%d", tokenResponse.statusCode());
@@ -320,7 +360,8 @@ class OAuth2EndToEndTest {
             String refreshToken = tokenJson.path("refresh_token").asText();
             String idToken = tokenJson.path("id_token").asText();
 
-                log("Tokens received (lengths): access=%d refresh=%d id=%d",
+            log(
+                    "Tokens received (lengths): access=%d refresh=%d id=%d",
                     accessToken.length(), refreshToken.length(), idToken.length());
 
             return new AuthorizationResult(accessToken, refreshToken, idToken);
@@ -380,7 +421,11 @@ class OAuth2EndToEndTest {
                 .flatMap(
                         entry ->
                                 entry.getValue().stream()
-                                        .map(value -> urlEncode(entry.getKey()) + "=" + urlEncode(value)))
+                                        .map(
+                                                value ->
+                                                        urlEncode(entry.getKey())
+                                                                + "="
+                                                                + urlEncode(value)))
                 .collect(Collectors.joining("&"));
     }
 
@@ -389,7 +434,10 @@ class OAuth2EndToEndTest {
     }
 
     private static HttpResult get(
-            String url, Map<String, String> headers, Map<String, String> cookies, boolean followRedirects)
+            String url,
+            Map<String, String> headers,
+            Map<String, String> cookies,
+            boolean followRedirects)
             throws Exception {
         return send("GET", url, headers, cookies, null, followRedirects);
     }
@@ -420,7 +468,10 @@ class OAuth2EndToEndTest {
         HttpResult result = sendOnce(method, URI.create(url), headers, cookieStore, body);
 
         int hops = 0;
-        while (followRedirects && isRedirectStatus(result.statusCode()) && result.location() != null && hops < 5) {
+        while (followRedirects
+                && isRedirectStatus(result.statusCode())
+                && result.location() != null
+                && hops < 5) {
             hops++;
             String nextUrl = resolveLocation(env.baseUrl, result.location());
             result = sendOnce("GET", URI.create(nextUrl), headers, cookieStore, null);
@@ -451,14 +502,16 @@ class OAuth2EndToEndTest {
             builder.header("Cookie", cookieHeader(cookies));
         }
 
-        HttpResponse<String> response = HTTP_CLIENT.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response =
+                HTTP_CLIENT.send(builder.build(), HttpResponse.BodyHandlers.ofString());
         if (cookies != null) {
             mergeCookiesFromResponse(response, cookies);
         }
         return HttpResult.from(response);
     }
 
-    private static void mergeCookiesFromResponse(HttpResponse<String> response, Map<String, String> cookies) {
+    private static void mergeCookiesFromResponse(
+            HttpResponse<String> response, Map<String, String> cookies) {
         List<String> setCookies = response.headers().allValues("Set-Cookie");
         for (String setCookie : setCookies) {
             String[] parts = setCookie.split(";", 2);
@@ -497,10 +550,9 @@ class OAuth2EndToEndTest {
     }
 
     private static void logBanner(String title) {
-        log("\n%s\n%s\n%s",
-                bannerLine('┏', '━', '┓'),
-                bannerContent(title),
-                bannerLine('┗', '━', '┛'));
+        log(
+                "\n%s\n%s\n%s",
+                bannerLine('┏', '━', '┓'), bannerContent(title), bannerLine('┗', '━', '┛'));
     }
 
     private static void logDivider(String label) {
@@ -519,7 +571,8 @@ class OAuth2EndToEndTest {
     private static String bannerContent(String title) {
         String trimmed = title == null ? "" : title.strip();
         int innerWidth = BANNER_WIDTH - 4;
-        String truncated = trimmed.length() > innerWidth ? trimmed.substring(0, innerWidth) : trimmed;
+        String truncated =
+                trimmed.length() > innerWidth ? trimmed.substring(0, innerWidth) : trimmed;
         int paddingTotal = innerWidth - truncated.length();
         int leftPad = paddingTotal / 2;
         int rightPad = paddingTotal - leftPad;

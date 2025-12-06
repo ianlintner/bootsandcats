@@ -1,13 +1,13 @@
 package com.bootsandcats.oauth2.client;
 
-import jakarta.validation.constraints.NotBlank;
 import java.time.Duration;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
-/**
- * Configuration properties for the reusable OAuth2 server HTTP client.
- */
+import jakarta.validation.constraints.NotBlank;
+
+/** Configuration properties for the reusable OAuth2 server HTTP client. */
 @Validated
 @ConfigurationProperties(prefix = "oauth2.server.client")
 public class OAuth2ServerClientProperties {
