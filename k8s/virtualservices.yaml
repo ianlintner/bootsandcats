@@ -21,11 +21,11 @@ spec:
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: canary-app
+  name: profile-ui
   namespace: default
 spec:
   hosts:
-  - canary.cat-herding.net
+  - profile.cat-herding.net
   gateways:
   - aks-istio-ingress/cat-herding-gateway
   http:
@@ -34,6 +34,6 @@ spec:
         prefix: /
     route:
     - destination:
-        host: canary-app
+        host: profile-ui
         port:
           number: 80

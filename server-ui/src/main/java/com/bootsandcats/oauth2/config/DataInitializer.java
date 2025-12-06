@@ -54,9 +54,9 @@ public class DataInitializer {
 
             registerClientIfMissing(
                     repository,
-                    "canary-app",
+                    "profile-ui",
                     () ->
-                            buildCanaryClient(
+                            buildProfileUiClient(
                                     passwordEncoder.encode(demoClientSecret),
                                     UUID.randomUUID().toString()));
         };
@@ -146,15 +146,15 @@ public class DataInitializer {
                 .build();
     }
 
-    private RegisteredClient buildCanaryClient(String encodedSecret, String id) {
+        private RegisteredClient buildProfileUiClient(String encodedSecret, String id) {
         return RegisteredClient.withId(id)
-                .clientId("canary-app")
+                                .clientId("profile-ui")
                 .clientSecret(encodedSecret)
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-                .redirectUri("http://localhost:8081/login/oauth2/code/custom-server")
-                .redirectUri("http://127.0.0.1:8081/login/oauth2/code/custom-server")
+                                .redirectUri("http://localhost:8080/login/oauth2/code/oauth2-server")
+                                .redirectUri("http://127.0.0.1:8080/login/oauth2/code/oauth2-server")
                 .scope(OidcScopes.OPENID)
                 .scope(OidcScopes.PROFILE)
                 .scope(OidcScopes.EMAIL)
