@@ -136,8 +136,8 @@ public class DataInitializer {
                 .clientSecret(encodedSecret)
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
-                .scope("message.read")
-                .scope("message.write")
+                .scope("api:read")
+                .scope("api:write")
                 .tokenSettings(
                         TokenSettings.builder()
                                 .accessTokenTimeToLive(Duration.ofMinutes(5))
