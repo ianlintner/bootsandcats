@@ -193,14 +193,23 @@ class OAuth2EndToEndTest {
             String authorizeUrl = env.baseUrl + authorizePath + "?" + encodeQuery(authorizeParams);
             HttpResult postLoginAuth = get(authorizeUrl, Map.of(), cookies, false);
             log("GET %s -> status=%d location=%s", authorizePath, postLoginAuth.statusCode(), postLoginAuth.location());
+            HttpResult authorizationPage = postLoginAuth;
             if (postLoginAuth.statusCode() == 200) {
                 String body = postLoginAuth.body();
-                throw new IllegalStateException(
-                        "Authorization endpoint returned HTML instead of redirect (likely consent page). Consent interstitials must be disabled. Body snippet: "
-                                + body.substring(0, Math.min(500, body.length())));
+                try {
+                    ParsedForm consentForm = ParsedForm.parseFirstForm(body, env.baseUrl + authorizePath);
+                    consentForm.approveAllScopes();
+                    log("Consent form action=%s fields=%s", consentForm.action, consentForm.fields);
+                    authorizationPage = postForm(consentForm.action, consentForm.fields, Map.of(), cookies, false);
+                    log("POST consent -> status=%d location=%s", authorizationPage.statusCode(), authorizationPage.location());
+                } catch (Exception e) {
+                    throw new IllegalStateException(
+                            "Authorization endpoint returned HTML instead of redirect and consent auto-submit failed. Body snippet: "
+                                    + body.substring(0, Math.min(500, body.length())),
+                            e);
+                }
             }
 
-            HttpResult authorizationPage = postLoginAuth;
             if (postLoginAuth.statusCode() == 302 && !isRedirectWithCode(postLoginAuth)) {
                 String redirectLocation = postLoginAuth.location();
                 if (redirectLocation == null) {
