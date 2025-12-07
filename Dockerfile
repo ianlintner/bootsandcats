@@ -27,7 +27,7 @@ RUN mkdocs build --site-dir /docs/site
 # still succeeds when DOCS_SOURCE=docs-builder.
 FROM debian:bookworm-slim AS docs-prebuilt
 WORKDIR /docs
-RUN --mount=type=bind,source=site,target=/prebuilt,ro,required=false \
+RUN --mount=type=bind,source=site,target=/prebuilt,ro \
         mkdir -p /docs/site && \
         if [ -d /prebuilt ] && [ "$(ls -A /prebuilt)" ]; then \
             echo "Using prebuilt MkDocs site from build context" && \
