@@ -1,7 +1,7 @@
 # Simple runtime image for profile-ui
 FROM eclipse-temurin:21-jre
 
-ARG PROFILE_JAR=profile-ui/build/libs/profile-ui-*.jar
+ARG PROFILE_JAR=profile-ui/build/libs/profile-ui-*-runner.jar
 
 WORKDIR /app
 
@@ -10,14 +10,21 @@ WORKDIR /app
 # a clear error if the artifact is absent.
 RUN --mount=type=bind,source=.,target=/context,ro \
 		set -e; \
-		# Try the default CI path first (repo root context)
-		if ls /context/profile-ui/build/libs/profile-ui-*.jar >/tmp/jar.list 2>/dev/null; then \
+		# Prefer the executable runner JAR (fat jar with Main-Class) from repo root context
+		if ls /context/profile-ui/build/libs/profile-ui-*-runner.jar >/tmp/jar.list 2>/dev/null; then \
 			JAR_PATH=$(head -n1 /tmp/jar.list); \
 		# Fallback: when building from inside profile-ui/ with context '.'
+		elif ls /context/build/libs/profile-ui-*-runner.jar >/tmp/jar.list 2>/dev/null; then \
+			JAR_PATH=$(head -n1 /tmp/jar.list); \
+		# Last resort: accept any profile-ui jar, but warn that manifest may be missing Main-Class
+		elif ls /context/profile-ui/build/libs/profile-ui-*.jar >/tmp/jar.list 2>/dev/null; then \
+			echo "Warning: no *-runner jar found; falling back to generic jar" >&2; \
+			JAR_PATH=$(head -n1 /tmp/jar.list); \
 		elif ls /context/build/libs/profile-ui-*.jar >/tmp/jar.list 2>/dev/null; then \
+			echo "Warning: no *-runner jar found; falling back to generic jar" >&2; \
 			JAR_PATH=$(head -n1 /tmp/jar.list); \
 		else \
-			echo "Profile UI jar not found. Expected at profile-ui/build/libs/profile-ui-*.jar (repo-root context) or build/libs/profile-ui-*.jar (profile-ui/ context). Build the jar or download the artifact first." >&2; \
+			echo "Profile UI jar not found. Expected at profile-ui/build/libs/profile-ui-*-runner.jar (repo-root context) or build/libs/profile-ui-*-runner.jar (profile-ui/ context). Build the runner jar or download the artifact first." >&2; \
 			exit 1; \
 		fi; \
 		cp "$JAR_PATH" /app/app.jar
