@@ -293,36 +293,9 @@ jobs:
           resource-group: nekoc
           cluster-name: bigboy
 
-      - name: Run Flyway migrations against AKS Postgres
-        env:
-          DB_USER: ${{ secrets.OAUTH2_DB_USERNAME }}
-          DB_PASS: ${{ secrets.OAUTH2_DB_PASSWORD }}
-          DB_NAME: ${{ secrets.OAUTH2_DB_NAME || 'oauth2db' }}
-          PF_PORT: 55432
+      - name: Apply Flyway migrations ConfigMap
         run: |
-          set -euo pipefail
-
-          if [ -z "${DB_USER}" ] || [ -z "${DB_PASS}" ]; then
-            echo "Database credentials are required (OAUTH2_DB_USERNAME/OAUTH2_DB_PASSWORD)." >&2
-            exit 1
-          fi
-
-          kubectl port-forward svc/postgres "${PF_PORT}:5432" -n default >/tmp/pf.log 2>&1 &
-          PF_PID=$!
-          trap 'kill ${PF_PID} >/dev/null 2>&1 || true' EXIT
-          sleep 5
-
-          docker run --rm \
-            -v "${GITHUB_WORKSPACE}/server-dao/src/main/resources/db/migration:/flyway/sql:ro" \
-            flyway/flyway:11-alpine \
-            -url="jdbc:postgresql://host.docker.internal:${PF_PORT}/${DB_NAME}" \
-            -user="${DB_USER}" \
-            -password="${DB_PASS}" \
-            -baselineOnMigrate=true \
-            migrate
-
-          kill ${PF_PID} >/dev/null 2>&1 || true
-          trap - EXIT
+          kubectl apply -f k8s/flyway-migrations-configmap.yaml -n default
 
       - name: Deploy to AKS
         run: |

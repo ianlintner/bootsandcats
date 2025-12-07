@@ -19,6 +19,7 @@ resources:
   - pdb.yaml
   - profile-ui-deployment.yaml
   - virtualservices.yaml
+  - flyway-migrations-configmap.yaml
 
 
 # You can add configMapGenerator/secretGenerator later if you want kustomize to build these dynamically
