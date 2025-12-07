@@ -1,0 +1,32 @@
+Manifest-Version: 1.0
+Class-Path: resources/ classes/ libs/micronaut-micrometer-registry-prome
+ theus-5.4.0.jar libs/micronaut-validation-4.4.4.jar libs/micronaut-micr
+ ometer-core-5.4.0.jar libs/micronaut-reactor-3.2.1.jar libs/micronaut-h
+ ttp-server-netty-4.3.14.jar libs/micronaut-management-4.3.14.jar libs/m
+ icronaut-jackson-databind-4.3.14.jar libs/logback-classic-1.4.14.jar li
+ bs/micronaut-http-server-4.3.14.jar libs/micronaut-router-4.3.14.jar li
+ bs/micronaut-http-netty-4.3.14.jar libs/micronaut-buffer-netty-4.3.14.j
+ ar libs/micronaut-discovery-core-4.3.14.jar libs/micronaut-jackson-core
+ -4.3.14.jar libs/micronaut-json-core-4.3.14.jar libs/micronaut-http-4.3
+ .14.jar libs/micronaut-context-propagation-4.3.14.jar libs/micronaut-co
+ ntext-4.3.14.jar libs/micronaut-aop-4.3.14.jar libs/micronaut-inject-4.
+ 3.14.jar libs/snakeyaml-2.2.jar libs/jackson-datatype-jdk8-2.16.2.jar l
+ ibs/jackson-datatype-jsr310-2.16.2.jar libs/jackson-databind-2.16.2.jar
+  libs/jackson-core-2.16.2.jar libs/jackson-annotations-2.16.2.jar libs/
+ jakarta.annotation-api-2.1.1.jar libs/netty-codec-http2-4.1.108.Final.j
+ ar libs/netty-codec-http-4.1.108.Final.jar libs/netty-handler-4.1.108.F
+ inal.jar libs/netty-codec-4.1.108.Final.jar libs/netty-transport-native
+ -unix-common-4.1.108.Final.jar libs/netty-transport-4.1.108.Final.jar l
+ ibs/netty-buffer-4.1.108.Final.jar libs/netty-resolver-4.1.108.Final.ja
+ r libs/netty-common-4.1.108.Final.jar libs/reactor-core-3.6.1.jar libs/
+ micronaut-core-reactive-4.3.14.jar libs/reactive-streams-1.0.4.jar libs
+ /micronaut-core-4.3.14.jar libs/logback-core-1.4.14.jar libs/slf4j-api-
+ 2.0.12.jar libs/micrometer-registry-prometheus-1.12.2.jar libs/micromet
+ er-core-1.12.2.jar libs/micrometer-observation-1.12.2.jar libs/jakarta.
+ validation-api-3.0.2.jar libs/jakarta.inject-api-2.0.1.jar libs/microme
+ ter-commons-1.12.2.jar libs/HdrHistogram-2.1.12.jar libs/LatencyUtils-2
+ .0.3.jar libs/simpleclient_common-0.16.0.jar libs/simpleclient-0.16.0.j
+ ar libs/simpleclient_tracer_otel-0.16.0.jar libs/simpleclient_tracer_ot
+ el_agent-0.16.0.jar libs/simpleclient_tracer_common-0.16.0.jar
+Main-Class: com.bootsandcats.profileui.Application
+
