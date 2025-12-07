@@ -18,9 +18,20 @@ class HomeControllerTest {
     HttpClient client;
 
     @Test
-    void rootEndpointResponds() {
+    void rootEndpointServesThemedLandingPage() {
         HttpResponse<String> response = client.toBlocking().exchange("/", String.class);
-        assertThat(response.body()).contains("profile-ui");
+
         assertThat(response.getStatus().getCode()).isEqualTo(200);
+        assertThat(response.body())
+                .contains("Profile UI")
+                .contains("@ianlintner/theme");
+    }
+
+    @Test
+    void apiStatusReturnsJson() {
+        HttpResponse<String> response = client.toBlocking().exchange("/api/status", String.class);
+
+        assertThat(response.getStatus().getCode()).isEqualTo(200);
+        assertThat(response.body()).contains("\"service\":\"profile-ui\"");
     }
 }

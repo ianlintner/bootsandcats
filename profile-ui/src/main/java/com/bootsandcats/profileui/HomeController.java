@@ -7,8 +7,8 @@ import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Get;
 
-/** Simple landing endpoint for profile UI service. */
-@Controller("/")
+/** Health-style JSON endpoint for the profile UI service. */
+@Controller("/api/status")
 class HomeController {
 
     @Get(produces = MediaType.APPLICATION_JSON)

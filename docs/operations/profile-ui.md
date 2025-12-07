@@ -1,6 +1,6 @@
 # Profile UI
 
-Profile UI is a Spring Boot micro-app used to validate end-to-end authentication via the Authorization Server. It shows the authenticated user’s details, claims, and ID token, and includes a logout button. Styling is provided via TailwindCSS with `@ianlintner/theme`.
+Profile UI is a Spring Boot micro-app used to validate end-to-end authentication via the Authorization Server. It shows the authenticated user’s details, claims, and ID token, and includes a logout button. Styling is provided via TailwindCSS with the shared portfolio theme `@ianlintner/theme` and is visible at the root path (`/`). The JSON status check now lives at `/api/status`.
 
 ## Build
 

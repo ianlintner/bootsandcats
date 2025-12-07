@@ -3,6 +3,11 @@ micronaut:
     name: profile-ui
   server:
     port: ${PROFILE_UI_PORT:8085}
+  router:
+    static-resources:
+      public:
+        paths: classpath:public
+        mapping: /**
   metrics:
     enabled: true
     export:
