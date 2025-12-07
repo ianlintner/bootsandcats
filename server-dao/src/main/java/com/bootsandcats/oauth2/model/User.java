@@ -2,6 +2,7 @@ package com.bootsandcats.oauth2.model;
 
 import java.time.Instant;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -11,8 +12,8 @@ import jakarta.persistence.UniqueConstraint;
 
 @Entity
 @Table(
-        name = "app_users",
-        uniqueConstraints = {@UniqueConstraint(columnNames = {"provider", "providerId"})})
+    name = "app_users",
+    uniqueConstraints = {@UniqueConstraint(columnNames = {"provider", "provider_id"})})
 public class User {
 
     @Id
@@ -22,9 +23,16 @@ public class User {
     private String username;
     private String email;
     private String provider;
+
+    @Column(name = "provider_id")
     private String providerId;
+
     private String name;
+
+    @Column(name = "picture_url")
     private String pictureUrl;
+
+    @Column(name = "last_login")
     private Instant lastLogin;
 
     public Long getId() {
