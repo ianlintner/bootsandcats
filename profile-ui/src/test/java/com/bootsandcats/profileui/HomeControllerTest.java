@@ -11,6 +11,7 @@ import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Inject;
 
 @MicronautTest
+@io.micronaut.context.annotation.Property(name = "micronaut.security.enabled", value = "false")
 class HomeControllerTest {
 
     @Inject
