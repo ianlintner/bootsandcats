@@ -50,12 +50,27 @@ spec:
           subPath: postgres
       volumes:
       - name: postgres-storage
-        emptyDir: {}
+        persistentVolumeClaim:
+          claimName: postgres-pvc
       tolerations:
       - key: "kubernetes.azure.com/scalesetpriority"
         operator: "Equal"
         value: "spot"
         effect: "NoSchedule"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: managed-premium
+
 ---
 apiVersion: v1
 kind: Service

@@ -138,13 +138,16 @@ spec:
         - name: SESSION_STORE_TYPE
           value: "redis"
         - name: REDIS_HOST
-          value: "redis"
+          valueFrom:
+            secretKeyRef:
+              name: redis-auth
+              key: redis-host
         - name: REDIS_PORT
           value: "6379"
         - name: REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: oauth2-app-secrets
+              name: redis-auth
               key: redis-password
         - name: REDIS_SSL_ENABLED
           value: "false"
