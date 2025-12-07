@@ -1,5 +1,10 @@
 # syntax=docker/dockerfile:1.7
 
+# Select documentation source. Default builds docs inside the Docker build; CI can
+# set DOCS_SOURCE=docs-prebuilt to reuse an uploaded MkDocs artifact and skip the
+# Python/MkDocs toolchain during docker build time.
+ARG DOCS_SOURCE=auto
+
 # Documentation build stage - separate Python environment for MkDocs
 FROM python:3.12-slim AS docs-builder
 
@@ -46,10 +51,8 @@ RUN java -Djarmode=layertools -jar app.jar extract
 # Runtime stage
 FROM eclipse-temurin:21-jre
 
-# Select documentation source. Default builds docs inside the Docker build; CI can
-# set DOCS_SOURCE=docs-prebuilt to reuse an uploaded MkDocs artifact and skip the
-# Python/MkDocs toolchain during docker build time.
-ARG DOCS_SOURCE=docs-builder
+# Re-declare DOCS_SOURCE for this stage (inherits default/global value)
+ARG DOCS_SOURCE
 
 # Security: Create non-root user
 RUN groupadd -g 1001 appgroup && \
@@ -63,13 +66,31 @@ COPY --from=builder /app/spring-boot-loader/ ./
 COPY --from=builder /app/snapshot-dependencies/ ./
 COPY --from=builder /app/application/ ./
 
-# Copy built MkDocs site from the selected source stage into static resources
-COPY --from=${DOCS_SOURCE} /docs/site/ ./BOOT-INF/classes/static/docs/
+# Bring in both possible doc sources. We’ll choose in a RUN step to avoid
+# variable substitution limits in COPY --from.
+COPY --from=docs-builder /docs/site/ /tmp/docs-site-builder/
+COPY --from=docs-prebuilt /docs/site/ /tmp/docs-site-prebuilt/
 
-# If we were told to use a prebuilt site, ensure it actually existed
-RUN if [ "$DOCS_SOURCE" = "docs-prebuilt" ] && [ ! "$(ls -A ./BOOT-INF/classes/static/docs/ 2>/dev/null)" ]; then \
-            echo "DOCS_SOURCE=docs-prebuilt but no prebuilt MkDocs site was provided" >&2; \
-            exit 1; \
+# Decide which docs to publish:
+# - If DOCS_SOURCE=docs-prebuilt, require the prebuilt site to exist.
+# - Otherwise, prefer prebuilt when present; fall back to locally built docs.
+RUN mkdir -p ./BOOT-INF/classes/static/docs/ && \
+        if [ "$DOCS_SOURCE" = "docs-prebuilt" ]; then \
+            if [ -d /tmp/docs-site-prebuilt ] && [ "$(ls -A /tmp/docs-site-prebuilt)" ]; then \
+                echo "Using prebuilt MkDocs site (forced)"; \
+                cp -a /tmp/docs-site-prebuilt/. ./BOOT-INF/classes/static/docs/; \
+            else \
+                echo "DOCS_SOURCE=docs-prebuilt but no prebuilt MkDocs site was provided" >&2; \
+                exit 1; \
+            fi; \
+        else \
+            if [ -d /tmp/docs-site-prebuilt ] && [ "$(ls -A /tmp/docs-site-prebuilt)" ]; then \
+                echo "Prebuilt MkDocs site detected; using it"; \
+                cp -a /tmp/docs-site-prebuilt/. ./BOOT-INF/classes/static/docs/; \
+            else \
+                echo "Using docs built during Docker build"; \
+                cp -a /tmp/docs-site-builder/. ./BOOT-INF/classes/static/docs/; \
+            fi; \
         fi
 
 # Change ownership
