@@ -64,7 +64,6 @@ spec:
             secretKeyRef:
               name: oauth2-app-secrets
               key: redis-password
-              optional: true
         resources:
           requests:
             memory: "64Mi"
@@ -77,6 +76,9 @@ spec:
           mountPath: /etc/redis
         - name: redis-data
           mountPath: /data
+        - name: redis-secrets
+          mountPath: /mnt/secrets-store
+          readOnly: true
         livenessProbe:
           exec:
             command:
@@ -109,6 +111,12 @@ spec:
           name: redis-config
       - name: redis-data
         emptyDir: {}
+      - name: redis-secrets
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: oauth2-secrets-provider
 ---
 apiVersion: v1
 kind: Service
