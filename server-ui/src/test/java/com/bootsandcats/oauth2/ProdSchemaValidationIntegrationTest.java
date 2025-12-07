@@ -43,11 +43,11 @@ class ProdSchemaValidationIntegrationTest {
     static void configureDataSource(DynamicPropertyRegistry registry) {
         POSTGRES.start();
         Flyway.configure()
-            .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
-            .baselineOnMigrate(true)
-            .locations("classpath:db/migration")
-            .load()
-            .migrate();
+                .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
+                .baselineOnMigrate(true)
+                .locations("classpath:db/migration")
+                .load()
+                .migrate();
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
@@ -64,7 +64,8 @@ class ProdSchemaValidationIntegrationTest {
     @Test
     void contextLoadsWithProdProfileAndFlywayMigrations() {
         Long registeredClients =
-                jdbcTemplate.queryForObject("SELECT COUNT(*) FROM oauth2_registered_client", Long.class);
+                jdbcTemplate.queryForObject(
+                        "SELECT COUNT(*) FROM oauth2_registered_client", Long.class);
         Long appUsers = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM app_users", Long.class);
 
         assertThat(registeredClients).isNotNull();
