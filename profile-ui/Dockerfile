@@ -10,9 +10,14 @@ WORKDIR /app
 # a clear error if the artifact is absent.
 RUN --mount=type=bind,source=.,target=/context,ro \
 		set -e; \
-		JAR_PATH=$(echo /context/${PROFILE_JAR}); \
-		if [ ! -e "$JAR_PATH" ]; then \
-			echo "Profile UI jar not found at ${PROFILE_JAR}. Ensure the artifact is downloaded to that path before building (e.g., actions/download-artifact to profile-ui/build/libs)." >&2; \
+		# Try the default CI path first (repo root context)
+		if ls /context/profile-ui/build/libs/profile-ui-*.jar >/tmp/jar.list 2>/dev/null; then \
+			JAR_PATH=$(head -n1 /tmp/jar.list); \
+		# Fallback: when building from inside profile-ui/ with context '.'
+		elif ls /context/build/libs/profile-ui-*.jar >/tmp/jar.list 2>/dev/null; then \
+			JAR_PATH=$(head -n1 /tmp/jar.list); \
+		else \
+			echo "Profile UI jar not found. Expected at profile-ui/build/libs/profile-ui-*.jar (repo-root context) or build/libs/profile-ui-*.jar (profile-ui/ context). Build the jar or download the artifact first." >&2; \
 			exit 1; \
 		fi; \
 		cp "$JAR_PATH" /app/app.jar
