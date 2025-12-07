@@ -1,7 +1,6 @@
 plugins {
     id("io.micronaut.application") version "4.3.8"
     id("io.micronaut.test-resources") version "4.3.8"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 val micronautVersion = "4.3.8"
@@ -21,13 +20,28 @@ application {
 }
 
 // Produce a self-contained (fat) jar for container images
-tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+val fatJar = tasks.register<Jar>("fatJar") {
+    group = "build"
+    description = "Assembles a fat jar containing all runtime dependencies"
     archiveClassifier.set("all")
-    mergeServiceFiles()
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    from(sourceSets.main.get().output)
+    from({
+        configurations.runtimeClasspath.get()
+            .filter { it.name.endsWith(".jar") }
+            .map { zipTree(it) }
+    })
+
+    manifest {
+        attributes(
+            "Main-Class" to application.mainClass.get()
+        )
+    }
 }
 
 tasks.named("assemble") {
-    dependsOn(tasks.named("shadowJar"))
+    dependsOn(fatJar)
 }
 
 dependencies {
