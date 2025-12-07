@@ -20,3 +20,15 @@ spec:
     matchLabels:
       app: postgres
 
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: redis-pdb
+  namespace: default
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: redis
+

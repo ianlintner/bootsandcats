@@ -37,7 +37,7 @@ metadata:
   labels:
     app: redis
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: redis
@@ -46,6 +46,13 @@ spec:
       labels:
         app: redis
     spec:
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: "kubernetes.io/hostname"
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app: redis
       containers:
       - name: redis
         image: redis:7.2-alpine
