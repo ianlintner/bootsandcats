@@ -8,18 +8,28 @@ ARG DOCS_SOURCE=auto
 # Documentation build stage - separate Python environment for MkDocs
 FROM python:3.12-slim AS docs-builder
 
+ARG DOCS_SOURCE=auto
+
 WORKDIR /docs
 
 # Copy documentation sources
 COPY mkdocs.yml ./
 COPY docs ./docs
 
-# Install MkDocs dependencies from shared requirements
+# Install MkDocs dependencies and build site unless a prebuilt site is provided or forced
 COPY docs/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Build MkDocs site
-RUN mkdocs build --site-dir /docs/site
+RUN --mount=type=bind,source=site,target=/prebuilt,ro \
+    if [ "$DOCS_SOURCE" = "docs-prebuilt" ]; then \
+        echo "DOCS_SOURCE=docs-prebuilt provided; skipping MkDocs build"; \
+        mkdir -p /docs/site; \
+    elif [ -f /prebuilt/index.html ]; then \
+        echo "Prebuilt MkDocs site detected in build context; skipping MkDocs build"; \
+        mkdir -p /docs/site; \
+    else \
+        echo "No prebuilt MkDocs site detected; installing dependencies and building"; \
+        pip install --no-cache-dir -r requirements.txt && \
+        mkdocs build --site-dir /docs/site; \
+    fi
 
 # Optional prebuilt MkDocs site (downloaded by CI as artifact). If a prebuilt site
 # is present in the Docker build context under ./site it will be copied here;
