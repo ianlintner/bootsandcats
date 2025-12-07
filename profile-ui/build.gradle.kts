@@ -1,6 +1,7 @@
 plugins {
     id("io.micronaut.application") version "4.3.8"
     id("io.micronaut.test-resources") version "4.3.8"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 val micronautVersion = "4.3.8"
@@ -17,6 +18,16 @@ micronaut {
 
 application {
     mainClass.set("com.bootsandcats.profileui.Application")
+}
+
+// Produce a self-contained (fat) jar for container images
+tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+    archiveClassifier.set("all")
+    mergeServiceFiles()
+}
+
+tasks.named("assemble") {
+    dependsOn(tasks.named("shadowJar"))
 }
 
 dependencies {
