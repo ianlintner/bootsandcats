@@ -247,8 +247,8 @@ jobs:
           IMAGE_TAG="gabby.azurecr.io/oauth2-server:${{ github.sha }}"
           IMAGE_LATEST="gabby.azurecr.io/oauth2-server:latest"
 
-          docker buildx build \
-            --platform linux/amd64,linux/arm64 \
+          docker build \
+            --platform linux/amd64 \
             --build-arg DOCS_SOURCE=auto \
             --push \
             -t $IMAGE_TAG \
@@ -262,8 +262,8 @@ jobs:
           PROFILE_IMAGE_TAG="gabby.azurecr.io/profile-ui:${{ github.sha }}"
           PROFILE_IMAGE_LATEST="gabby.azurecr.io/profile-ui:latest"
 
-          docker buildx build \
-            --platform linux/amd64,linux/arm64 \
+          docker build \
+            --platform linux/amd64 \
             --push \
             -f profile-ui/Dockerfile \
             -t $PROFILE_IMAGE_TAG \
