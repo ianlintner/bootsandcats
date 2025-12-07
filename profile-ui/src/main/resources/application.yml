@@ -1,8 +1,8 @@
 micronaut:
   application:
-    name: profile-ui-lite
+    name: profile-ui
   server:
-    port: ${PROFILE_UI_LITE_PORT:8085}
+    port: ${PROFILE_UI_PORT:8085}
   metrics:
     enabled: true
     export:

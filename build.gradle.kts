@@ -32,7 +32,7 @@ subprojects {
     apply(plugin = "java")
     apply(plugin = "com.github.spotbugs")
 
-    if (name != "profile-ui-lite") {
+    if (name != "profile-ui") {
         apply(plugin = "io.spring.dependency-management")
 
         // Override Flyway version from Spring Boot BOM

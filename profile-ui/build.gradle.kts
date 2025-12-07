@@ -11,12 +11,12 @@ micronaut {
     testRuntime("junit5")
     processing {
         incremental(true)
-        annotations("com.bootsandcats.profilelite.*")
+        annotations("com.bootsandcats.profileui.*")
     }
 }
 
 application {
-    mainClass.set("com.bootsandcats.profilelite.Application")
+    mainClass.set("com.bootsandcats.profileui.Application")
 }
 
 dependencies {

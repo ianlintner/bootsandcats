@@ -1,4 +1,4 @@
-package com.bootsandcats.profilelite;
+package com.bootsandcats.profileui;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -19,7 +19,7 @@ class HomeControllerTest {
     @Test
     void rootEndpointResponds() {
         HttpResponse<String> response = client.toBlocking().exchange("/", String.class);
-        assertThat(response.body()).contains("profile-ui-lite");
+        assertThat(response.body()).contains("profile-ui");
         assertThat(response.getStatus().getCode()).isEqualTo(200);
     }
 }
