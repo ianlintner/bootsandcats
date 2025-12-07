@@ -1,75 +1,19 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: v1
+kind: Service
 metadata:
-  name: postgres
+  name: postgres-hl
   namespace: default
   labels:
-    app: postgres
+    app: postgres-ha
 spec:
-  replicas: 1
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+  - name: postgres
+    port: 5432
+    targetPort: 5432
   selector:
-    matchLabels:
-      app: postgres
-  template:
-    metadata:
-      labels:
-        app: postgres
-    spec:
-      containers:
-      - name: postgres
-        image: postgres:15-alpine
-        ports:
-        - containerPort: 5432
-          name: postgres
-        env:
-        - name: POSTGRES_DB
-          valueFrom:
-            secretKeyRef:
-              name: oauth2-app-secrets
-              key: database-name
-        - name: POSTGRES_USER
-          valueFrom:
-            secretKeyRef:
-              name: oauth2-app-secrets
-              key: database-username
-        - name: POSTGRES_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: oauth2-app-secrets
-              key: database-password
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
-            memory: "512Mi"
-            cpu: "250m"
-        volumeMounts:
-        - name: postgres-storage
-          mountPath: /var/lib/postgresql/data
-          subPath: postgres
-      volumes:
-      - name: postgres-storage
-        persistentVolumeClaim:
-          claimName: postgres-pvc
-      tolerations:
-      - key: "kubernetes.azure.com/scalesetpriority"
-        operator: "Equal"
-        value: "spot"
-        effect: "NoSchedule"
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: postgres-pvc
-  namespace: default
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
-  storageClassName: managed-premium
+    app: postgres-ha
 
 ---
 apiVersion: v1
@@ -78,14 +22,156 @@ metadata:
   name: postgres
   namespace: default
   labels:
-    app: postgres
+    app: postgres-ha
 spec:
   type: ClusterIP
   ports:
-  - port: 5432
+  - name: postgres
+    port: 5432
     targetPort: 5432
-    protocol: TCP
-    name: postgres
   selector:
-    app: postgres
+    app: postgres-ha
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-ha
+  namespace: default
+  labels:
+    app: postgres-ha
+spec:
+  serviceName: postgres-hl
+  replicas: 2
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      app: postgres-ha
+  template:
+    metadata:
+      labels:
+        app: postgres-ha
+    spec:
+      tolerations:
+      - key: "kubernetes.azure.com/scalesetpriority"
+        operator: "Equal"
+        value: "spot"
+        effect: "NoSchedule"
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - postgres-ha
+              topologyKey: kubernetes.io/hostname
+      containers:
+      - name: postgres
+        image: bitnami/postgresql-repmgr:15
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5432
+          name: postgres
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: REPMGR_NODE_NAME
+          value: "$(POD_NAME)"
+        - name: REPMGR_NODE_NETWORK_NAME
+          value: "$(POD_NAME).postgres-hl.default.svc.cluster.local"
+        - name: REPMGR_PRIMARY_HOST
+          value: postgres-ha-0.postgres-hl.default.svc.cluster.local
+        - name: REPMGR_PRIMARY_PORT
+          value: "5432"
+        - name: REPMGR_PARTNER_NODES
+          value: postgres-ha-0.postgres-hl.default.svc.cluster.local,postgres-ha-1.postgres-hl.default.svc.cluster.local
+        - name: REPMGR_PORT_NUMBER
+          value: "5432"
+        - name: REPMGR_USERNAME
+          value: repmgr
+        - name: REPMGR_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: database-password
+        - name: POSTGRESQL_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: database-username
+        - name: POSTGRESQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: database-password
+        - name: POSTGRESQL_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: database-name
+        - name: POSTGRESQL_POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: database-password
+        - name: POSTGRESQL_SHARED_PRELOAD_LIBRARIES
+          value: "repmgr"
+        - name: ALLOW_EMPTY_PASSWORD
+          value: "no"
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - |
+              PGPASSWORD="$POSTGRESQL_POSTGRES_PASSWORD" psql -U postgres -tAc "SELECT NOT pg_is_in_recovery()" | grep -q t
+          initialDelaySeconds: 20
+          timeoutSeconds: 5
+          periodSeconds: 10
+          failureThreshold: 6
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - |
+              PGPASSWORD="$POSTGRESQL_POSTGRES_PASSWORD" psql -U postgres -tAc "SELECT 1"
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+          periodSeconds: 10
+          failureThreshold: 6
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        volumeMounts:
+        - name: data
+          mountPath: /bitnami/postgresql
+      volumes: []
+      securityContext:
+        fsGroup: 1001
+        runAsUser: 1001
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 2Gi
+      storageClassName: managed-premium
 

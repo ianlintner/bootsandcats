@@ -18,7 +18,7 @@ spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: postgres
+      app: postgres-ha
 
 ---
 apiVersion: policy/v1
