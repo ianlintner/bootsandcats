@@ -32,6 +32,8 @@ dependencies {
     implementation("io.micronaut.micrometer:micronaut-micrometer-registry-prometheus")
     implementation("ch.qos.logback:logback-classic")
 
+    runtimeOnly("org.yaml:snakeyaml")
+
     testImplementation("org.assertj:assertj-core:3.26.3")
     testImplementation("io.micronaut:micronaut-http-client")
     testImplementation("io.micronaut.test:micronaut-test-junit5")
