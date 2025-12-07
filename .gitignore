@@ -73,3 +73,4 @@ dependency-check-report.*
 e2e-tests/jwk.json
 test_output*.txt
 node_modules
+profile-ui-lite/.micronaut/test-resources/test-resources-port.txt
