@@ -1,0 +1,19 @@
+micronaut:
+  application:
+    name: profile-ui-lite
+  server:
+    port: ${PROFILE_UI_LITE_PORT:8085}
+  metrics:
+    enabled: true
+    export:
+      prometheus:
+        enabled: true
+
+endpoints:
+  all:
+    sensitive: false
+  health:
+    enabled: true
+    details-visible: ANONYMOUS
+  prometheus:
+    enabled: true
