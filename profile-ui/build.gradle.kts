@@ -54,6 +54,8 @@ dependencies {
     implementation("io.micronaut:micronaut-http-server-netty")
     implementation("io.micronaut:micronaut-management")
     implementation("io.micronaut:micronaut-jackson-databind")
+    implementation("io.micronaut.security:micronaut-security-oauth2")
+    implementation("io.micronaut.security:micronaut-security-jwt")
     implementation("io.micronaut.validation:micronaut-validation:$micronautVersion")
     implementation("io.micronaut.micrometer:micronaut-micrometer-registry-prometheus")
     implementation("ch.qos.logback:logback-classic")

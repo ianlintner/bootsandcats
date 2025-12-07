@@ -8,6 +8,44 @@ micronaut:
       public:
         paths: classpath:public
         mapping: /**
+  security:
+    enabled: true
+    authentication: idtoken
+    token-propagation:
+      enabled: true
+    redirect:
+      enabled: true
+      login-success: /
+      login-failure: /
+    intercept-url-map:
+      - pattern: /api/status
+        http-method: GET
+        access: isAnonymous()
+      - pattern: /public/**
+        http-method: GET
+        access: isAnonymous()
+      - pattern: /actuator/health
+        http-method: GET
+        access: isAnonymous()
+      - pattern: /actuator/prometheus
+        http-method: GET
+        access: isAnonymous()
+      - pattern: /api/me
+        http-method: GET
+        access: isAuthenticated()
+      - pattern: /**
+        access: isAuthenticated()
+    oauth2:
+      clients:
+        oauth2server:
+          client-id: ${OAUTH2_CLIENT_ID:profile-ui}
+          client-secret: ${OAUTH2_CLIENT_SECRET:profile-ui-secret}
+          openid:
+            issuer: ${OAUTH2_ISSUER_URI:https://oauth2.cat-herding.net}
+          scopes:
+            - openid
+            - profile
+            - email
   metrics:
     enabled: true
     export:
