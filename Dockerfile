@@ -29,11 +29,11 @@ FROM debian:bookworm-slim AS docs-prebuilt
 WORKDIR /docs
 RUN --mount=type=bind,source=site,target=/prebuilt,ro \
         mkdir -p /docs/site && \
-        if [ -d /prebuilt ] && [ "$(ls -A /prebuilt)" ]; then \
+        if [ -d /prebuilt ] && [ -f /prebuilt/index.html ]; then \
             echo "Using prebuilt MkDocs site from build context" && \
             cp -a /prebuilt/. /docs/site; \
         else \
-            echo "No prebuilt MkDocs site found in build context; relying on docs-builder"; \
+            echo "No usable prebuilt MkDocs site found in build context; relying on docs-builder"; \
         fi
 
 # Build stage - extract layers from pre-built JAR
@@ -76,15 +76,15 @@ COPY --from=docs-prebuilt /docs/site/ /tmp/docs-site-prebuilt/
 # - Otherwise, prefer prebuilt when present; fall back to locally built docs.
 RUN mkdir -p ./BOOT-INF/classes/static/docs/ && \
         if [ "$DOCS_SOURCE" = "docs-prebuilt" ]; then \
-            if [ -d /tmp/docs-site-prebuilt ] && [ "$(ls -A /tmp/docs-site-prebuilt)" ]; then \
+            if [ -f /tmp/docs-site-prebuilt/index.html ]; then \
                 echo "Using prebuilt MkDocs site (forced)"; \
                 cp -a /tmp/docs-site-prebuilt/. ./BOOT-INF/classes/static/docs/; \
             else \
-                echo "DOCS_SOURCE=docs-prebuilt but no prebuilt MkDocs site was provided" >&2; \
+                echo "DOCS_SOURCE=docs-prebuilt but no prebuilt MkDocs site with index.html was provided" >&2; \
                 exit 1; \
             fi; \
         else \
-            if [ -d /tmp/docs-site-prebuilt ] && [ "$(ls -A /tmp/docs-site-prebuilt)" ]; then \
+            if [ -f /tmp/docs-site-prebuilt/index.html ]; then \
                 echo "Prebuilt MkDocs site detected; using it"; \
                 cp -a /tmp/docs-site-prebuilt/. ./BOOT-INF/classes/static/docs/; \
             else \

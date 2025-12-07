@@ -249,7 +249,7 @@ jobs:
 
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
-            --build-arg DOCS_SOURCE=docs-prebuilt \
+            --build-arg DOCS_SOURCE=auto \
             --push \
             -t $IMAGE_TAG \
             -t $IMAGE_LATEST \
