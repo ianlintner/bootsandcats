@@ -2,6 +2,7 @@ package com.bootsandcats.oauth2;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -31,6 +32,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
         })
 class ProdSchemaValidationIntegrationTest {
 
+    private static final String STATIC_JWK_JSON =
+            "{\"keys\":[{\"kty\":\"EC\",\"d\":\"mwhKr9BIDjuB-OajeULLA4RORdJLUL8816YenVZwlMs\",\"use\":\"sig\",\"crv\":\"P-256\",\"kid\":\"586e7c9b-a4dc-4ea9-9cf7-197c3fae5d7f\",\"x\":\"0yuOTwftybMpxjSc1liSpftWHi5-YyyqvdlYclgF4zw\",\"y\":\"qboYXttcfjXXSYFlUEMkBOVmsMMDATyRv-UN4AR8Fl0\",\"alg\":\"ES256\"}]}";
+
     @Container
     private static final PostgreSQLContainer<?> POSTGRES =
             new PostgreSQLContainer<>("postgres:16-alpine");
@@ -38,6 +42,12 @@ class ProdSchemaValidationIntegrationTest {
     @DynamicPropertySource
     static void configureDataSource(DynamicPropertyRegistry registry) {
         POSTGRES.start();
+        Flyway.configure()
+            .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
+            .baselineOnMigrate(true)
+            .locations("classpath:db/migration")
+            .load()
+            .migrate();
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
@@ -46,6 +56,7 @@ class ProdSchemaValidationIntegrationTest {
         registry.add("spring.flyway.user", POSTGRES::getUsername);
         registry.add("spring.flyway.password", POSTGRES::getPassword);
         registry.add("spring.flyway.locations", () -> "classpath:db/migration");
+        registry.add("azure.keyvault.static-jwk", () -> STATIC_JWK_JSON);
     }
 
     @Autowired private JdbcTemplate jdbcTemplate;

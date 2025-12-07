@@ -1,6 +1,7 @@
 package com.bootsandcats.oauth2.config;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -75,6 +76,7 @@ public class DataInitializer {
     private RegisteredClient buildConfidentialClient(String encodedSecret, String id) {
         return RegisteredClient.withId(id)
                 .clientId("demo-client")
+                .clientIdIssuedAt(Instant.now())
                 .clientSecret(encodedSecret)
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
@@ -106,6 +108,7 @@ public class DataInitializer {
     private RegisteredClient buildPublicClient(String id) {
         return RegisteredClient.withId(id)
                 .clientId("public-client")
+                .clientIdIssuedAt(Instant.now())
                 .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
@@ -133,6 +136,7 @@ public class DataInitializer {
     private RegisteredClient buildMachineToMachineClient(String encodedSecret) {
         return RegisteredClient.withId(UUID.randomUUID().toString())
                 .clientId("m2m-client")
+                .clientIdIssuedAt(Instant.now())
                 .clientSecret(encodedSecret)
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
@@ -149,6 +153,7 @@ public class DataInitializer {
     private RegisteredClient buildProfileUiClient(String encodedSecret, String id) {
         return RegisteredClient.withId(id)
                 .clientId("profile-ui")
+                .clientIdIssuedAt(Instant.now())
                 .clientSecret(encodedSecret)
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
