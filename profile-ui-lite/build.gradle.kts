@@ -3,7 +3,10 @@ plugins {
     id("io.micronaut.test-resources") version "4.3.8"
 }
 
+val micronautVersion = "4.3.8"
+
 micronaut {
+    version.set(micronautVersion)
     runtime("netty")
     testRuntime("junit5")
     processing {
@@ -17,12 +20,15 @@ application {
 }
 
 dependencies {
+    annotationProcessor(platform("io.micronaut.platform:micronaut-platform:$micronautVersion"))
+    implementation(platform("io.micronaut.platform:micronaut-platform:$micronautVersion"))
+
     annotationProcessor("io.micronaut:micronaut-inject-java")
-    annotationProcessor("io.micronaut.validation:micronaut-validation-processor")
+    annotationProcessor("io.micronaut.validation:micronaut-validation-processor:$micronautVersion")
 
     implementation("io.micronaut:micronaut-http-server-netty")
     implementation("io.micronaut:micronaut-management")
-    implementation("io.micronaut:micronaut-validation")
+    implementation("io.micronaut.validation:micronaut-validation:$micronautVersion")
     implementation("io.micronaut.micrometer:micronaut-micrometer-registry-prometheus")
     implementation("ch.qos.logback:logback-classic")
 
