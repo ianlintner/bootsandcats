@@ -23,9 +23,7 @@ class HomeControllerTest {
         HttpResponse<String> response = client.toBlocking().exchange("/", String.class);
 
         assertThat(response.getStatus().getCode()).isEqualTo(200);
-        assertThat(response.body())
-                .contains("Profile UI")
-                .contains("@ianlintner/theme");
+        assertThat(response.body()).contains("Profile UI").contains("@ianlintner/theme");
     }
 
     @Test

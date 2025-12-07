@@ -1,11 +1,12 @@
 package com.bootsandcats.profileui;
 
+import java.util.Map;
+
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.security.authentication.Authentication;
-import java.util.Map;
 
 /** Returns the authenticated user's profile attributes. */
 @Controller("/api/me")
