@@ -4,7 +4,7 @@ include(
     "server-dao",
     "server-logic",
     "server-ui",
-    "profile-ui-lite",
+    "profile-ui",
     "oauth2-http-client",
     "e2e-tests"
 )
@@ -12,6 +12,6 @@ include(
 project(":server-dao").projectDir = file("server-dao")
 project(":server-logic").projectDir = file("server-logic")
 project(":server-ui").projectDir = file("server-ui")
-project(":profile-ui-lite").projectDir = file("profile-ui-lite")
+project(":profile-ui").projectDir = file("profile-ui")
 project(":oauth2-http-client").projectDir = file("oauth2-http-client")
 project(":e2e-tests").projectDir = file("e2e-tests")
