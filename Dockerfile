@@ -56,10 +56,15 @@ EXPOSE 9000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:9000/actuator/health || exit 1
 
-# JVM options for containers
+# JVM options tuned for low-memory pods (prefer horizontal scaling)
 ENV JAVA_OPTS="-XX:+UseContainerSupport \
-    -XX:MaxRAMPercentage=75.0 \
-    -XX:InitialRAMPercentage=50.0 \
+    -XX:+UseG1GC \
+    -XX:+UseStringDeduplication \
+    -XX:MaxRAMPercentage=45.0 \
+    -XX:InitialRAMPercentage=15.0 \
+    -XX:MaxMetaspaceSize=128m \
+    -XX:MaxDirectMemorySize=128m \
+    -XX:+ExitOnOutOfMemoryError \
     -Djava.security.egd=file:/dev/./urandom"
 
 # Run the application
