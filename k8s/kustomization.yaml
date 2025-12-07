@@ -12,6 +12,7 @@ labels:
 
 resources:
   - deployment.yaml
+  - cnpg-operator.yaml
   - postgres.yaml
   - redis.yaml
   - redis-auth.yaml
