@@ -173,8 +173,9 @@ public class AuthorizationServerConfig {
                 .formLogin(form -> form.loginPage("/login").permitAll())
                 .oauth2Login(
                         oauth2 ->
-                                oauth2.successHandler(
-                                        federatedIdentityAuthenticationSuccessHandler))
+                                oauth2.loginPage("/login")
+                                        .successHandler(
+                                                federatedIdentityAuthenticationSuccessHandler))
                 .csrf(
                         csrf ->
                                 csrf.ignoringRequestMatchers(
