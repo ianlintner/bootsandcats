@@ -1,55 +1,42 @@
 plugins {
-    id("org.springframework.boot") version "4.0.0"
-    id("io.spring.dependency-management")
-    id("java")
+    id("io.micronaut.application") version "4.3.8"
+    id("io.micronaut.test-resources") version "4.3.8"
+}
+
+val micronautVersion = "4.3.8"
+
+micronaut {
+    version.set(micronautVersion)
+    runtime("netty")
+    testRuntime("junit5")
+    processing {
+        incremental(true)
+        annotations("com.bootsandcats.profilelite.*")
+    }
+}
+
+application {
+    mainClass.set("com.bootsandcats.profilelite.Application")
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-actuator")
-    implementation("org.springframework.boot:spring-boot-starter-security")
-    implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
-    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
-    implementation(project(":oauth2-http-client"))
-    implementation("de.codecentric:spring-boot-admin-starter-client:3.4.0")
-    
-    compileOnly("org.projectlombok:lombok:1.18.32")
-    annotationProcessor("org.projectlombok:lombok:1.18.32")
-    
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-}
+    annotationProcessor(platform("io.micronaut.platform:micronaut-platform:$micronautVersion"))
+    implementation(platform("io.micronaut.platform:micronaut-platform:$micronautVersion"))
 
-tasks.withType<Test> {
-    useJUnitPlatform()
-}
+    annotationProcessor("io.micronaut:micronaut-inject-java")
+    annotationProcessor("io.micronaut.validation:micronaut-validation-processor:$micronautVersion")
 
-springBoot {
-    mainClass.set("com.bootsandcats.profile.ProfileUiApplication")
-}
+    implementation("io.micronaut:micronaut-http-server-netty")
+    implementation("io.micronaut:micronaut-management")
+    implementation("io.micronaut:micronaut-jackson-databind")
+    implementation("io.micronaut.validation:micronaut-validation:$micronautVersion")
+    implementation("io.micronaut.micrometer:micronaut-micrometer-registry-prometheus")
+    implementation("ch.qos.logback:logback-classic")
 
-val npmInstall by tasks.registering(Exec::class) {
-    workingDir = projectDir
-    commandLine("npm", "install")
-    inputs.file("package.json")
-    outputs.dir("node_modules")
-}
+    runtimeOnly("org.yaml:snakeyaml")
 
-val buildProfileCss by tasks.registering(Exec::class) {
-    workingDir = projectDir
-    commandLine("npm", "run", "build:css")
-    inputs.files(fileTree("src/main/frontend"))
-    inputs.file("package.json")
-    inputs.file("tailwind.config.js")
-    outputs.file("src/main/resources/static/css/profile.css")
-    dependsOn(npmInstall)
-}
-
-tasks.named("processResources") {
-    dependsOn(buildProfileCss)
-}
-
-tasks.named("clean") {
-    doFirst {
-        delete("node_modules", "src/main/resources/static/css/profile.css")
-    }
+    testImplementation("org.assertj:assertj-core:3.26.3")
+    testImplementation("io.micronaut:micronaut-http-client")
+    testImplementation("io.micronaut.test:micronaut-test-junit5")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
