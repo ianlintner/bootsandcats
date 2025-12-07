@@ -196,8 +196,6 @@ spec:
           capabilities:
             drop:
             - ALL
-      nodeSelector:
-        kubernetes.io/arch: amd64
       tolerations:
       - key: "kubernetes.azure.com/scalesetpriority"
         operator: "Equal"

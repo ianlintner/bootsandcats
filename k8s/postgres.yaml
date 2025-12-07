@@ -52,9 +52,9 @@ spec:
       - name: postgres-storage
         emptyDir: {}
       tolerations:
-      - key: "preemptible"
+      - key: "kubernetes.azure.com/scalesetpriority"
         operator: "Equal"
-        value: "true"
+        value: "spot"
         effect: "NoSchedule"
 ---
 apiVersion: v1
