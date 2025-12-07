@@ -28,31 +28,28 @@ spotless {
     }
 }
 
-// Ensure Spotless sees generated frontend assets as ready when it walks the repo
-// (Gradle 9 task validation flags implicit access to :profile-ui:npmInstall outputs).
-tasks.named("spotlessJava") {
-    dependsOn(":profile-ui:npmInstall")
-}
-
 subprojects {
-    apply(plugin = "io.spring.dependency-management")
     apply(plugin = "java")
     apply(plugin = "com.github.spotbugs")
+
+    if (name != "profile-ui-lite") {
+        apply(plugin = "io.spring.dependency-management")
+
+        // Override Flyway version from Spring Boot BOM
+        the<io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension>().apply {
+            imports {
+                mavenBom(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
+            }
+            dependencies {
+                dependency("org.flywaydb:flyway-core:11.2.0")
+                dependency("org.flywaydb:flyway-database-postgresql:11.2.0")
+            }
+        }
+    }
 
     configure<JavaPluginExtension> {
         toolchain {
             languageVersion.set(JavaLanguageVersion.of(21))
-        }
-    }
-
-    // Override Flyway version from Spring Boot BOM
-    the<io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension>().apply {
-        imports {
-            mavenBom(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
-        }
-        dependencies {
-            dependency("org.flywaydb:flyway-core:11.2.0")
-            dependency("org.flywaydb:flyway-database-postgresql:11.2.0")
         }
     }
 
