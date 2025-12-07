@@ -71,7 +71,7 @@ spec:
               topologyKey: kubernetes.io/hostname
       containers:
       - name: postgres
-        image: bitnami/postgresql-repmgr:15
+        image: bitnami/postgresql-repmgr:15.10.0
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5432
