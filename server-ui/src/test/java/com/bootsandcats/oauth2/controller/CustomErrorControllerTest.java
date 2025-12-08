@@ -18,11 +18,12 @@ import org.springframework.web.context.WebApplicationContext;
 
 import com.bootsandcats.oauth2.config.TestKeyManagementConfig;
 import com.bootsandcats.oauth2.config.TestOAuth2ClientConfiguration;
+import com.bootsandcats.oauth2.config.TestObjectMapperConfig;
 
 @SpringBootTest
 // @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import({TestOAuth2ClientConfiguration.class, TestKeyManagementConfig.class})
+@Import({TestOAuth2ClientConfiguration.class, TestKeyManagementConfig.class, TestObjectMapperConfig.class})
 class CustomErrorControllerTest {
 
     @Autowired private WebApplicationContext context;

@@ -18,12 +18,13 @@ import org.springframework.web.context.WebApplicationContext;
 
 import com.bootsandcats.oauth2.config.TestKeyManagementConfig;
 import com.bootsandcats.oauth2.config.TestOAuth2ClientConfiguration;
+import com.bootsandcats.oauth2.config.TestObjectMapperConfig;
 
 /** Tests for security headers compliance (OWASP recommendations). */
 @SpringBootTest
 // @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import({TestOAuth2ClientConfiguration.class, TestKeyManagementConfig.class})
+@Import({TestOAuth2ClientConfiguration.class, TestKeyManagementConfig.class, TestObjectMapperConfig.class})
 class SecurityHeadersTest {
 
     @Autowired private WebApplicationContext context;
