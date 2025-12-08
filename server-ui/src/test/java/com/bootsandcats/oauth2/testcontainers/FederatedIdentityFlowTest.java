@@ -108,6 +108,7 @@ class FederatedIdentityFlowTest extends AbstractPostgresContainerTest {
 
     @BeforeEach
     void setUp() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
         userRepository.deleteAll();
         if (mockGitHub != null) {
             mockGitHub.reset();
