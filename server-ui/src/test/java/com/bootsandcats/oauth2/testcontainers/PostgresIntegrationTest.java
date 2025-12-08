@@ -18,6 +18,8 @@ package com.bootsandcats.oauth2.testcontainers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.bootsandcats.oauth2.config.TestKeyManagementConfig;
+import com.bootsandcats.oauth2.config.TestOAuth2ClientConfiguration;
 import com.bootsandcats.oauth2.model.User;
 import com.bootsandcats.oauth2.repository.UserRepository;
 import java.time.Instant;
@@ -29,6 +31,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,6 +51,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @SpringBootTest
 @ActiveProfiles("testcontainers")
+@Import({TestOAuth2ClientConfiguration.class, TestKeyManagementConfig.class})
 @Tag("testcontainers")
 @Tag("postgres")
 @DisplayName("PostgreSQL Integration Tests")

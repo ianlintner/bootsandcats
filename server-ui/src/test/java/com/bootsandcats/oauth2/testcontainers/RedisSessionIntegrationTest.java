@@ -23,6 +23,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.bootsandcats.oauth2.config.TestKeyManagementConfig;
+import com.bootsandcats.oauth2.config.TestOAuth2ClientConfiguration;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,6 +33,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ActiveProfiles;
@@ -55,6 +58,7 @@ import org.springframework.web.context.WebApplicationContext;
  */
 @SpringBootTest
 @ActiveProfiles("testcontainers-redis")
+@Import({TestOAuth2ClientConfiguration.class, TestKeyManagementConfig.class})
 @Tag("testcontainers")
 @Tag("redis")
 @DisplayName("Redis Session Integration Tests")
