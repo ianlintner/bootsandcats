@@ -1,9 +1,9 @@
 package com.bootsandcats.oauth2.config;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.env.Environment;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
@@ -28,76 +28,67 @@ import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 @TestConfiguration
 public class TestFederatedIdentityConfiguration {
 
-    @Value("${spring.security.oauth2.client.provider.github.authorization-uri:http://localhost:8888/login/oauth/authorize}")
-    private String githubAuthorizationUri;
-
-    @Value("${spring.security.oauth2.client.provider.github.token-uri:http://localhost:8888/login/oauth/access_token}")
-    private String githubTokenUri;
-
-    @Value("${spring.security.oauth2.client.provider.github.user-info-uri:http://localhost:8888/user}")
-    private String githubUserInfoUri;
-
-    @Value("${spring.security.oauth2.client.registration.github.client-id:test-github-client}")
-    private String githubClientId;
-
-    @Value("${spring.security.oauth2.client.registration.github.client-secret:test-github-secret}")
-    private String githubClientSecret;
-
-    @Value("${spring.security.oauth2.client.provider.google.authorization-uri:http://localhost:8889/oauth2/authorize}")
-    private String googleAuthorizationUri;
-
-    @Value("${spring.security.oauth2.client.provider.google.token-uri:http://localhost:8889/oauth2/token}")
-    private String googleTokenUri;
-
-    @Value("${spring.security.oauth2.client.provider.google.user-info-uri:http://localhost:8889/userinfo}")
-    private String googleUserInfoUri;
-
-    @Value("${spring.security.oauth2.client.provider.google.jwk-set-uri:http://localhost:8889/.well-known/jwks.json}")
-    private String googleJwkSetUri;
-
-    @Value("${spring.security.oauth2.client.registration.google.client-id:test-google-client}")
-    private String googleClientId;
-
-    @Value("${spring.security.oauth2.client.registration.google.client-secret:test-google-secret}")
-    private String googleClientSecret;
-
     @Bean
     @Primary
-    public ClientRegistrationRepository federatedClientRegistrationRepository() {
+    public ClientRegistrationRepository federatedClientRegistrationRepository(Environment env) {
         return new InMemoryClientRegistrationRepository(
-                githubClientRegistration(),
-                googleClientRegistration()
+                githubClientRegistration(env),
+                googleClientRegistration(env)
         );
     }
 
-    private ClientRegistration githubClientRegistration() {
+    private ClientRegistration githubClientRegistration(Environment env) {
+        String authUri = env.getProperty("spring.security.oauth2.client.provider.github.authorization-uri",
+                "http://localhost:8888/login/oauth/authorize");
+        String tokenUri = env.getProperty("spring.security.oauth2.client.provider.github.token-uri",
+                "http://localhost:8888/login/oauth/access_token");
+        String userInfoUri = env.getProperty("spring.security.oauth2.client.provider.github.user-info-uri",
+                "http://localhost:8888/user");
+        String clientId = env.getProperty("spring.security.oauth2.client.registration.github.client-id",
+                "test-github-client");
+        String clientSecret = env.getProperty("spring.security.oauth2.client.registration.github.client-secret",
+                "test-github-secret");
+
         return ClientRegistration.withRegistrationId("github")
-                .clientId(githubClientId)
-                .clientSecret(githubClientSecret)
+                .clientId(clientId)
+                .clientSecret(clientSecret)
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
                 .scope("read:user", "user:email")
-                .authorizationUri(githubAuthorizationUri)
-                .tokenUri(githubTokenUri)
-                .userInfoUri(githubUserInfoUri)
+                .authorizationUri(authUri)
+                .tokenUri(tokenUri)
+                .userInfoUri(userInfoUri)
                 .userNameAttributeName("id")
                 .clientName("GitHub")
                 .build();
     }
 
-    private ClientRegistration googleClientRegistration() {
+    private ClientRegistration googleClientRegistration(Environment env) {
+        String authUri = env.getProperty("spring.security.oauth2.client.provider.google.authorization-uri",
+                "http://localhost:8889/o/oauth2/v2/auth");
+        String tokenUri = env.getProperty("spring.security.oauth2.client.provider.google.token-uri",
+                "http://localhost:8889/token");
+        String userInfoUri = env.getProperty("spring.security.oauth2.client.provider.google.user-info-uri",
+                "http://localhost:8889/userinfo");
+        String jwkSetUri = env.getProperty("spring.security.oauth2.client.provider.google.jwk-set-uri",
+                "http://localhost:8889/oauth2/v3/certs");
+        String clientId = env.getProperty("spring.security.oauth2.client.registration.google.client-id",
+                "test-google-client");
+        String clientSecret = env.getProperty("spring.security.oauth2.client.registration.google.client-secret",
+                "test-google-secret");
+
         return ClientRegistration.withRegistrationId("google")
-                .clientId(googleClientId)
-                .clientSecret(googleClientSecret)
+                .clientId(clientId)
+                .clientSecret(clientSecret)
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .redirectUri("{baseUrl}/login/oauth2/code/{registrationId}")
                 .scope("openid", "profile", "email")
-                .authorizationUri(googleAuthorizationUri)
-                .tokenUri(googleTokenUri)
-                .userInfoUri(googleUserInfoUri)
-                .jwkSetUri(googleJwkSetUri)
+                .authorizationUri(authUri)
+                .tokenUri(tokenUri)
+                .userInfoUri(userInfoUri)
+                .jwkSetUri(jwkSetUri)
                 .userNameAttributeName(IdTokenClaimNames.SUB)
                 .clientName("Google")
                 .build();
