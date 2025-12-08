@@ -38,12 +38,16 @@ class ProdSchemaValidationIntegrationTest {
             "{\"keys\":[{\"kty\":\"EC\",\"d\":\"mwhKr9BIDjuB-OajeULLA4RORdJLUL8816YenVZwlMs\",\"use\":\"sig\",\"crv\":\"P-256\",\"kid\":\"586e7c9b-a4dc-4ea9-9cf7-197c3fae5d7f\",\"x\":\"0yuOTwftybMpxjSc1liSpftWHi5-YyyqvdlYclgF4zw\",\"y\":\"qboYXttcfjXXSYFlUEMkBOVmsMMDATyRv-UN4AR8Fl0\",\"alg\":\"ES256\"}]}";
 
     @Container
+    @SuppressWarnings("resource")
     private static final PostgreSQLContainer<?> POSTGRES =
-            new PostgreSQLContainer<>("postgres:16-alpine");
+            new PostgreSQLContainer<>("postgres:16-alpine")
+                    .withDatabaseName("testdb")
+                    .withUsername("test")
+                    .withPassword("test");
 
     @DynamicPropertySource
     static void configureDataSource(DynamicPropertyRegistry registry) {
-        POSTGRES.start();
+        // Container is auto-started by @Container annotation before this method is called
         Flyway.configure()
                 .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
                 .baselineOnMigrate(true)
