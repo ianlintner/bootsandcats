@@ -18,9 +18,9 @@ package com.bootsandcats.oauth2.testcontainers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.bootsandcats.oauth2.entity.User;
+import com.bootsandcats.oauth2.model.User;
 import com.bootsandcats.oauth2.repository.UserRepository;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -76,7 +76,7 @@ class PostgresIntegrationTest extends AbstractPostgresContainerTest {
             user.setProviderId("12345");
             user.setName("Test User");
             user.setPictureUrl("https://github.com/avatar.png");
-            user.setLastLogin(LocalDateTime.now());
+            user.setLastLogin(Instant.now());
 
             // WHEN: Saving the user
             User savedUser = userRepository.save(user);
