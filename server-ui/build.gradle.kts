@@ -152,9 +152,59 @@ tasks.register<Test>("fastTests") {
     description = "Runs fast unit tests (excludes integration tests)"
     group = "verification"
     useJUnitPlatform {
-        excludeTags("integration", "e2e", "slow")
+        excludeTags("integration", "e2e", "slow", "testcontainers")
     }
     testLogging {
         events("passed", "skipped", "failed")
+    }
+}
+
+// Testcontainers Integration Test Tasks
+tasks.register<Test>("testcontainersTests") {
+    description = "Runs all Testcontainers integration tests (PostgreSQL, Redis, WireMock)"
+    group = "verification"
+    useJUnitPlatform {
+        includeTags("testcontainers")
+    }
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
+    }
+    // Give containers more time to start
+    systemProperty("junit.jupiter.execution.timeout.default", "5m")
+}
+
+tasks.register<Test>("postgresTests") {
+    description = "Runs PostgreSQL Testcontainers integration tests"
+    group = "verification"
+    useJUnitPlatform()
+    include("**/testcontainers/Postgres*Test.class")
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
+    }
+    systemProperty("junit.jupiter.execution.timeout.default", "5m")
+}
+
+tasks.register<Test>("redisTests") {
+    description = "Runs Redis Testcontainers integration tests"
+    group = "verification"
+    useJUnitPlatform()
+    include("**/testcontainers/Redis*Test.class")
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
+    }
+    systemProperty("junit.jupiter.execution.timeout.default", "5m")
+}
+
+tasks.register<Test>("federatedIdentityTests") {
+    description = "Runs federated identity flow tests with mocked OAuth providers"
+    group = "verification"
+    useJUnitPlatform()
+    include("**/testcontainers/FederatedIdentity*Test.class")
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
     }
 }
