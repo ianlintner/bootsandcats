@@ -21,7 +21,11 @@ import org.springframework.web.context.WebApplicationContext;
 @SpringBootTest
 // @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import({TestOAuth2ClientConfiguration.class, TestKeyManagementConfig.class, TestObjectMapperConfig.class})
+@Import({
+    TestOAuth2ClientConfiguration.class,
+    TestKeyManagementConfig.class,
+    TestObjectMapperConfig.class
+})
 class OpenApiConfigTest {
 
     @Autowired private WebApplicationContext context;

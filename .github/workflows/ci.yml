@@ -132,10 +132,43 @@ jobs:
             **/build/reports/spotbugs/**
           if-no-files-found: ignore
 
+  integration-tests:
+    name: Integration Tests (Testcontainers)
+    runs-on: ubuntu-latest
+    needs: build-unit
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.0.0'
+          cache-read-only: true
+
+      - name: Run Testcontainers tests
+        run: gradle :server-ui:testcontainersTests --no-daemon --build-cache
+
+      - name: Upload Testcontainers test reports (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testcontainers-reports
+          path: |
+            **/build/reports/tests/testcontainersTests/**
+          if-no-files-found: ignore
+
   smoke:
     name: Smoke Test
     runs-on: ubuntu-latest
-    needs: build-unit
+    needs: [build-unit, integration-tests]
     timeout-minutes: 15
     steps:
       - name: Checkout

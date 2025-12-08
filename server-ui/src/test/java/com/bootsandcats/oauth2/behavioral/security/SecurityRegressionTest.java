@@ -448,7 +448,8 @@ class SecurityRegressionTest {
         @Test
         @DisplayName("SEC-R-040: Token endpoint rejects GET requests")
         void tokenEndpoint_shouldRejectGetRequests() throws Exception {
-            AiAgentTestReporter.setExpectedOutcome("302 redirect or 405 Method Not Allowed for GET");
+            AiAgentTestReporter.setExpectedOutcome(
+                    "302 redirect or 405 Method Not Allowed for GET");
             AiAgentTestReporter.setRegressionIndicator(true);
 
             MvcResult result = mockMvc.perform(get("/oauth2/token")).andReturn();
@@ -535,8 +536,8 @@ class SecurityRegressionTest {
          *
          * <p>Regression: Authorization endpoint is accessible
          *
-         * <p>Authorization endpoint must be accessible (will redirect to login or return
-         * bad request for missing required params like state).
+         * <p>Authorization endpoint must be accessible (will redirect to login or return bad
+         * request for missing required params like state).
          */
         @Test
         @DisplayName("SEC-R-052: Authorization endpoint is accessible")

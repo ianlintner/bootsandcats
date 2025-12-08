@@ -11,7 +11,11 @@ import com.bootsandcats.oauth2.config.TestObjectMapperConfig;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Import({TestOAuth2ClientConfiguration.class, TestKeyManagementConfig.class, TestObjectMapperConfig.class})
+@Import({
+    TestOAuth2ClientConfiguration.class,
+    TestKeyManagementConfig.class,
+    TestObjectMapperConfig.class
+})
 class OAuth2AuthorizationServerApplicationTests {
 
     @Test

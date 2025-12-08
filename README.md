@@ -46,8 +46,8 @@ sequenceDiagram
 ### Prerequisites
 
 - Java 21 (LTS) or higher
-- Maven 3.8+
-- Docker (optional)
+- Gradle 9.0+ (wrapper included)
+- Docker (optional, required for testcontainers tests)
 
 ### Running Locally
 
@@ -57,11 +57,11 @@ git clone https://github.com/ianlintner/bootsandcats.git
 cd bootsandcats
 
 # Build and run
-./mvnw spring-boot:run
+./gradlew :server-ui:bootRun
 
 # Or build and run JAR
-./mvnw package
-java -jar target/oauth2-server-1.0.0-SNAPSHOT.jar
+./gradlew :server-ui:build
+java -jar server-ui/build/libs/server-ui-1.0.0-SNAPSHOT.jar
 ```
 
 The server will start on `http://localhost:9000`.
@@ -217,18 +217,54 @@ curl -X POST http://localhost:9000/oauth2/introspect \
 
 ## Testing
 
-```bash
-# Run unit tests
-./mvnw test
+The project uses Gradle 9.0 with JUnit 5 and comprehensive test categories.
 
-# Run integration tests
-./mvnw verify
+### Unit Tests (Default)
+```bash
+# Run unit tests (uses H2 in-memory database)
+./gradlew :server-ui:test
 
 # Run all tests with coverage report
-./mvnw verify jacoco:report
+./gradlew :server-ui:test jacocoTestReport
+```
 
+### Integration Tests with Testcontainers
+Testcontainers tests run against real PostgreSQL and Redis containers for production-like testing.
+
+```bash
+# Run all testcontainers tests (requires Docker)
+./gradlew :server-ui:testcontainersTests
+
+# Run PostgreSQL-specific tests
+./gradlew :server-ui:postgresTests
+
+# Run Redis-specific tests
+./gradlew :server-ui:redisTests
+
+# Run federated identity tests (WireMock for OAuth providers)
+./gradlew :server-ui:federatedIdentityTests
+```
+
+### Specialized Test Tasks
+```bash
+# Behavioral tests (happy path + sad path scenarios)
+./gradlew :server-ui:behavioralTests
+
+# Security and contract tests
+./gradlew :server-ui:securityTests
+./gradlew :server-ui:contractTests
+
+# OAuth2-specific tests
+./gradlew :server-ui:oauth2Tests
+
+# Fast tests (excludes integration and slow)
+./gradlew :server-ui:fastTests
+```
+
+### Load Tests
+```bash
 # Run load tests (requires running server)
-./mvnw gatling:test -Pload-test
+./gradlew :e2e-tests:gatlingRun
 ```
 
 ## Security

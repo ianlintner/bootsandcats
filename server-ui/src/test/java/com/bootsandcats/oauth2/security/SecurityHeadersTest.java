@@ -24,7 +24,11 @@ import com.bootsandcats.oauth2.config.TestObjectMapperConfig;
 @SpringBootTest
 // @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import({TestOAuth2ClientConfiguration.class, TestKeyManagementConfig.class, TestObjectMapperConfig.class})
+@Import({
+    TestOAuth2ClientConfiguration.class,
+    TestKeyManagementConfig.class,
+    TestObjectMapperConfig.class
+})
 class SecurityHeadersTest {
 
     @Autowired private WebApplicationContext context;
