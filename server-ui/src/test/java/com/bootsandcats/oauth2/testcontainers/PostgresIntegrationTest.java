@@ -18,13 +18,9 @@ package com.bootsandcats.oauth2.testcontainers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.bootsandcats.oauth2.config.TestKeyManagementConfig;
-import com.bootsandcats.oauth2.config.TestOAuth2ClientConfiguration;
-import com.bootsandcats.oauth2.config.TestObjectMapperConfig;
-import com.bootsandcats.oauth2.model.User;
-import com.bootsandcats.oauth2.repository.UserRepository;
 import java.time.Instant;
 import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -35,6 +31,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.bootsandcats.oauth2.config.TestKeyManagementConfig;
+import com.bootsandcats.oauth2.config.TestOAuth2ClientConfiguration;
+import com.bootsandcats.oauth2.config.TestObjectMapperConfig;
+import com.bootsandcats.oauth2.model.User;
+import com.bootsandcats.oauth2.repository.UserRepository;
 
 /**
  * Integration tests for PostgreSQL persistence using Testcontainers.
@@ -52,7 +54,11 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @SpringBootTest
 @ActiveProfiles({"test", "testcontainers"})
-@Import({TestOAuth2ClientConfiguration.class, TestKeyManagementConfig.class, TestObjectMapperConfig.class})
+@Import({
+    TestOAuth2ClientConfiguration.class,
+    TestKeyManagementConfig.class,
+    TestObjectMapperConfig.class
+})
 @Tag("testcontainers")
 @Tag("postgres")
 @DisplayName("PostgreSQL Integration Tests")
@@ -70,7 +76,8 @@ class PostgresIntegrationTest extends AbstractPostgresContainerTest {
     class UserPersistence {
 
         @Test
-        @DisplayName("GIVEN valid user data WHEN saving user THEN user is persisted with generated ID")
+        @DisplayName(
+                "GIVEN valid user data WHEN saving user THEN user is persisted with generated ID")
         @Transactional
         void shouldPersistUserWithGeneratedId() {
             // GIVEN: Valid user data
@@ -110,7 +117,8 @@ class PostgresIntegrationTest extends AbstractPostgresContainerTest {
             userRepository.save(user);
 
             // WHEN: Finding by provider and provider ID
-            Optional<User> found = userRepository.findByProviderAndProviderId("github", "github-123");
+            Optional<User> found =
+                    userRepository.findByProviderAndProviderId("github", "github-123");
 
             // THEN: User is retrieved correctly
             assertThat(found)
@@ -135,9 +143,7 @@ class PostgresIntegrationTest extends AbstractPostgresContainerTest {
                     userRepository.findByProviderAndProviderId("nonexistent", "99999");
 
             // THEN: Empty result is returned
-            assertThat(found)
-                    .as("Non-existent user should return empty Optional")
-                    .isEmpty();
+            assertThat(found).as("Non-existent user should return empty Optional").isEmpty();
         }
 
         @Test
@@ -192,13 +198,12 @@ class PostgresIntegrationTest extends AbstractPostgresContainerTest {
 
             // THEN: All users are persisted
             long count = userRepository.count();
-            assertThat(count)
-                    .as("All users should be persisted in transaction")
-                    .isEqualTo(3);
+            assertThat(count).as("All users should be persisted in transaction").isEqualTo(3);
         }
 
         @Test
-        @DisplayName("GIVEN user with unique constraint WHEN duplicate saved THEN transaction fails")
+        @DisplayName(
+                "GIVEN user with unique constraint WHEN duplicate saved THEN transaction fails")
         void shouldEnforceUniqueConstraints() {
             // GIVEN: User already exists
             User user1 = createUser("uniqueuser", "github", "unique-id");

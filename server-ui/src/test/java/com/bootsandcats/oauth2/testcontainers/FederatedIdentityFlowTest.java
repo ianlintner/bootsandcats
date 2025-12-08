@@ -19,12 +19,7 @@ package com.bootsandcats.oauth2.testcontainers;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.bootsandcats.oauth2.config.TestFederatedIdentityConfiguration;
-import com.bootsandcats.oauth2.config.TestKeyManagementConfig;
-import com.bootsandcats.oauth2.config.TestObjectMapperConfig;
-import com.bootsandcats.oauth2.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -42,6 +37,11 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import com.bootsandcats.oauth2.config.TestFederatedIdentityConfiguration;
+import com.bootsandcats.oauth2.config.TestKeyManagementConfig;
+import com.bootsandcats.oauth2.config.TestObjectMapperConfig;
+import com.bootsandcats.oauth2.repository.UserRepository;
+
 /**
  * Integration tests for federated identity flows using mock OAuth providers.
  *
@@ -58,7 +58,11 @@ import org.springframework.web.context.WebApplicationContext;
  */
 @SpringBootTest
 @ActiveProfiles({"test", "testcontainers-oauth"})
-@Import({TestFederatedIdentityConfiguration.class, TestKeyManagementConfig.class, TestObjectMapperConfig.class})
+@Import({
+    TestFederatedIdentityConfiguration.class,
+    TestKeyManagementConfig.class,
+    TestObjectMapperConfig.class
+})
 @Tag("testcontainers")
 @Tag("oauth-flow")
 @DisplayName("Federated Identity Flow Tests")
@@ -151,8 +155,7 @@ class FederatedIdentityFlowTest extends AbstractPostgresContainerTest {
             // GIVEN: GitHub OAuth is configured
 
             // WHEN: Initiating GitHub login
-            MvcResult result =
-                    mockMvc.perform(get("/oauth2/authorization/github")).andReturn();
+            MvcResult result = mockMvc.perform(get("/oauth2/authorization/github")).andReturn();
 
             // THEN: Should redirect to GitHub authorization
             assertThat(result.getResponse().getStatus())
@@ -167,8 +170,7 @@ class FederatedIdentityFlowTest extends AbstractPostgresContainerTest {
         }
 
         @Test
-        @DisplayName(
-                "GIVEN valid GitHub callback WHEN processing THEN user is created/updated")
+        @DisplayName("GIVEN valid GitHub callback WHEN processing THEN user is created/updated")
         void shouldProcessGitHubCallback() throws Exception {
             // GIVEN: Mock GitHub will return valid user
             mockGitHub.mockSuccessfulAuth(
@@ -182,8 +184,7 @@ class FederatedIdentityFlowTest extends AbstractPostgresContainerTest {
             // The full callback flow requires session state from authorization
 
             // WHEN: Checking OAuth endpoint accessibility
-            MvcResult result =
-                    mockMvc.perform(get("/oauth2/authorization/github")).andReturn();
+            MvcResult result = mockMvc.perform(get("/oauth2/authorization/github")).andReturn();
 
             // THEN: OAuth flow is initiated
             assertThat(result.getResponse().getStatus())
@@ -203,8 +204,7 @@ class FederatedIdentityFlowTest extends AbstractPostgresContainerTest {
             // GIVEN: Google OIDC is configured
 
             // WHEN: Initiating Google login
-            MvcResult result =
-                    mockMvc.perform(get("/oauth2/authorization/google")).andReturn();
+            MvcResult result = mockMvc.perform(get("/oauth2/authorization/google")).andReturn();
 
             // THEN: Should redirect to Google authorization
             assertThat(result.getResponse().getStatus())
@@ -227,12 +227,8 @@ class FederatedIdentityFlowTest extends AbstractPostgresContainerTest {
                     .as("Issuer URI should be configured")
                     .isNotNull()
                     .contains("localhost");
-            assertThat(authUri)
-                    .as("Authorization URI should be configured")
-                    .isNotNull();
-            assertThat(tokenUri)
-                    .as("Token URI should be configured")
-                    .isNotNull();
+            assertThat(authUri).as("Authorization URI should be configured").isNotNull();
+            assertThat(tokenUri).as("Token URI should be configured").isNotNull();
         }
     }
 
@@ -244,9 +240,7 @@ class FederatedIdentityFlowTest extends AbstractPostgresContainerTest {
         @DisplayName("GIVEN no existing user WHEN OAuth login completes THEN new user is created")
         void shouldCreateNewUserOnFirstLogin() {
             // GIVEN: No users exist
-            assertThat(userRepository.count())
-                    .as("No users should exist initially")
-                    .isZero();
+            assertThat(userRepository.count()).as("No users should exist initially").isZero();
 
             // This test documents the expected behavior
             // Full flow testing requires simulating the complete OAuth dance
@@ -313,7 +307,8 @@ class FederatedIdentityFlowTest extends AbstractPostgresContainerTest {
         }
 
         @Test
-        @DisplayName("GIVEN invalid state parameter WHEN processing callback THEN request is rejected")
+        @DisplayName(
+                "GIVEN invalid state parameter WHEN processing callback THEN request is rejected")
         void shouldRejectInvalidState() throws Exception {
             // GIVEN: Invalid state parameter
 
@@ -342,9 +337,7 @@ class FederatedIdentityFlowTest extends AbstractPostgresContainerTest {
             // GIVEN/WHEN: Checking mock server status
 
             // THEN: Mock server is available
-            assertThat(mockGitHub)
-                    .as("Mock GitHub server should be initialized")
-                    .isNotNull();
+            assertThat(mockGitHub).as("Mock GitHub server should be initialized").isNotNull();
             assertThat(mockGitHub.getBaseUrl())
                     .as("Mock GitHub base URL should be available")
                     .isNotNull()
@@ -357,9 +350,7 @@ class FederatedIdentityFlowTest extends AbstractPostgresContainerTest {
             // GIVEN/WHEN: Checking mock server status
 
             // THEN: Mock server is available
-            assertThat(mockGoogle)
-                    .as("Mock Google server should be initialized")
-                    .isNotNull();
+            assertThat(mockGoogle).as("Mock Google server should be initialized").isNotNull();
             assertThat(mockGoogle.getBaseUrl())
                     .as("Mock Google base URL should be available")
                     .isNotNull()

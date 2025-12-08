@@ -29,9 +29,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 /**
  * JUnit 5 extension that generates AI-agent-parseable test reports.
  *
- * <p>This reporter outputs structured JSON that helps AI agents understand test failures,
- * diagnose root causes, and suggest fixes. It captures context about what was tested, what failed,
- * and provides guidance for remediation.
+ * <p>This reporter outputs structured JSON that helps AI agents understand test failures, diagnose
+ * root causes, and suggest fixes. It captures context about what was tested, what failed, and
+ * provides guidance for remediation.
  *
  * <h2>Usage</h2>
  *
@@ -154,8 +154,8 @@ public class AiAgentTestReporter
     }
 
     /**
-     * Marks the current test as a regression test. Regression tests should not be modified
-     * to pass - the underlying issue should be fixed instead.
+     * Marks the current test as a regression test. Regression tests should not be modified to pass
+     * - the underlying issue should be fixed instead.
      *
      * @param isRegression true if this is a regression test
      */
@@ -249,9 +249,7 @@ public class AiAgentTestReporter
         } else if (message.contains("invalid_scope")) {
             fix.type = "CHECK_SCOPE_CONFIGURATION";
             fix.filesToReview =
-                    List.of(
-                            "RegisteredClient configuration",
-                            "TestOAuth2ClientConfiguration.java");
+                    List.of("RegisteredClient configuration", "TestOAuth2ClientConfiguration.java");
             fix.commonCauses =
                     List.of(
                             "Scope not configured for client",
@@ -260,9 +258,7 @@ public class AiAgentTestReporter
         } else if (tags.contains("pkce")) {
             fix.type = "CHECK_PKCE_CONFIGURATION";
             fix.filesToReview =
-                    List.of(
-                            "AuthorizationServerConfig.java",
-                            "RegisteredClient.clientSettings()");
+                    List.of("AuthorizationServerConfig.java", "RegisteredClient.clientSettings()");
             fix.commonCauses =
                     List.of(
                             "PKCE not required for public clients",
@@ -271,7 +267,8 @@ public class AiAgentTestReporter
         } else {
             fix.type = "GENERAL_INVESTIGATION";
             fix.filesToReview = List.of(context.getRequiredTestClass().getSimpleName() + ".java");
-            fix.commonCauses = List.of("Review test setup and assertions", "Check application logs");
+            fix.commonCauses =
+                    List.of("Review test setup and assertions", "Check application logs");
         }
 
         return fix;

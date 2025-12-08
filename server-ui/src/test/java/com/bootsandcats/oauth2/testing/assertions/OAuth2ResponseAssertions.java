@@ -73,7 +73,9 @@ public class OAuth2ResponseAssertions {
 
         ensureJsonParsed();
         Assertions.assertThat(json.has("access_token"))
-                .as("Token response should contain 'access_token'. Response: %s", truncate(body, 500))
+                .as(
+                        "Token response should contain 'access_token'. Response: %s",
+                        truncate(body, 500))
                 .isTrue();
         return this;
     }
@@ -151,7 +153,9 @@ public class OAuth2ResponseAssertions {
      */
     public OAuth2ResponseAssertions hasExpiresIn() {
         ensureJsonParsed();
-        Assertions.assertThat(json.has("expires_in")).as("Response should contain 'expires_in'").isTrue();
+        Assertions.assertThat(json.has("expires_in"))
+                .as("Response should contain 'expires_in'")
+                .isTrue();
         Assertions.assertThat(json.path("expires_in").asInt())
                 .as("expires_in should be positive")
                 .isGreaterThan(0);
@@ -192,8 +196,7 @@ public class OAuth2ResponseAssertions {
         String actualError = json.path("error").asText();
         Assertions.assertThat(actualError)
                 .as(
-                        "OAuth2 error should be '%s' but was '%s'. "
-                                + "Description: %s",
+                        "OAuth2 error should be '%s' but was '%s'. " + "Description: %s",
                         expectedError, actualError, json.path("error_description").asText())
                 .isEqualTo(expectedError);
         return this;
@@ -207,7 +210,9 @@ public class OAuth2ResponseAssertions {
      */
     public OAuth2ResponseAssertions isValidOAuth2Error() {
         ensureJsonParsed();
-        Assertions.assertThat(json.has("error")).as("Error response should contain 'error' field").isTrue();
+        Assertions.assertThat(json.has("error"))
+                .as("Error response should contain 'error' field")
+                .isTrue();
 
         String error = json.path("error").asText();
         Assertions.assertThat(VALID_OAUTH2_ERRORS)

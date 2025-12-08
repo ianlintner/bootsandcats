@@ -16,19 +16,20 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * <p>Usage: Extend this class and add @SpringBootTest with @ActiveProfiles("testcontainers")
  *
  * <p>AI-Agent Notes:
+ *
  * <ul>
- *   <li>Container startup takes ~5-10 seconds on first test</li>
- *   <li>Tests run against PostgreSQL 16-alpine for production parity</li>
- *   <li>Flyway migrations are applied programmatically before context loads</li>
- *   <li>Each test class gets a fresh database schema</li>
+ *   <li>Container startup takes ~5-10 seconds on first test
+ *   <li>Tests run against PostgreSQL 16-alpine for production parity
+ *   <li>Flyway migrations are applied programmatically before context loads
+ *   <li>Each test class gets a fresh database schema
  * </ul>
  */
 @Testcontainers
 public abstract class AbstractPostgresContainerTest {
 
     /**
-     * Shared PostgreSQL container using PostgreSQL 16 Alpine image.
-     * Matches production configuration for realistic testing.
+     * Shared PostgreSQL container using PostgreSQL 16 Alpine image. Matches production
+     * configuration for realistic testing.
      */
     @Container
     protected static final PostgreSQLContainer<?> postgresContainer =
@@ -39,9 +40,9 @@ public abstract class AbstractPostgresContainerTest {
                     .withReuse(true); // Enable container reuse between test runs
 
     /**
-     * Dynamically configures Spring datasource properties from the container.
-     * This ensures tests use the actual PostgreSQL container.
-     * Also runs Flyway migrations programmatically before the Spring context loads.
+     * Dynamically configures Spring datasource properties from the container. This ensures tests
+     * use the actual PostgreSQL container. Also runs Flyway migrations programmatically before the
+     * Spring context loads.
      */
     @DynamicPropertySource
     static void configurePostgresProperties(DynamicPropertyRegistry registry) {
@@ -61,7 +62,8 @@ public abstract class AbstractPostgresContainerTest {
         registry.add("spring.datasource.username", postgresContainer::getUsername);
         registry.add("spring.datasource.password", postgresContainer::getPassword);
         registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
-        registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.PostgreSQLDialect");
+        registry.add(
+                "spring.jpa.database-platform", () -> "org.hibernate.dialect.PostgreSQLDialect");
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
         // Disable Spring's Flyway since we migrate programmatically
         registry.add("spring.flyway.enabled", () -> "false");

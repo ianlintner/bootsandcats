@@ -99,8 +99,7 @@ class ClientCredentialsSadPathTest {
         AiAgentTestReporter.setRequestContext(
                 "/oauth2/token",
                 "POST",
-                java.util.Map.of(
-                        "grant_type", "client_credentials", "client_id", "m2m-client"));
+                java.util.Map.of("grant_type", "client_credentials", "client_id", "m2m-client"));
         AiAgentTestReporter.setExpectedOutcome("401 Unauthorized - invalid_client error");
 
         // When: Token request is made with wrong secret
@@ -159,8 +158,7 @@ class ClientCredentialsSadPathTest {
                 result.getResponse().getStatus(), result.getResponse().getContentAsString());
 
         OAuth2ResponseAssertions.assertThat(
-                        result.getResponse().getStatus(),
-                        result.getResponse().getContentAsString())
+                        result.getResponse().getStatus(), result.getResponse().getContentAsString())
                 .isUnauthorized();
     }
 
@@ -215,11 +213,8 @@ class ClientCredentialsSadPathTest {
     void invalidGrantType_shouldReturnError() throws Exception {
         // Given: Request with invalid grant_type
         AiAgentTestReporter.setRequestContext(
-                "/oauth2/token",
-                "POST",
-                java.util.Map.of("grant_type", "invalid_grant_type"));
-        AiAgentTestReporter.setExpectedOutcome(
-                "400 Bad Request with unsupported_grant_type error");
+                "/oauth2/token", "POST", java.util.Map.of("grant_type", "invalid_grant_type"));
+        AiAgentTestReporter.setExpectedOutcome("400 Bad Request with unsupported_grant_type error");
 
         // When: Token request is made with invalid grant_type
         MvcResult result =
@@ -315,9 +310,7 @@ class ClientCredentialsSadPathTest {
 
         int status = result.getResponse().getStatus();
         org.assertj.core.api.Assertions.assertThat(status)
-                .as(
-                        "Introspection without auth should be rejected (401 or 302). Got: %d",
-                        status)
+                .as("Introspection without auth should be rejected (401 or 302). Got: %d", status)
                 .isIn(401, 302, 303);
     }
 

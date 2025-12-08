@@ -131,7 +131,9 @@ public class TokenAssertions {
         hasClaim(claimName);
         String actualValue = payload.path(claimName).asText();
         Assertions.assertThat(actualValue)
-                .as("JWT claim '%s' should be '%s' but was '%s'", claimName, expectedValue, actualValue)
+                .as(
+                        "JWT claim '%s' should be '%s' but was '%s'",
+                        claimName, expectedValue, actualValue)
                 .isEqualTo(expectedValue);
         return this;
     }
@@ -207,7 +209,9 @@ public class TokenAssertions {
                     .isTrue();
         } else {
             Assertions.assertThat(audNode.asText())
-                    .as("JWT audience should be '%s' but was '%s'", expectedAudience, audNode.asText())
+                    .as(
+                            "JWT audience should be '%s' but was '%s'",
+                            expectedAudience, audNode.asText())
                     .isEqualTo(expectedAudience);
         }
         return this;

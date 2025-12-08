@@ -3,7 +3,6 @@ package com.bootsandcats.oauth2.behavioral.security;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -332,7 +331,8 @@ class SecurityRegressionTest {
         @Test
         @DisplayName("SEC-R-030: Error responses do not leak internal details")
         void errorResponse_shouldNotLeakInternalDetails() throws Exception {
-            AiAgentTestReporter.setExpectedOutcome("Error response without stack traces or internals");
+            AiAgentTestReporter.setExpectedOutcome(
+                    "Error response without stack traces or internals");
             AiAgentTestReporter.setRegressionIndicator(true);
 
             String credentials = "m2m-client:wrong-secret";
@@ -378,9 +378,7 @@ class SecurityRegressionTest {
             AiAgentTestReporter.setRegressionIndicator(true);
 
             MvcResult result =
-                    mockMvc.perform(get("/oauth2/jwks"))
-                            .andExpect(status().isOk())
-                            .andReturn();
+                    mockMvc.perform(get("/oauth2/jwks")).andExpect(status().isOk()).andReturn();
 
             String body = result.getResponse().getContentAsString();
 
@@ -436,8 +434,7 @@ class SecurityRegressionTest {
         @Test
         @DisplayName("SEC-R-041: Token endpoint requires correct content type")
         void tokenEndpoint_shouldRequireCorrectContentType() throws Exception {
-            AiAgentTestReporter.setExpectedOutcome(
-                    "4xx error for unsupported media type");
+            AiAgentTestReporter.setExpectedOutcome("4xx error for unsupported media type");
             AiAgentTestReporter.setRegressionIndicator(true);
 
             String credentials = "m2m-client:m2m-secret";
@@ -457,9 +454,7 @@ class SecurityRegressionTest {
 
             // Should be either 415 Unsupported Media Type or 400 Bad Request
             int status = result.getResponse().getStatus();
-            assertThat(status)
-                    .as("Token endpoint should reject JSON content type")
-                    .isIn(400, 415);
+            assertThat(status).as("Token endpoint should reject JSON content type").isIn(400, 415);
         }
     }
 
@@ -480,8 +475,7 @@ class SecurityRegressionTest {
             AiAgentTestReporter.setExpectedOutcome("200 OK without authentication");
             AiAgentTestReporter.setRegressionIndicator(true);
 
-            mockMvc.perform(get("/.well-known/openid-configuration"))
-                    .andExpect(status().isOk());
+            mockMvc.perform(get("/.well-known/openid-configuration")).andExpect(status().isOk());
         }
 
         /**

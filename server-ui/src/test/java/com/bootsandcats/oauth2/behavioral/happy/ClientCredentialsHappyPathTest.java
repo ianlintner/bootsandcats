@@ -219,8 +219,7 @@ class ClientCredentialsHappyPathTest {
     @DisplayName("CC-HP-004: Token should be valid JWT with ES256")
     void issuedToken_shouldBeValidJwtWithEs256() throws Exception {
         // Given: Valid token request
-        AiAgentTestReporter.setExpectedOutcome(
-                "JWT token with 3 parts, ES256 algorithm in header");
+        AiAgentTestReporter.setExpectedOutcome("JWT token with 3 parts, ES256 algorithm in header");
 
         // When: Token is issued
         MvcResult result =
@@ -264,8 +263,7 @@ class ClientCredentialsHappyPathTest {
     @DisplayName("CC-HP-005: JWKS endpoint should return valid EC keys")
     void jwksEndpoint_shouldReturnValidEcKeys() throws Exception {
         // Given: Authorization server is running
-        AiAgentTestReporter.setExpectedOutcome(
-                "JWKS with EC keys including kid, kty, crv, x, y");
+        AiAgentTestReporter.setExpectedOutcome("JWKS with EC keys including kid, kty, crv, x, y");
 
         // When: JWKS endpoint is accessed
         MvcResult result =

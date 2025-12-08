@@ -7,11 +7,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -223,8 +223,7 @@ class TokenOperationsHappyPathTest {
     @DisplayName("TK-HP-004: Access token contains expected JWT claims")
     void accessToken_shouldContainExpectedClaims() throws Exception {
         // Given: Valid token request
-        AiAgentTestReporter.setExpectedOutcome(
-                "JWT with sub, iss, exp, iat, scope claims");
+        AiAgentTestReporter.setExpectedOutcome("JWT with sub, iss, exp, iat, scope claims");
 
         // When: Token is issued
         String accessToken = obtainAccessToken("api:read");
@@ -313,9 +312,7 @@ class TokenOperationsHappyPathTest {
                 .isActiveToken();
     }
 
-    /**
-     * Helper method to obtain an access token for testing.
-     */
+    /** Helper method to obtain an access token for testing. */
     private String obtainAccessToken(String scope) throws Exception {
         MvcResult result =
                 mockMvc.perform(
@@ -328,8 +325,7 @@ class TokenOperationsHappyPathTest {
                         .andReturn();
 
         return OAuth2ResponseAssertions.assertThat(
-                        result.getResponse().getStatus(),
-                        result.getResponse().getContentAsString())
+                        result.getResponse().getStatus(), result.getResponse().getContentAsString())
                 .getAccessToken();
     }
 }

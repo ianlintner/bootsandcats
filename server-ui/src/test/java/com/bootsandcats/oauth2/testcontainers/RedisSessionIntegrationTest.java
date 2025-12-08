@@ -23,10 +23,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.bootsandcats.oauth2.config.TestKeyManagementConfig;
-import com.bootsandcats.oauth2.config.TestOAuth2ClientConfiguration;
-import com.bootsandcats.oauth2.config.TestObjectMapperConfig;
-import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -42,6 +38,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+
+import com.bootsandcats.oauth2.config.TestKeyManagementConfig;
+import com.bootsandcats.oauth2.config.TestOAuth2ClientConfiguration;
+import com.bootsandcats.oauth2.config.TestObjectMapperConfig;
+
+import jakarta.servlet.http.Cookie;
 
 /**
  * Integration tests for Redis session management using Testcontainers.
@@ -59,7 +61,11 @@ import org.springframework.web.context.WebApplicationContext;
  */
 @SpringBootTest
 @ActiveProfiles({"test", "testcontainers-redis"})
-@Import({TestOAuth2ClientConfiguration.class, TestKeyManagementConfig.class, TestObjectMapperConfig.class})
+@Import({
+    TestOAuth2ClientConfiguration.class,
+    TestKeyManagementConfig.class,
+    TestObjectMapperConfig.class
+})
 @Tag("testcontainers")
 @Tag("redis")
 @DisplayName("Redis Session Integration Tests")
@@ -82,7 +88,8 @@ class RedisSessionIntegrationTest extends AbstractRedisContainerTest {
     class SessionCreation {
 
         @Test
-        @DisplayName("GIVEN unauthenticated request WHEN accessing protected endpoint THEN session is created")
+        @DisplayName(
+                "GIVEN unauthenticated request WHEN accessing protected endpoint THEN session is created")
         void shouldCreateSessionOnProtectedEndpointAccess() throws Exception {
             // GIVEN: Unauthenticated request
 
@@ -105,7 +112,8 @@ class RedisSessionIntegrationTest extends AbstractRedisContainerTest {
         @DisplayName("GIVEN login page request WHEN accessing THEN session attributes are stored")
         void shouldStoreSessionAttributesOnLogin() throws Exception {
             // GIVEN/WHEN: Accessing login page
-            MvcResult result = mockMvc.perform(get("/login")).andExpect(status().isOk()).andReturn();
+            MvcResult result =
+                    mockMvc.perform(get("/login")).andExpect(status().isOk()).andReturn();
 
             // THEN: Session is available
             MockHttpSession session = (MockHttpSession) result.getRequest().getSession(false);
@@ -123,7 +131,8 @@ class RedisSessionIntegrationTest extends AbstractRedisContainerTest {
     class SessionPersistence {
 
         @Test
-        @DisplayName("GIVEN active session WHEN making subsequent request THEN session is maintained")
+        @DisplayName(
+                "GIVEN active session WHEN making subsequent request THEN session is maintained")
         void shouldMaintainSessionAcrossRequests() throws Exception {
             // GIVEN: Initial request creates session
             MvcResult firstResult =
@@ -177,7 +186,8 @@ class RedisSessionIntegrationTest extends AbstractRedisContainerTest {
     class SessionSecurity {
 
         @Test
-        @DisplayName("GIVEN CSRF protected endpoint WHEN request without CSRF THEN request is rejected or redirected")
+        @DisplayName(
+                "GIVEN CSRF protected endpoint WHEN request without CSRF THEN request is rejected or redirected")
         void shouldRejectRequestWithoutCsrf() throws Exception {
             // GIVEN: CSRF protected endpoint
 
@@ -235,16 +245,9 @@ class RedisSessionIntegrationTest extends AbstractRedisContainerTest {
             Integer port = redisContainer.getFirstMappedPort();
 
             // THEN: Redis is accessible
-            assertThat(isRunning)
-                    .as("Redis container should be running")
-                    .isTrue();
-            assertThat(host)
-                    .as("Redis host should be available")
-                    .isNotNull();
-            assertThat(port)
-                    .as("Redis port should be mapped")
-                    .isNotNull()
-                    .isPositive();
+            assertThat(isRunning).as("Redis container should be running").isTrue();
+            assertThat(host).as("Redis host should be available").isNotNull();
+            assertThat(port).as("Redis port should be mapped").isNotNull().isPositive();
         }
 
         @Test
@@ -260,12 +263,8 @@ class RedisSessionIntegrationTest extends AbstractRedisContainerTest {
                 Boolean deleted = redisTemplate.delete(key);
 
                 // THEN: Operations succeed
-                assertThat(value)
-                        .as("Redis GET should return stored value")
-                        .isEqualTo("healthy");
-                assertThat(deleted)
-                        .as("Redis DELETE should succeed")
-                        .isTrue();
+                assertThat(value).as("Redis GET should return stored value").isEqualTo("healthy");
+                assertThat(deleted).as("Redis DELETE should succeed").isTrue();
             }
         }
     }

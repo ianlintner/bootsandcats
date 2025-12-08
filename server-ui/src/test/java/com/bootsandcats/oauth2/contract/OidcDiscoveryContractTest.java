@@ -31,8 +31,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * Contract tests for OIDC Discovery document compliance.
  *
- * <p>These tests verify that the authorization server's OpenID Connect Discovery document
- * complies with the OpenID Connect Discovery 1.0 specification.
+ * <p>These tests verify that the authorization server's OpenID Connect Discovery document complies
+ * with the OpenID Connect Discovery 1.0 specification.
  *
  * <h2>Specification Reference</h2>
  *
@@ -262,7 +262,8 @@ class OidcDiscoveryContractTest {
     @DisplayName("OD-C-005: id_token_signing_alg_values_supported includes ES256")
     void idTokenSigningAlgValuesSupported_shouldIncludeEs256() throws Exception {
         // Given: Discovery document
-        AiAgentTestReporter.setExpectedOutcome("id_token_signing_alg_values_supported includes ES256");
+        AiAgentTestReporter.setExpectedOutcome(
+                "id_token_signing_alg_values_supported includes ES256");
 
         // When: Discovery document is retrieved
         MvcResult result =
@@ -448,8 +449,7 @@ class OidcDiscoveryContractTest {
     @DisplayName("OD-C-010: code_challenge_methods_supported includes S256")
     void codeChallengeMethodsSupported_shouldIncludeS256() throws Exception {
         // Given: Discovery document
-        AiAgentTestReporter.setExpectedOutcome(
-                "code_challenge_methods_supported includes 'S256'");
+        AiAgentTestReporter.setExpectedOutcome("code_challenge_methods_supported includes 'S256'");
 
         // When: Discovery document is retrieved
         MvcResult result =
