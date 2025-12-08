@@ -50,7 +50,7 @@ import org.springframework.transaction.annotation.Transactional;
  * </ul>
  */
 @SpringBootTest
-@ActiveProfiles("testcontainers")
+@ActiveProfiles({"test", "testcontainers"})
 @Import({TestOAuth2ClientConfiguration.class, TestKeyManagementConfig.class})
 @Tag("testcontainers")
 @Tag("postgres")
