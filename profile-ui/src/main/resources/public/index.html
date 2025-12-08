@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Profile UI · Boots & Cats</title>
-    <!-- Portfolio theme (from npm) served via unpkg -->
     <link rel="stylesheet" href="https://unpkg.com/@ianlintner/theme@0.1.0/dist/styles.css" />
     <style>
       body {
@@ -15,10 +14,113 @@
         color: #e2e8f0;
         font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
+      .tab-btn { cursor: pointer; transition: all 0.2s; }
+      .tab-btn.active { background: rgba(99, 102, 241, 0.2); color: #c7d2fe; border-color: rgba(99, 102, 241, 0.5); }
+      .tab-content { display: none; }
+      .tab-content.active { display: block; }
+      .form-input {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        color: #e2e8f0;
+        width: 100%;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      .form-input:focus {
+        outline: none;
+        border-color: rgba(99, 102, 241, 0.5);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+      }
+      .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #94a3b8;
+        margin-bottom: 0.5rem;
+      }
+      .btn-primary {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+      .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3); }
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: #e2e8f0;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .btn-secondary:hover { background: rgba(255, 255, 255, 0.15); }
+      .btn-danger {
+        background: rgba(239, 68, 68, 0.2);
+        color: #fca5a5;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .btn-danger:hover { background: rgba(239, 68, 68, 0.3); }
+      .card {
+        background: rgba(15, 23, 42, 0.7);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+      }
+      .profile-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1, #ec4899);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 700;
+        color: white;
+      }
+      .loading-spinner {
+        border: 3px solid rgba(255, 255, 255, 0.1);
+        border-top-color: #6366f1;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .alert {
+        padding: 1rem;
+        border-radius: 0.75rem;
+        margin-bottom: 1rem;
+      }
+      .alert-error { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; }
+      .alert-success { background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); color: #86efac; }
+      .hidden { display: none !important; }
+      .admin-table { width: 100%; border-collapse: collapse; }
+      .admin-table th, .admin-table td {
+        padding: 0.75rem 1rem;
+        text-align: left;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      .admin-table th { color: #94a3b8; font-weight: 600; font-size: 0.875rem; }
+      .admin-table tr:hover { background: rgba(255, 255, 255, 0.02); }
     </style>
   </head>
   <body class="antialiased">
-    <main class="mx-auto flex min-h-screen max-w-5xl flex-col gap-12 px-6 py-16 lg:px-12">
+    <main class="mx-auto flex min-h-screen max-w-5xl flex-col gap-8 px-6 py-12 lg:px-12">
+      <!-- Header -->
       <header class="flex items-center justify-between">
         <div class="flex items-center gap-3">
           <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-600/20 text-primary-200 ring-1 ring-primary-500/50">
@@ -29,90 +131,298 @@
             <p class="text-sm text-slate-400">Boots &amp; Cats Authorization Server</p>
           </div>
         </div>
-        <a
-          id="login-action"
-          href="#"
-          class="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-200 ring-1 ring-emerald-500/40 transition hover:bg-emerald-500/20"
-        >
-          <span class="h-2 w-2 rounded-full bg-emerald-300"></span>
-          Checking session…
-        </a>
+        <div class="flex items-center gap-4">
+          <span id="auth-status" class="inline-flex items-center gap-2 rounded-full bg-slate-800 px-4 py-2 text-sm text-slate-400">
+            <span class="loading-spinner"></span>
+            Checking session…
+          </span>
+          <button id="logout-btn" class="hidden rounded-lg bg-white/10 px-4 py-2 text-sm font-semibold text-slate-100 ring-1 ring-white/15 transition hover:bg-white/20">
+            Logout
+          </button>
+        </div>
       </header>
 
-      <section class="grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
-        <div class="space-y-6 rounded-2xl bg-slate-900/70 p-8 shadow-2xl ring-1 ring-white/5 backdrop-blur">
-          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-primary-200/80">Portfolio Theme</p>
-          <h1 class="text-3xl font-bold text-white sm:text-4xl">Welcome to the Profile UI</h1>
-          <p class="max-w-2xl text-base leading-relaxed text-slate-300">
-            This UI is styled with the <span class="font-semibold text-primary-100">@ianlintner/theme</span> portfolio theme. If you are not signed in, you will be
-            redirected to the OAuth2 Authorization Server to log in. After sign-in, your profile attributes and ID token claims appear below.
+      <!-- Not Logged In State -->
+      <section id="login-section" class="hidden">
+        <div class="card text-center py-16">
+          <h1 class="text-3xl font-bold text-white mb-4">Welcome to Profile Manager</h1>
+          <p class="text-slate-400 mb-8 max-w-md mx-auto">
+            Sign in with your OAuth2 account to view and manage your profile information.
           </p>
-
-          <div class="flex flex-wrap gap-4">
-            <button
-              id="cta-login"
-              class="group inline-flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-3 text-base font-semibold text-white shadow-lg shadow-primary-500/30 transition hover:-translate-y-0.5 hover:bg-primary-400"
-            >
-              <span>Login via Authorization Server</span>
-              <span aria-hidden="true" class="transition group-hover:translate-x-0.5">→</span>
-            </button>
-            <a
-              href="/actuator/info"
-              class="inline-flex items-center gap-2 rounded-xl bg-white/5 px-5 py-3 text-base font-semibold text-slate-100 ring-1 ring-white/10 transition hover:bg-white/10"
-            >
-              <span>Service info</span>
-            </a>
-          </div>
-        </div>
-
-        <div class="grid gap-4">
-          <article class="rounded-2xl bg-white/5 p-6 ring-1 ring-white/10 backdrop-blur">
-            <div class="flex items-center gap-3">
-              <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary-500/20 text-primary-100 ring-1 ring-primary-400/40">01</div>
-              <div>
-                <p class="text-sm font-semibold text-white">Start authentication</p>
-                <p class="text-sm text-slate-300">Click “Login via Authorization Server” to launch the OAuth2 Authorization Code flow.</p>
-              </div>
-            </div>
-          </article>
-          <article class="rounded-2xl bg-white/5 p-6 ring-1 ring-white/10 backdrop-blur">
-            <div class="flex items-center gap-3">
-              <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary-500/20 text-primary-100 ring-1 ring-primary-400/40">02</div>
-              <div>
-                <p class="text-sm font-semibold text-white">Review your claims</p>
-                <p class="text-sm text-slate-300">After sign-in, the app will display your profile attributes, ID token, and granted scopes.</p>
-              </div>
-            </div>
-          </article>
-          <article class="rounded-2xl bg-white/5 p-6 ring-1 ring-white/10 backdrop-blur">
-            <div class="flex items-center gap-3">
-              <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary-500/20 text-primary-100 ring-1 ring-primary-400/40">03</div>
-              <div>
-                <p class="text-sm font-semibold text-white">Sign out securely</p>
-                <p class="text-sm text-slate-300">Use the logout control to end your session and clear tokens from the browser.</p>
-              </div>
-            </div>
-          </article>
-
-          <article class="rounded-2xl bg-white/5 p-6 ring-1 ring-white/10 backdrop-blur">
-            <div class="flex items-center justify-between gap-3">
-              <div>
-                <p class="text-sm font-semibold text-white">Authenticated user</p>
-                <p id="user-name" class="text-sm text-slate-300">Fetching profile…</p>
-              </div>
-              <button
-                id="cta-logout"
-                class="rounded-lg bg-white/10 px-3 py-2 text-xs font-semibold text-slate-100 ring-1 ring-white/15 transition hover:bg-white/20"
-              >
-                Logout
-              </button>
-            </div>
-            <div class="mt-4 grid gap-2 text-sm text-slate-200" id="user-claims"></div>
-          </article>
+          <button id="login-btn" class="btn-primary">
+            Login via Authorization Server →
+          </button>
         </div>
       </section>
 
-      <footer class="flex flex-col gap-3 border-t border-white/5 pt-8 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+      <!-- Logged In State -->
+      <section id="profile-section" class="hidden">
+        <!-- Tabs -->
+        <div class="flex gap-2 mb-6" id="tab-container">
+          <button class="tab-btn active rounded-lg px-4 py-2 text-sm font-semibold ring-1 ring-white/10" data-tab="my-profile">
+            My Profile
+          </button>
+          <button class="tab-btn hidden rounded-lg px-4 py-2 text-sm font-semibold ring-1 ring-white/10" data-tab="admin" id="admin-tab-btn">
+            Admin
+          </button>
+        </div>
+
+        <!-- Alert Container -->
+        <div id="alert-container"></div>
+
+        <!-- My Profile Tab -->
+        <div id="my-profile-tab" class="tab-content active">
+          <!-- No Profile State -->
+          <div id="no-profile-state" class="hidden card text-center py-16">
+            <div class="profile-avatar mx-auto mb-6">?</div>
+            <h2 class="text-2xl font-bold text-white mb-4">No Profile Found</h2>
+            <p class="text-slate-400 mb-8">
+              You haven't created a profile yet. Click below to set up your profile information.
+            </p>
+            <button id="create-profile-btn" class="btn-primary">
+              Create Your Profile
+            </button>
+          </div>
+
+          <!-- Profile View State -->
+          <div id="profile-view-state" class="hidden">
+            <div class="card">
+              <div class="flex items-start justify-between mb-6">
+                <div class="flex items-center gap-4">
+                  <div class="profile-avatar" id="profile-avatar">?</div>
+                  <div>
+                    <h2 class="text-2xl font-bold text-white" id="profile-display-name">Loading...</h2>
+                    <p class="text-slate-400" id="profile-email">-</p>
+                  </div>
+                </div>
+                <button id="edit-profile-btn" class="btn-secondary">Edit Profile</button>
+              </div>
+              
+              <div class="grid gap-6 md:grid-cols-2">
+                <div>
+                  <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wide mb-3">Personal Info</h3>
+                  <div class="space-y-3">
+                    <div class="flex justify-between">
+                      <span class="text-slate-400">First Name</span>
+                      <span class="text-white" id="view-firstName">-</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-slate-400">Last Name</span>
+                      <span class="text-white" id="view-lastName">-</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-slate-400">Preferred Name</span>
+                      <span class="text-white" id="view-preferredName">-</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-slate-400">Phone</span>
+                      <span class="text-white" id="view-phoneNumber">-</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wide mb-3">Address</h3>
+                  <div id="view-address" class="text-white">-</div>
+                </div>
+                
+                <div class="md:col-span-2">
+                  <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wide mb-3">Bio</h3>
+                  <p class="text-white" id="view-bio">-</p>
+                </div>
+                
+                <div class="md:col-span-2">
+                  <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wide mb-3">Social Media</h3>
+                  <div class="flex flex-wrap gap-3" id="view-socialMedia">-</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Profile Edit State -->
+          <div id="profile-edit-state" class="hidden">
+            <form id="profile-form" class="card">
+              <h2 class="text-xl font-bold text-white mb-6" id="form-title">Edit Profile</h2>
+              
+              <div class="grid gap-6 md:grid-cols-2">
+                <div>
+                  <label class="form-label" for="firstName">First Name *</label>
+                  <input type="text" id="firstName" name="firstName" class="form-input" required maxlength="100">
+                </div>
+                <div>
+                  <label class="form-label" for="lastName">Last Name *</label>
+                  <input type="text" id="lastName" name="lastName" class="form-input" required maxlength="100">
+                </div>
+                <div>
+                  <label class="form-label" for="preferredName">Preferred Name</label>
+                  <input type="text" id="preferredName" name="preferredName" class="form-input" maxlength="100">
+                </div>
+                <div>
+                  <label class="form-label" for="email">Email *</label>
+                  <input type="email" id="email" name="email" class="form-input" required>
+                </div>
+                <div>
+                  <label class="form-label" for="phoneNumber">Phone Number</label>
+                  <input type="tel" id="phoneNumber" name="phoneNumber" class="form-input" maxlength="20">
+                </div>
+                <div>
+                  <label class="form-label" for="pictureUrl">Profile Picture URL</label>
+                  <input type="url" id="pictureUrl" name="pictureUrl" class="form-input">
+                </div>
+                <div class="md:col-span-2">
+                  <label class="form-label" for="bio">Bio</label>
+                  <textarea id="bio" name="bio" class="form-input" rows="3" maxlength="500"></textarea>
+                </div>
+                
+                <div class="md:col-span-2">
+                  <h3 class="text-lg font-semibold text-white mb-4">Address</h3>
+                  <div class="grid gap-4 md:grid-cols-2">
+                    <div class="md:col-span-2">
+                      <label class="form-label" for="street">Street</label>
+                      <input type="text" id="street" name="street" class="form-input" maxlength="200">
+                    </div>
+                    <div>
+                      <label class="form-label" for="city">City</label>
+                      <input type="text" id="city" name="city" class="form-input" maxlength="100">
+                    </div>
+                    <div>
+                      <label class="form-label" for="state">State/Province</label>
+                      <input type="text" id="state" name="state" class="form-input" maxlength="100">
+                    </div>
+                    <div>
+                      <label class="form-label" for="postalCode">Postal Code</label>
+                      <input type="text" id="postalCode" name="postalCode" class="form-input" maxlength="20">
+                    </div>
+                    <div>
+                      <label class="form-label" for="country">Country</label>
+                      <input type="text" id="country" name="country" class="form-input" maxlength="100">
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="md:col-span-2">
+                  <h3 class="text-lg font-semibold text-white mb-4">Social Media</h3>
+                  <div class="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label class="form-label" for="twitter">Twitter/X</label>
+                      <input type="text" id="twitter" name="twitter" class="form-input" placeholder="@username">
+                    </div>
+                    <div>
+                      <label class="form-label" for="linkedin">LinkedIn</label>
+                      <input type="url" id="linkedin" name="linkedin" class="form-input" placeholder="https://linkedin.com/in/...">
+                    </div>
+                    <div>
+                      <label class="form-label" for="github">GitHub</label>
+                      <input type="text" id="github" name="github" class="form-input" placeholder="username">
+                    </div>
+                    <div>
+                      <label class="form-label" for="website">Website</label>
+                      <input type="url" id="website" name="website" class="form-input" placeholder="https://...">
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="flex justify-between items-center mt-8 pt-6 border-t border-white/10">
+                <button type="button" id="delete-profile-btn" class="btn-danger hidden">Delete Profile</button>
+                <div class="flex gap-3 ml-auto">
+                  <button type="button" id="cancel-edit-btn" class="btn-secondary">Cancel</button>
+                  <button type="submit" class="btn-primary">Save Profile</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Admin Tab -->
+        <div id="admin-tab" class="tab-content">
+          <div class="card">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-xl font-bold text-white">Manage Profiles</h2>
+              <div class="flex gap-3">
+                <input type="text" id="admin-search" class="form-input" style="width: 250px" placeholder="Search profiles...">
+                <button id="admin-search-btn" class="btn-secondary">Search</button>
+              </div>
+            </div>
+            
+            <div id="admin-loading" class="text-center py-8">
+              <div class="loading-spinner mx-auto mb-4"></div>
+              <p class="text-slate-400">Loading profiles...</p>
+            </div>
+            
+            <div id="admin-profiles-container" class="hidden">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-profiles-list"></tbody>
+              </table>
+              
+              <div class="flex items-center justify-between mt-4 pt-4 border-t border-white/10">
+                <span class="text-sm text-slate-400" id="admin-pagination-info">Showing 0 profiles</span>
+                <div class="flex gap-2">
+                  <button id="admin-prev-btn" class="btn-secondary" disabled>Previous</button>
+                  <button id="admin-next-btn" class="btn-secondary" disabled>Next</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Admin Edit Modal -->
+          <div id="admin-edit-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div class="card w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-bold text-white">Edit User Profile</h2>
+                <button id="close-admin-modal" class="text-slate-400 hover:text-white text-2xl">&times;</button>
+              </div>
+              <form id="admin-profile-form">
+                <input type="hidden" id="admin-edit-id">
+                <div class="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label class="form-label">First Name *</label>
+                    <input type="text" id="admin-firstName" class="form-input" required>
+                  </div>
+                  <div>
+                    <label class="form-label">Last Name *</label>
+                    <input type="text" id="admin-lastName" class="form-input" required>
+                  </div>
+                  <div>
+                    <label class="form-label">Preferred Name</label>
+                    <input type="text" id="admin-preferredName" class="form-input">
+                  </div>
+                  <div>
+                    <label class="form-label">Email *</label>
+                    <input type="email" id="admin-email" class="form-input" required>
+                  </div>
+                  <div>
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" id="admin-phoneNumber" class="form-input">
+                  </div>
+                  <div>
+                    <label class="form-label">Picture URL</label>
+                    <input type="url" id="admin-pictureUrl" class="form-input">
+                  </div>
+                  <div class="md:col-span-2">
+                    <label class="form-label">Bio</label>
+                    <textarea id="admin-bio" class="form-input" rows="2"></textarea>
+                  </div>
+                </div>
+                <div class="flex justify-end gap-3 mt-6">
+                  <button type="button" id="admin-delete-btn" class="btn-danger">Delete</button>
+                  <button type="submit" class="btn-primary">Save Changes</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="mt-auto flex flex-col gap-3 border-t border-white/5 pt-8 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between">
         <p class="text-slate-300">Powered by Boots &amp; Cats · Micronaut</p>
         <div class="flex flex-wrap gap-3">
           <a class="hover:text-primary-100" href="/actuator/health">Health</a>
@@ -121,64 +431,6 @@
         </div>
       </footer>
     </main>
-    <script>
-      const loginPath = "/oauth/login/oauth2server";
-      const logoutPath = "/logout";
-
-      const loginButton = document.getElementById("cta-login");
-      const loginAction = document.getElementById("login-action");
-      const logoutButton = document.getElementById("cta-logout");
-      const userNameEl = document.getElementById("user-name");
-      const userClaimsEl = document.getElementById("user-claims");
-
-      function redirectToLogin() {
-        window.location.href = loginPath;
-      }
-
-      loginButton.addEventListener("click", redirectToLogin);
-      loginAction.addEventListener("click", redirectToLogin);
-
-      logoutButton.addEventListener("click", () => {
-        window.location.href = logoutPath;
-      });
-
-      async function loadProfile() {
-        try {
-          const response = await fetch("/api/me", { credentials: "include" });
-
-          if (response.status === 401 || response.status === 403) {
-            loginAction.innerText = "Redirecting to login…";
-            redirectToLogin();
-            return;
-          }
-
-          if (!response.ok) {
-            loginAction.innerText = "Unable to load session";
-            return;
-          }
-
-          const data = await response.json();
-          loginAction.innerText = "Signed in";
-          loginAction.classList.remove("bg-emerald-500/10");
-          loginAction.classList.add("bg-primary-500/15", "text-primary-100", "ring-primary-500/30");
-
-          userNameEl.innerText = data.name || "Authenticated";
-          userClaimsEl.innerHTML = "";
-
-          const claims = data.attributes || {};
-          Object.keys(claims).forEach((key) => {
-            const value = claims[key];
-            const item = document.createElement("div");
-            item.className = "flex items-start justify-between gap-3 rounded-lg bg-white/5 px-3 py-2";
-            item.innerHTML = `<span class="text-slate-300">${key}</span><span class="text-slate-100 text-right">${typeof value === "object" ? JSON.stringify(value) : value}</span>`;
-            userClaimsEl.appendChild(item);
-          });
-        } catch (e) {
-          loginAction.innerText = "Session check failed";
-        }
-      }
-
-      loadProfile();
-    </script>
+    <script src="profile-app.js"></script>
   </body>
 </html>
