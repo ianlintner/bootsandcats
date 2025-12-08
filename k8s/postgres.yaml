@@ -55,6 +55,14 @@ spec:
   # Primary update strategy
   primaryUpdateStrategy: unsupervised
 
+  # Enable Istio sidecar injection for PostgreSQL pods
+  inheritedMetadata:
+    annotations:
+      sidecar.istio.io/inject: "true"
+      # Exclude PostgreSQL port from Istio traffic interception for direct DB connections
+      traffic.sidecar.istio.io/excludeInboundPorts: "5432"
+      traffic.sidecar.istio.io/excludeOutboundPorts: "5432"
+
   # Bootstrap from scratch with initial database
   bootstrap:
     initdb:

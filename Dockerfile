@@ -122,8 +122,6 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
     -XX:+UseStringDeduplication \
     -XX:MaxRAMPercentage=45.0 \
     -XX:InitialRAMPercentage=15.0 \
-    -XX:MaxMetaspaceSize=128m \
-    -XX:MaxDirectMemorySize=128m \
     -XX:+ExitOnOutOfMemoryError \
     -Djava.security.egd=file:/dev/./urandom"
 

@@ -1,0 +1,113 @@
+# Istio Authorization Policies for the default namespace
+# Allows all traffic within the namespace (service mesh)
+
+---
+# Allow all traffic from workloads within the default namespace
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-intra-namespace
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    project: bootsandcats
+spec:
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        namespaces:
+        - default
+
+---
+# Allow traffic from Istio ingress gateway (external traffic)
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-istio-ingress
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    project: bootsandcats
+spec:
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        namespaces:
+        - aks-istio-ingress
+
+---
+# Allow health checks and probes (unauthenticated)
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-health-checks
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    project: bootsandcats
+spec:
+  action: ALLOW
+  rules:
+  - to:
+    - operation:
+        paths:
+        - "/actuator/health/*"
+        - "/actuator/health"
+        - "/health"
+        - "/healthz"
+        - "/ready"
+        - "/readyz"
+        - "/livez"
+
+---
+# Specific policy for oauth2-server to access Redis and Postgres
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: oauth2-server-backend-access
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    project: bootsandcats
+spec:
+  selector:
+    matchLabels:
+      app: redis
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals:
+        - cluster.local/ns/default/sa/default
+        - cluster.local/ns/default/sa/oauth2-server
+    to:
+    - operation:
+        ports:
+        - "6379"
+
+---
+# Allow oauth2-server to access PostgreSQL
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: postgres-access
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    project: bootsandcats
+spec:
+  selector:
+    matchLabels:
+      cnpg.io/cluster: postgres-ha
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        namespaces:
+        - default
+    to:
+    - operation:
+        ports:
+        - "5432"
