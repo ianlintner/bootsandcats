@@ -239,9 +239,63 @@ public class AuthorizationServerConfig {
         return (selector, securityContext) -> selector.select(jwkSetProvider.getJwkSet());
     }
 
+    /**
+     * Customizes JWT tokens with ES256 algorithm and role-based profile scopes.
+     *
+     * <p>This customizer adds profile scopes to the token based on the user's role:
+     * <ul>
+     *   <li>All authenticated users: profile:read, profile:write (for their own profile)</li>
+     *   <li>ADMIN role users: Additionally receive profile:admin scope</li>
+     * </ul>
+     *
+     * @return OAuth2TokenCustomizer for JWT encoding
+     */
     @Bean
     public OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer() {
-        return context -> context.getJwsHeader().algorithm(SignatureAlgorithm.ES256);
+        return context -> {
+            // Set ES256 algorithm for all tokens
+            context.getJwsHeader().algorithm(SignatureAlgorithm.ES256);
+
+            // Only customize access tokens
+            if (context.getTokenType().getValue().equals("access_token")) {
+                var principal = context.getPrincipal();
+                var claims = context.getClaims();
+
+                // Get existing scopes from the token
+                var existingScopes =
+                        new java.util.HashSet<>(
+                                claims.build().getClaimAsStringList("scope") != null
+                                        ? claims.build().getClaimAsStringList("scope")
+                                        : java.util.Collections.emptyList());
+
+                // Add profile:read and profile:write for all authenticated users
+                // This allows them to manage their own profile
+                existingScopes.add("profile:read");
+                existingScopes.add("profile:write");
+
+                // Check if user has ADMIN role and add profile:admin scope
+                if (principal != null && principal.getAuthorities() != null) {
+                    boolean isAdmin =
+                            principal.getAuthorities().stream()
+                                    .anyMatch(
+                                            auth ->
+                                                    auth.getAuthority().equals("ROLE_ADMIN")
+                                                            || auth.getAuthority()
+                                                                    .equals("SCOPE_admin"));
+                    if (isAdmin) {
+                        existingScopes.add("profile:admin");
+                        log.debug("Added profile:admin scope for admin user: {}", principal.getName());
+                    }
+                }
+
+                // Update the scope claim
+                claims.claim("scope", existingScopes);
+                log.debug(
+                        "JWT customized with scopes: {} for user: {}",
+                        existingScopes,
+                        principal != null ? principal.getName() : "unknown");
+            }
+        };
     }
 
     /**
