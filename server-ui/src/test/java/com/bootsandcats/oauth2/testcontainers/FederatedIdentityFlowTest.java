@@ -21,8 +21,8 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.bootsandcats.oauth2.config.TestFederatedIdentityConfiguration;
 import com.bootsandcats.oauth2.config.TestKeyManagementConfig;
-import com.bootsandcats.oauth2.config.TestOAuth2ClientConfiguration;
 import com.bootsandcats.oauth2.config.TestObjectMapperConfig;
 import com.bootsandcats.oauth2.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -58,7 +58,7 @@ import org.springframework.web.context.WebApplicationContext;
  */
 @SpringBootTest
 @ActiveProfiles({"test", "testcontainers-oauth"})
-@Import({TestOAuth2ClientConfiguration.class, TestKeyManagementConfig.class, TestObjectMapperConfig.class})
+@Import({TestFederatedIdentityConfiguration.class, TestKeyManagementConfig.class, TestObjectMapperConfig.class})
 @Tag("testcontainers")
 @Tag("oauth-flow")
 @DisplayName("Federated Identity Flow Tests")
