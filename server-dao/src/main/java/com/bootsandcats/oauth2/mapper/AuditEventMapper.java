@@ -3,9 +3,7 @@ package com.bootsandcats.oauth2.mapper;
 import com.bootsandcats.oauth2.dto.AuditEventSummary;
 import com.bootsandcats.oauth2.model.SecurityAuditEvent;
 
-/**
- * Mapper utility for converting entities to DTOs.
- */
+/** Mapper utility for converting entities to DTOs. */
 public final class AuditEventMapper {
 
     private AuditEventMapper() {
