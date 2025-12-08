@@ -63,6 +63,16 @@ tasks.named<Jar>("jar") {
     enabled = false
 }
 
+// Configure default test task to exclude testcontainers tests (run those separately)
+tasks.named<Test>("test") {
+    useJUnitPlatform {
+        excludeTags("testcontainers")
+    }
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
+}
+
 // Behavioral Test Tasks for AI-Agent-Friendly Testing
 tasks.register<Test>("behavioralTests") {
     description = "Runs behavioral tests (happy/sad paths)"
