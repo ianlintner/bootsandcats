@@ -56,7 +56,7 @@ import org.springframework.web.context.WebApplicationContext;
  * </ul>
  */
 @SpringBootTest
-@ActiveProfiles("testcontainers-oauth")
+@ActiveProfiles({"test", "testcontainers-oauth"})
 @Import({TestOAuth2ClientConfiguration.class, TestKeyManagementConfig.class})
 @Tag("testcontainers")
 @Tag("oauth-flow")

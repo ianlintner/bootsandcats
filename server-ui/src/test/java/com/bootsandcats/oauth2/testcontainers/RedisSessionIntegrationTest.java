@@ -57,7 +57,7 @@ import org.springframework.web.context.WebApplicationContext;
  * </ul>
  */
 @SpringBootTest
-@ActiveProfiles("testcontainers-redis")
+@ActiveProfiles({"test", "testcontainers-redis"})
 @Import({TestOAuth2ClientConfiguration.class, TestKeyManagementConfig.class})
 @Tag("testcontainers")
 @Tag("redis")
