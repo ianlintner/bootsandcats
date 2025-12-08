@@ -363,3 +363,16 @@
 .auth-shell.home-shell {
     max-width: 900px;
 }
+
+/* JWT raw container spacing */
+.jwt-raw-container {
+    margin-top: 1.5rem;
+}
+
+/* JWT container h4 styling */
+.jwt-container h4 {
+    margin: 0 0 0.75rem 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: hsl(var(--foreground));
+}
