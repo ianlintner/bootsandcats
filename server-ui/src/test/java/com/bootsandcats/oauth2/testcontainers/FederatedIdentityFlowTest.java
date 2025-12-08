@@ -53,7 +53,6 @@ import org.springframework.web.context.WebApplicationContext;
  * </ul>
  */
 @SpringBootTest
-@AutoConfigureMockMvc
 @ActiveProfiles("testcontainers-oauth")
 @Tag("testcontainers")
 @Tag("oauth-flow")
@@ -63,7 +62,9 @@ class FederatedIdentityFlowTest extends AbstractPostgresContainerTest {
     private static MockGitHubOAuthServer mockGitHub;
     private static MockGoogleOidcServer mockGoogle;
 
-    @Autowired private MockMvc mockMvc;
+    @Autowired private WebApplicationContext context;
+
+    private MockMvc mockMvc;
 
     @Autowired private UserRepository userRepository;
 
