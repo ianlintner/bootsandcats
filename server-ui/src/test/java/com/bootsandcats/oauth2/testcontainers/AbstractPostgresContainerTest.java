@@ -26,8 +26,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 public abstract class AbstractPostgresContainerTest {
 
-    private static boolean migrated = false;
-
     /**
      * Shared PostgreSQL container using PostgreSQL 16 Alpine image.
      * Matches production configuration for realistic testing.
@@ -47,19 +45,16 @@ public abstract class AbstractPostgresContainerTest {
      */
     @DynamicPropertySource
     static void configurePostgresProperties(DynamicPropertyRegistry registry) {
-        // Run Flyway migrations programmatically (only once)
-        if (!migrated) {
-            Flyway.configure()
-                    .dataSource(
-                            postgresContainer.getJdbcUrl(),
-                            postgresContainer.getUsername(),
-                            postgresContainer.getPassword())
-                    .baselineOnMigrate(true)
-                    .locations("classpath:db/migration")
-                    .load()
-                    .migrate();
-            migrated = true;
-        }
+        // Always run Flyway migrations (Flyway handles idempotency via flyway_schema_history table)
+        Flyway.configure()
+                .dataSource(
+                        postgresContainer.getJdbcUrl(),
+                        postgresContainer.getUsername(),
+                        postgresContainer.getPassword())
+                .baselineOnMigrate(true)
+                .locations("classpath:db/migration")
+                .load()
+                .migrate();
 
         // Configure Spring datasource
         registry.add("spring.datasource.url", postgresContainer::getJdbcUrl);
