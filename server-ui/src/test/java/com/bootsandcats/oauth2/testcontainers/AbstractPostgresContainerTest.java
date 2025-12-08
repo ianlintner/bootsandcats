@@ -1,5 +1,6 @@
 package com.bootsandcats.oauth2.testcontainers;
 
+import org.flywaydb.core.Flyway;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -18,12 +19,14 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * <ul>
  *   <li>Container startup takes ~5-10 seconds on first test</li>
  *   <li>Tests run against PostgreSQL 16-alpine for production parity</li>
- *   <li>Flyway migrations are applied automatically</li>
+ *   <li>Flyway migrations are applied programmatically before context loads</li>
  *   <li>Each test class gets a fresh database schema</li>
  * </ul>
  */
 @Testcontainers
 public abstract class AbstractPostgresContainerTest {
+
+    private static boolean migrated = false;
 
     /**
      * Shared PostgreSQL container using PostgreSQL 16 Alpine image.
@@ -40,16 +43,32 @@ public abstract class AbstractPostgresContainerTest {
     /**
      * Dynamically configures Spring datasource properties from the container.
      * This ensures tests use the actual PostgreSQL container.
+     * Also runs Flyway migrations programmatically before the Spring context loads.
      */
     @DynamicPropertySource
     static void configurePostgresProperties(DynamicPropertyRegistry registry) {
+        // Run Flyway migrations programmatically (only once)
+        if (!migrated) {
+            Flyway.configure()
+                    .dataSource(
+                            postgresContainer.getJdbcUrl(),
+                            postgresContainer.getUsername(),
+                            postgresContainer.getPassword())
+                    .baselineOnMigrate(true)
+                    .locations("classpath:db/migration")
+                    .load()
+                    .migrate();
+            migrated = true;
+        }
+
+        // Configure Spring datasource
         registry.add("spring.datasource.url", postgresContainer::getJdbcUrl);
         registry.add("spring.datasource.username", postgresContainer::getUsername);
         registry.add("spring.datasource.password", postgresContainer::getPassword);
         registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
         registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.PostgreSQLDialect");
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "none"); // Flyway handles migrations
-        registry.add("spring.flyway.enabled", () -> "true");
-        registry.add("spring.flyway.locations", () -> "classpath:db/migration");
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
+        // Disable Spring's Flyway since we migrate programmatically
+        registry.add("spring.flyway.enabled", () -> "false");
     }
 }
