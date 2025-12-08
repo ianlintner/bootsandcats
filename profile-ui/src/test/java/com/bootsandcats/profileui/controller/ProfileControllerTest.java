@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import com.bootsandcats.profileui.ProfileController;
 import com.bootsandcats.profileui.dto.ProfileRequest;
 import com.bootsandcats.profileui.dto.ProfileResponse;
 import com.bootsandcats.profileui.service.ProfileService;
