@@ -17,7 +17,8 @@ import org.springframework.test.context.ActiveProfiles;
 @Import({
     TestOAuth2ClientConfiguration.class,
     TestKeyManagementConfig.class,
-    TestFlywayConfig.class
+    TestFlywayConfig.class,
+    TestObjectMapperConfig.class
 })
 class AuthorizationServerConfigTest {
 
