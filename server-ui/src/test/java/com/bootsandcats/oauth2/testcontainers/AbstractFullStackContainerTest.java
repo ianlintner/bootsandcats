@@ -1,5 +1,6 @@
 package com.bootsandcats.oauth2.testcontainers;
 
+import org.flywaydb.core.Flyway;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
@@ -28,6 +29,8 @@ import org.testcontainers.utility.DockerImageName;
 @Testcontainers
 public abstract class AbstractFullStackContainerTest {
 
+    private static boolean migrated = false;
+
     /** Shared PostgreSQL container using PostgreSQL 16 Alpine image. */
     @Container
     protected static final PostgreSQLContainer<?> postgresContainer =
@@ -47,6 +50,20 @@ public abstract class AbstractFullStackContainerTest {
     /** Configures all infrastructure properties from containers. */
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
+        // Run Flyway migrations programmatically (only once)
+        if (!migrated) {
+            Flyway.configure()
+                    .dataSource(
+                            postgresContainer.getJdbcUrl(),
+                            postgresContainer.getUsername(),
+                            postgresContainer.getPassword())
+                    .baselineOnMigrate(true)
+                    .locations("classpath:db/migration")
+                    .load()
+                    .migrate();
+            migrated = true;
+        }
+
         // PostgreSQL configuration
         registry.add("spring.datasource.url", postgresContainer::getJdbcUrl);
         registry.add("spring.datasource.username", postgresContainer::getUsername);
@@ -54,9 +71,9 @@ public abstract class AbstractFullStackContainerTest {
         registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
         registry.add(
                 "spring.jpa.database-platform", () -> "org.hibernate.dialect.PostgreSQLDialect");
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "none");
-        registry.add("spring.flyway.enabled", () -> "true");
-        registry.add("spring.flyway.locations", () -> "classpath:db/migration");
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
+        // Disable Spring's Flyway since we migrate programmatically
+        registry.add("spring.flyway.enabled", () -> "false");
 
         // Redis configuration
         registry.add("spring.data.redis.host", redisContainer::getHost);
