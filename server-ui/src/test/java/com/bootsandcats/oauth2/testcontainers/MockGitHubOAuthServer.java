@@ -245,6 +245,29 @@ public class MockGitHubOAuthServer {
     }
 
     /**
+     * Mocks a successful authentication with custom user attributes.
+     *
+     * @param userId    GitHub user ID
+     * @param login     GitHub username
+     * @param email     User email
+     * @param name      Display name
+     * @param avatarUrl Avatar URL
+     */
+    public void mockSuccessfulAuth(String userId, String login, String email, String name, String avatarUrl) {
+        stubCustomUserResponse(userId, login, name, email);
+    }
+
+    /**
+     * Mocks an authentication error.
+     *
+     * @param errorCode   OAuth error code
+     * @param description Error description
+     */
+    public void mockAuthError(String errorCode, String description) {
+        stubTokenEndpointError(errorCode, description);
+    }
+
+    /**
      * Configures a custom user response.
      *
      * <p>Use this to test different user attributes or scenarios.
