@@ -33,11 +33,11 @@ import jakarta.validation.Valid;
 @Controller("/api/admin/profiles")
 @Validated
 @Secured(SecurityRule.IS_AUTHENTICATED)
-class AdminProfileController {
+public class AdminProfileController {
 
     private final ProfileService profileService;
 
-    AdminProfileController(ProfileService profileService) {
+    public AdminProfileController(ProfileService profileService) {
         this.profileService = profileService;
     }
 
