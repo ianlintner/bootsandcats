@@ -1,13 +1,14 @@
 /* Home Page Styles */
 
-/* Hero Title */
-.hero-title {
+/* Hero Title - use higher specificity to override profile.css */
+.home-shell .hero-title {
     text-align: center;
     margin-bottom: 2rem;
 }
-.hero-title h1 {
-    font-size: 2.5rem;
-    font-weight: 800;
+.home-shell .hero-title h1,
+.auth-card .hero-title h1 {
+    font-size: 2.5rem !important;
+    font-weight: 800 !important;
     background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
