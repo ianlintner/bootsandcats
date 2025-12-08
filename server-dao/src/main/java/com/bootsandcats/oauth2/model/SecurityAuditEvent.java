@@ -20,9 +20,9 @@ import jakarta.persistence.Table;
 /**
  * Entity representing a security audit event for OAuth2 compliance logging.
  *
- * <p>This entity captures authentication, authorization, token lifecycle, and other security-related
- * events for compliance and audit purposes. All fields are designed to support comprehensive
- * security auditing requirements.
+ * <p>This entity captures authentication, authorization, token lifecycle, and other
+ * security-related events for compliance and audit purposes. All fields are designed to support
+ * comprehensive security auditing requirements.
  */
 @Entity
 @Table(

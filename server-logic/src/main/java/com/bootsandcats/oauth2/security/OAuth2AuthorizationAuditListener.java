@@ -10,9 +10,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AccessTokenAuthenticationToken;
-import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeAuthenticationToken;
-import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientCredentialsAuthenticationToken;
-import org.springframework.security.oauth2.server.authorization.authentication.OAuth2RefreshTokenAuthenticationToken;
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2ClientAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2TokenIntrospectionAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2TokenRevocationAuthenticationToken;
 import org.springframework.stereotype.Component;
@@ -49,20 +47,13 @@ public class OAuth2AuthorizationAuditListener
         if (authentication instanceof OAuth2AccessTokenAuthenticationToken accessTokenAuth) {
             handleAccessTokenAuthentication(accessTokenAuth, request);
         } else if (authentication
-                instanceof OAuth2ClientCredentialsAuthenticationToken clientCredentialsAuth) {
-            handleClientCredentialsAuthentication(clientCredentialsAuth, request);
-        } else if (authentication
-                instanceof OAuth2RefreshTokenAuthenticationToken refreshTokenAuth) {
-            handleRefreshTokenAuthentication(refreshTokenAuth, request);
-        } else if (authentication
                 instanceof OAuth2TokenRevocationAuthenticationToken revocationAuth) {
             handleTokenRevocation(revocationAuth, request);
         } else if (authentication
                 instanceof OAuth2TokenIntrospectionAuthenticationToken introspectionAuth) {
             handleTokenIntrospection(introspectionAuth, request);
-        } else if (authentication
-                instanceof OAuth2AuthorizationCodeAuthenticationToken authCodeAuth) {
-            handleAuthorizationCodeAuthentication(authCodeAuth, request);
+        } else if (authentication instanceof OAuth2ClientAuthenticationToken clientAuth) {
+            handleClientAuthentication(clientAuth, request);
         }
     }
 
@@ -73,13 +64,12 @@ public class OAuth2AuthorizationAuditListener
                         ? authToken.getRegisteredClient().getClientId()
                         : null;
         String principal = authToken.getName();
-        String grantType =
-                authToken.getAuthorizationGrant() != null
-                        ? authToken.getAuthorizationGrant()
-                                .getClass()
-                                .getSimpleName()
-                                .replace("AuthenticationToken", "")
-                        : "unknown";
+
+        // Determine grant type from the principal authentication
+        String grantType = "unknown";
+        if (authToken.getPrincipal() instanceof Authentication principalAuth) {
+            grantType = principalAuth.getClass().getSimpleName().replace("AuthenticationToken", "");
+        }
 
         Set<String> scopes =
                 authToken.getAccessToken() != null
@@ -109,65 +99,47 @@ public class OAuth2AuthorizationAuditListener
                 principal);
     }
 
-    private void handleClientCredentialsAuthentication(
-            OAuth2ClientCredentialsAuthenticationToken authToken, HttpServletRequest request) {
+    private void handleClientAuthentication(
+            OAuth2ClientAuthenticationToken authToken, HttpServletRequest request) {
         String clientId =
-                authToken.getClientPrincipal() != null
-                        ? authToken.getClientPrincipal().getName()
-                        : null;
-
-        Set<String> scopes = authToken.getScopes() != null ? authToken.getScopes() : Set.of();
-        String scopesStr = String.join(" ", scopes);
+                authToken.getRegisteredClient() != null
+                        ? authToken.getRegisteredClient().getClientId()
+                        : authToken.getName();
 
         Map<String, Object> details = new HashMap<>();
-        details.put("grantType", "client_credentials");
-        details.put("scopes", scopes);
+        if (authToken.getClientAuthenticationMethod() != null) {
+            details.put(
+                    "authenticationMethod", authToken.getClientAuthenticationMethod().getValue());
+        }
 
-        securityAuditService.recordClientCredentialsSuccess(clientId, request, scopesStr, details);
-        log.debug("Recorded client credentials grant for client: {}", clientId);
-    }
-
-    private void handleRefreshTokenAuthentication(
-            OAuth2RefreshTokenAuthenticationToken authToken, HttpServletRequest request) {
-        String clientId =
-                authToken.getClientPrincipal() != null
-                        ? authToken.getClientPrincipal().getName()
-                        : null;
-
-        Set<String> scopes = authToken.getScopes() != null ? authToken.getScopes() : Set.of();
-        String scopesStr = String.join(" ", scopes);
-
-        Map<String, Object> details = new HashMap<>();
-        details.put("grantType", "refresh_token");
-        details.put("scopes", scopes);
-
-        securityAuditService.recordTokenRefreshed(clientId, clientId, request, scopesStr, details);
-        log.debug("Recorded token refresh for client: {}", clientId);
+        securityAuditService.recordClientAuthenticationSuccess(
+                clientId,
+                request,
+                authToken.getClientAuthenticationMethod() != null
+                        ? authToken.getClientAuthenticationMethod().getValue()
+                        : "unknown",
+                details);
+        log.debug("Recorded client authentication for client: {}", clientId);
     }
 
     private void handleTokenRevocation(
             OAuth2TokenRevocationAuthenticationToken authToken, HttpServletRequest request) {
-        String clientId =
-                authToken.getClientPrincipal() != null
-                        ? authToken.getClientPrincipal().getName()
-                        : null;
+        String clientId = authToken.getName();
 
         Map<String, Object> details = new HashMap<>();
         if (authToken.getTokenTypeHint() != null) {
             details.put("tokenTypeHint", authToken.getTokenTypeHint());
         }
 
-        String tokenType = authToken.getTokenTypeHint() != null ? authToken.getTokenTypeHint() : "unknown";
+        String tokenType =
+                authToken.getTokenTypeHint() != null ? authToken.getTokenTypeHint() : "unknown";
         securityAuditService.recordTokenRevoked(clientId, clientId, request, tokenType, details);
         log.debug("Recorded token revocation for client: {}", clientId);
     }
 
     private void handleTokenIntrospection(
             OAuth2TokenIntrospectionAuthenticationToken authToken, HttpServletRequest request) {
-        String clientId =
-                authToken.getClientPrincipal() != null
-                        ? authToken.getClientPrincipal().getName()
-                        : null;
+        String clientId = authToken.getName();
 
         boolean isActive =
                 authToken.getTokenClaims() != null && authToken.getTokenClaims().isActive();
@@ -180,31 +152,6 @@ public class OAuth2AuthorizationAuditListener
 
         securityAuditService.recordTokenIntrospection(clientId, request, isActive, details);
         log.debug("Recorded token introspection for client: {}, active: {}", clientId, isActive);
-    }
-
-    private void handleAuthorizationCodeAuthentication(
-            OAuth2AuthorizationCodeAuthenticationToken authToken, HttpServletRequest request) {
-        String clientId = authToken.getClientId();
-        String principal = authToken.getName();
-
-        Map<String, Object> details = new HashMap<>();
-        if (authToken.getRedirectUri() != null) {
-            details.put("redirectUri", authToken.getRedirectUri());
-        }
-
-        // Record as token issued since auth code exchange results in tokens
-        securityAuditService.recordTokenIssued(
-                principal,
-                clientId,
-                request,
-                "authorization_code",
-                "ACCESS_TOKEN",
-                null, // Scopes will be in the resulting access token
-                details);
-        log.debug(
-                "Recorded authorization code exchange for client: {}, principal: {}",
-                clientId,
-                principal);
     }
 
     private HttpServletRequest getCurrentRequest() {

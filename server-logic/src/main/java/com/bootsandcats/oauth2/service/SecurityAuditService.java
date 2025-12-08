@@ -332,7 +332,9 @@ public class SecurityAuditService {
             Map<String, Object> additionalDetails) {
         SecurityAuditEvent event =
                 createBaseEvent(
-                        AuditEventType.AUTHORIZATION_CODE_ISSUED, AuditEventResult.SUCCESS, request);
+                        AuditEventType.AUTHORIZATION_CODE_ISSUED,
+                        AuditEventResult.SUCCESS,
+                        request);
         event.setPrincipal(principal);
         event.setClientId(clientId);
         event.setScopes(scopes);
@@ -633,9 +635,7 @@ public class SecurityAuditService {
             event.setRequestUri(request.getRequestURI());
             event.setRequestMethod(request.getMethod());
             event.setSessionId(
-                    request.getSession(false) != null
-                            ? request.getSession(false).getId()
-                            : null);
+                    request.getSession(false) != null ? request.getSession(false).getId() : null);
         }
 
         return event;

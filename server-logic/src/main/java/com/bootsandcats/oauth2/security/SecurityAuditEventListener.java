@@ -17,8 +17,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import com.bootsandcats.oauth2.model.AuditEventResult;
-import com.bootsandcats.oauth2.model.AuditEventType;
 import com.bootsandcats.oauth2.service.SecurityAuditService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -65,9 +63,7 @@ public class SecurityAuditEventListener {
         if (authentication.getAuthorities() != null) {
             details.put(
                     "authorities",
-                    authentication.getAuthorities().stream()
-                            .map(Object::toString)
-                            .toList());
+                    authentication.getAuthorities().stream().map(Object::toString).toList());
         }
 
         // Add session/request details if available

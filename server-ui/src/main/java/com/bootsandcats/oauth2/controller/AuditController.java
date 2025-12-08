@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.bootsandcats.oauth2.dto.AuditEventSearchRequest;
 import com.bootsandcats.oauth2.dto.AuditEventSummary;
 import com.bootsandcats.oauth2.model.AuditEventResult;
 import com.bootsandcats.oauth2.model.SecurityAuditEvent;
@@ -90,8 +89,7 @@ public class AuditController {
             @Parameter(description = "Filter by principal (username/client)")
                     @RequestParam(required = false)
                     String principal,
-            @Parameter(description = "Filter by OAuth2 client ID")
-                    @RequestParam(required = false)
+            @Parameter(description = "Filter by OAuth2 client ID") @RequestParam(required = false)
                     String clientId,
             @Parameter(description = "Filter by event category (AUTHENTICATION, TOKEN, etc.)")
                     @RequestParam(required = false)
@@ -144,8 +142,7 @@ public class AuditController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(page, Math.min(size, 100));
-        Page<SecurityAuditEvent> events =
-                securityAuditService.findByPrincipal(principal, pageable);
+        Page<SecurityAuditEvent> events = securityAuditService.findByPrincipal(principal, pageable);
         return ResponseEntity.ok(events.map(AuditEventSummary::from));
     }
 
