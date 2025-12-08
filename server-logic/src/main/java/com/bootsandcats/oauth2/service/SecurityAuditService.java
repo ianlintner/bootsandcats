@@ -47,7 +47,7 @@ public class SecurityAuditService {
      *
      * @param event the audit event to record
      */
-    @Async
+    @Async("auditTaskExecutor")
     @Transactional
     public void recordEventAsync(SecurityAuditEvent event) {
         try {
