@@ -202,11 +202,11 @@ spec:
           readOnly: true
         resources:
           requests:
-            memory: "128Mi"
+            memory: "256Mi"
             cpu: "50m"
           limits:
-            memory: "512Mi"
-            cpu: "1000m"
+            memory: "1024Mi"
+            cpu: "500m"
         startupProbe:
           httpGet:
             path: /actuator/health/liveness
