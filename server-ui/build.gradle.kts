@@ -57,3 +57,99 @@ springBoot {
 tasks.named<Jar>("jar") {
     enabled = false
 }
+
+// Behavioral Test Tasks for AI-Agent-Friendly Testing
+tasks.register<Test>("behavioralTests") {
+    description = "Runs behavioral tests (happy/sad paths)"
+    group = "verification"
+    useJUnitPlatform {
+        includeTags("happy", "sad")
+    }
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
+    }
+}
+
+tasks.register<Test>("happyPathTests") {
+    description = "Runs happy path tests only"
+    group = "verification"
+    useJUnitPlatform {
+        includeTags("happy")
+    }
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
+    }
+}
+
+tasks.register<Test>("sadPathTests") {
+    description = "Runs sad path tests only"
+    group = "verification"
+    useJUnitPlatform {
+        includeTags("sad")
+    }
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
+    }
+}
+
+tasks.register<Test>("contractTests") {
+    description = "Runs contract tests (API compliance)"
+    group = "verification"
+    useJUnitPlatform {
+        includeTags("contract")
+    }
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
+    }
+}
+
+tasks.register<Test>("securityTests") {
+    description = "Runs security regression tests"
+    group = "verification"
+    useJUnitPlatform {
+        includeTags("security")
+    }
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
+    }
+}
+
+tasks.register<Test>("criticalTests") {
+    description = "Runs all critical tests (must pass for deployment)"
+    group = "verification"
+    useJUnitPlatform {
+        includeTags("critical")
+    }
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
+    }
+}
+
+tasks.register<Test>("oauth2Tests") {
+    description = "Runs all OAuth2-specific tests"
+    group = "verification"
+    useJUnitPlatform {
+        includeTags("oauth2")
+    }
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
+    }
+}
+
+tasks.register<Test>("fastTests") {
+    description = "Runs fast unit tests (excludes integration tests)"
+    group = "verification"
+    useJUnitPlatform {
+        excludeTags("integration", "e2e", "slow")
+    }
+    testLogging {
+        events("passed", "skipped", "failed")
+    }
+}
