@@ -91,6 +91,27 @@ public class MockGitHubOAuthServer {
     }
 
     /**
+     * Returns the authorization URI for GitHub OAuth.
+     */
+    public String getAuthorizationUri() {
+        return getBaseUrl() + "/login/oauth/authorize";
+    }
+
+    /**
+     * Returns the token URI for GitHub OAuth.
+     */
+    public String getTokenUri() {
+        return getBaseUrl() + "/login/oauth/access_token";
+    }
+
+    /**
+     * Returns the user info URI for GitHub OAuth.
+     */
+    public String getUserInfoUri() {
+        return getBaseUrl() + "/user";
+    }
+
+    /**
      * Configures all GitHub OAuth endpoint mocks.
      */
     private void setupStubs() {
