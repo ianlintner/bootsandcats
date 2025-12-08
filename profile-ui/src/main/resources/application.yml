@@ -33,6 +33,20 @@ micronaut:
       - pattern: /api/me
         http-method: GET
         access: isAuthenticated()
+      - pattern: /api/profile
+        http-method: GET
+        access: isAuthenticated()
+      - pattern: /api/profile
+        http-method: POST
+        access: isAuthenticated()
+      - pattern: /api/profile
+        http-method: PUT
+        access: isAuthenticated()
+      - pattern: /api/profile
+        http-method: DELETE
+        access: isAuthenticated()
+      - pattern: /api/admin/**
+        access: isAuthenticated()
       - pattern: /**
         access: isAuthenticated()
     oauth2:
@@ -46,11 +60,20 @@ micronaut:
             - openid
             - profile
             - email
+            - profile:read
+            - profile:write
   metrics:
     enabled: true
     export:
       prometheus:
         enabled: true
+
+# MongoDB/CosmosDB Configuration
+mongodb:
+  uri: ${MONGODB_URI:mongodb://localhost:27017}
+  database: ${MONGODB_DATABASE:profile-db}
+  collection:
+    profiles: profiles
 
 endpoints:
   all:

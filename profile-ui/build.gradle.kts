@@ -50,6 +50,7 @@ dependencies {
 
     annotationProcessor("io.micronaut:micronaut-inject-java")
     annotationProcessor("io.micronaut.validation:micronaut-validation-processor:$micronautVersion")
+    annotationProcessor("io.micronaut.serde:micronaut-serde-processor")
 
     implementation("io.micronaut:micronaut-http-server-netty")
     implementation("io.micronaut:micronaut-management")
@@ -60,10 +61,15 @@ dependencies {
     implementation("io.micronaut.micrometer:micronaut-micrometer-registry-prometheus")
     implementation("ch.qos.logback:logback-classic")
 
+    // MongoDB support for Azure CosmosDB
+    implementation("io.micronaut.mongodb:micronaut-mongo-sync")
+    implementation("io.micronaut.serde:micronaut-serde-jackson")
+
     runtimeOnly("org.yaml:snakeyaml")
 
     testImplementation("org.assertj:assertj-core:3.26.3")
     testImplementation("io.micronaut:micronaut-http-client")
     testImplementation("io.micronaut.test:micronaut-test-junit5")
+    testImplementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo:4.12.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
