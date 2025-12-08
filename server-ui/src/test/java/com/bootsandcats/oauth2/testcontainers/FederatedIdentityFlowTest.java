@@ -82,7 +82,7 @@ class FederatedIdentityFlowTest extends AbstractPostgresContainerTest {
         mockGitHub.start();
         mockGoogle.start();
 
-        // Configure GitHub OAuth
+        // Configure GitHub OAuth provider
         registry.add(
                 "spring.security.oauth2.client.provider.github.authorization-uri",
                 () -> mockGitHub.getAuthorizationUri());
@@ -99,10 +99,22 @@ class FederatedIdentityFlowTest extends AbstractPostgresContainerTest {
                 "spring.security.oauth2.client.registration.github.client-secret",
                 () -> "test-github-secret");
 
-        // Configure Google OIDC
+        // Configure Google OIDC provider - all endpoints explicitly
         registry.add(
                 "spring.security.oauth2.client.provider.google.issuer-uri",
                 () -> mockGoogle.getIssuerUri());
+        registry.add(
+                "spring.security.oauth2.client.provider.google.authorization-uri",
+                () -> mockGoogle.getAuthorizationUri());
+        registry.add(
+                "spring.security.oauth2.client.provider.google.token-uri",
+                () -> mockGoogle.getTokenUri());
+        registry.add(
+                "spring.security.oauth2.client.provider.google.user-info-uri",
+                () -> mockGoogle.getUserInfoUri());
+        registry.add(
+                "spring.security.oauth2.client.provider.google.jwk-set-uri",
+                () -> mockGoogle.getBaseUrl() + "/oauth2/v3/certs");
         registry.add(
                 "spring.security.oauth2.client.registration.google.client-id",
                 () -> "test-google-client");
