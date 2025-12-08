@@ -36,6 +36,28 @@ spec:
             secretKeyRef:
               name: oauth2-app-secrets
               key: demo-client-secret
+        # MongoDB configuration
+        - name: MONGODB_URI
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: mongodb-uri
+        - name: MONGODB_DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: mongodb-database
+        volumeMounts:
+        - name: secrets-store
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
+      volumes:
+      - name: secrets-store
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "oauth2-secrets-provider"
       nodeSelector:
         kubernetes.io/arch: amd64
       tolerations:
