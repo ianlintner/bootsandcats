@@ -9,31 +9,32 @@ import com.bootsandcats.profileui.dto.ProfileRequest;
 import com.bootsandcats.profileui.dto.ProfileResponse;
 import com.bootsandcats.profileui.service.ProfileService;
 
-import io.micronaut.test.annotation.MockBean;
-import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
-import jakarta.inject.Inject;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * Unit tests for AdminProfileController.
  *
- * <p>These tests verify the service layer interactions.
- * Full integration tests with authentication would require additional security setup.
+ * <p>These tests verify the service layer interactions using pure Mockito.
  */
-@MicronautTest
+@ExtendWith(MockitoExtension.class)
 class AdminProfileControllerTest {
 
-    @Inject
-    ProfileService profileService;
+    @Mock
+    private ProfileService profileService;
 
-    @MockBean(ProfileService.class)
-    ProfileService mockProfileService() {
-        return mock(ProfileService.class);
+    private AdminProfileController controller;
+
+    @BeforeEach
+    void setUp() {
+        controller = new AdminProfileController(profileService);
     }
 
     @Test

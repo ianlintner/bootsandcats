@@ -1,6 +1,6 @@
 plugins {
     id("io.micronaut.application") version "4.3.8"
-    id("io.micronaut.test-resources") version "4.3.8"
+    // Removed test-resources plugin - using Flapdoodle embedded MongoDB instead
 }
 
 val micronautVersion = "4.3.8"

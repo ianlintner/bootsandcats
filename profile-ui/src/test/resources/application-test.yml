@@ -4,6 +4,5 @@ micronaut:
   application:
     name: profile-ui-test
 
-mongodb:
-  uri: mongodb://localhost:27017
-  database: profile-test-db
+# Disable MongoDB for unit tests - controller tests use mocks
+# Integration tests use Flapdoodle embedded MongoDB
