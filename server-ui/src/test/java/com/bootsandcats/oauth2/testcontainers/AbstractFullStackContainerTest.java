@@ -56,6 +56,7 @@ public abstract class AbstractFullStackContainerTest {
                 "spring.jpa.database-platform", () -> "org.hibernate.dialect.PostgreSQLDialect");
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "none");
         registry.add("spring.flyway.enabled", () -> "true");
+        registry.add("spring.flyway.locations", () -> "classpath:db/migration");
 
         // Redis configuration
         registry.add("spring.data.redis.host", redisContainer::getHost);

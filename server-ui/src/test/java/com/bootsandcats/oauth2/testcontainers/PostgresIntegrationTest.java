@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.bootsandcats.oauth2.config.TestKeyManagementConfig;
 import com.bootsandcats.oauth2.config.TestOAuth2ClientConfiguration;
+import com.bootsandcats.oauth2.config.TestObjectMapperConfig;
 import com.bootsandcats.oauth2.model.User;
 import com.bootsandcats.oauth2.repository.UserRepository;
 import java.time.Instant;
@@ -51,7 +52,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @SpringBootTest
 @ActiveProfiles({"test", "testcontainers"})
-@Import({TestOAuth2ClientConfiguration.class, TestKeyManagementConfig.class})
+@Import({TestOAuth2ClientConfiguration.class, TestKeyManagementConfig.class, TestObjectMapperConfig.class})
 @Tag("testcontainers")
 @Tag("postgres")
 @DisplayName("PostgreSQL Integration Tests")
