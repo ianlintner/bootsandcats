@@ -14,9 +14,7 @@ import com.bootsandcats.profileui.repository.ProfileRepository;
 
 import jakarta.inject.Singleton;
 
-/**
- * Service layer for profile management operations.
- */
+/** Service layer for profile management operations. */
 @Singleton
 public class ProfileService {
 
@@ -67,8 +65,7 @@ public class ProfileService {
     public ProfileResponse createProfile(
             String oauthSubject, Long oauthUserId, ProfileRequest request) {
         if (profileRepository.existsByOauthSubject(oauthSubject)) {
-            throw new IllegalStateException(
-                    "Profile already exists for subject: " + oauthSubject);
+            throw new IllegalStateException("Profile already exists for subject: " + oauthSubject);
         }
 
         UserProfile profile = new UserProfile();

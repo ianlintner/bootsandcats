@@ -19,8 +19,7 @@ import io.micronaut.serde.annotation.Serdeable;
 @Serdeable
 public class UserProfile {
 
-    @BsonId
-    private ObjectId id;
+    @BsonId private ObjectId id;
 
     /**
      * The OAuth2 subject identifier (sub claim from JWT). This is the primary link to the OAuth2
@@ -29,72 +28,48 @@ public class UserProfile {
     @BsonProperty("oauth_subject")
     private String oauthSubject;
 
-    /**
-     * The OAuth2 user ID from the authorization server.
-     */
+    /** The OAuth2 user ID from the authorization server. */
     @BsonProperty("oauth_user_id")
     private Long oauthUserId;
 
-    /**
-     * User's first name.
-     */
+    /** User's first name. */
     @BsonProperty("first_name")
     private String firstName;
 
-    /**
-     * User's last name.
-     */
+    /** User's last name. */
     @BsonProperty("last_name")
     private String lastName;
 
-    /**
-     * User's preferred display name.
-     */
+    /** User's preferred display name. */
     @BsonProperty("preferred_name")
     private String preferredName;
 
-    /**
-     * User's email address.
-     */
+    /** User's email address. */
     private String email;
 
-    /**
-     * User's phone number.
-     */
+    /** User's phone number. */
     @BsonProperty("phone_number")
     private String phoneNumber;
 
-    /**
-     * User's mailing address.
-     */
+    /** User's mailing address. */
     private Address address;
 
-    /**
-     * User's social media links and handles.
-     */
+    /** User's social media links and handles. */
     @BsonProperty("social_media")
     private SocialMedia socialMedia;
 
-    /**
-     * User's bio or description.
-     */
+    /** User's bio or description. */
     private String bio;
 
-    /**
-     * URL to user's profile picture.
-     */
+    /** URL to user's profile picture. */
     @BsonProperty("picture_url")
     private String pictureUrl;
 
-    /**
-     * Timestamp when the profile was created.
-     */
+    /** Timestamp when the profile was created. */
     @BsonProperty("created_at")
     private Instant createdAt;
 
-    /**
-     * Timestamp when the profile was last updated.
-     */
+    /** Timestamp when the profile was last updated. */
     @BsonProperty("updated_at")
     private Instant updatedAt;
 

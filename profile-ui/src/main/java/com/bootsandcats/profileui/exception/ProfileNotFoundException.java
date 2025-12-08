@@ -1,8 +1,6 @@
 package com.bootsandcats.profileui.exception;
 
-/**
- * Exception thrown when a profile is not found.
- */
+/** Exception thrown when a profile is not found. */
 public class ProfileNotFoundException extends RuntimeException {
 
     public ProfileNotFoundException(String message) {

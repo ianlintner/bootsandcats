@@ -7,9 +7,7 @@ import java.util.Optional;
 
 import io.micronaut.security.authentication.Authentication;
 
-/**
- * Helper class for extracting information from the authenticated user's JWT.
- */
+/** Helper class for extracting information from the authenticated user's JWT. */
 public final class AuthenticationHelper {
 
     private AuthenticationHelper() {

@@ -3,9 +3,7 @@ package com.bootsandcats.profileui.model;
 import io.micronaut.core.annotation.Introspected;
 import io.micronaut.serde.annotation.Serdeable;
 
-/**
- * Mailing address for a user profile.
- */
+/** Mailing address for a user profile. */
 @Introspected
 @Serdeable
 public class Address {
@@ -17,8 +15,7 @@ public class Address {
     private String postalCode;
     private String country;
 
-    public Address() {
-    }
+    public Address() {}
 
     public Address(
             String street1,

@@ -243,9 +243,10 @@ public class AuthorizationServerConfig {
      * Customizes JWT tokens with ES256 algorithm and role-based profile scopes.
      *
      * <p>This customizer adds profile scopes to the token based on the user's role:
+     *
      * <ul>
-     *   <li>All authenticated users: profile:read, profile:write (for their own profile)</li>
-     *   <li>ADMIN role users: Additionally receive profile:admin scope</li>
+     *   <li>All authenticated users: profile:read, profile:write (for their own profile)
+     *   <li>ADMIN role users: Additionally receive profile:admin scope
      * </ul>
      *
      * @return OAuth2TokenCustomizer for JWT encoding
@@ -284,7 +285,9 @@ public class AuthorizationServerConfig {
                                                                     .equals("SCOPE_admin"));
                     if (isAdmin) {
                         existingScopes.add("profile:admin");
-                        log.debug("Added profile:admin scope for admin user: {}", principal.getName());
+                        log.debug(
+                                "Added profile:admin scope for admin user: {}",
+                                principal.getName());
                     }
                 }
 

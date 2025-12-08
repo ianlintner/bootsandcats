@@ -7,12 +7,9 @@ import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Produces;
 import io.micronaut.http.server.exceptions.ExceptionHandler;
-
 import jakarta.inject.Singleton;
 
-/**
- * Exception handler for ProfileNotFoundException.
- */
+/** Exception handler for ProfileNotFoundException. */
 @Produces
 @Singleton
 @Requires(classes = {ProfileNotFoundException.class, ExceptionHandler.class})

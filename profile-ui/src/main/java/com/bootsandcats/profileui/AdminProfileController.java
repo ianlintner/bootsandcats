@@ -116,7 +116,8 @@ public class AdminProfileController {
         if (profile.isPresent()) {
             return HttpResponse.ok(profile.get());
         } else {
-            return HttpResponse.notFound(Map.of("error", "not_found", "message", "Profile not found"));
+            return HttpResponse.notFound(
+                    Map.of("error", "not_found", "message", "Profile not found"));
         }
     }
 
@@ -130,7 +131,9 @@ public class AdminProfileController {
      */
     @Put(value = "/{id}", produces = MediaType.APPLICATION_JSON)
     HttpResponse<?> updateProfile(
-            Authentication authentication, @PathVariable String id, @Body @Valid ProfileRequest request) {
+            Authentication authentication,
+            @PathVariable String id,
+            @Body @Valid ProfileRequest request) {
         if (authentication == null) {
             return HttpResponse.unauthorized();
         }
@@ -179,7 +182,8 @@ public class AdminProfileController {
         if (profileService.deleteProfileById(id)) {
             return HttpResponse.ok(Map.of("deleted", true, "id", id));
         } else {
-            return HttpResponse.notFound(Map.of("error", "not_found", "message", "Profile not found"));
+            return HttpResponse.notFound(
+                    Map.of("error", "not_found", "message", "Profile not found"));
         }
     }
 }

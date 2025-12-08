@@ -20,9 +20,7 @@ import io.micronaut.context.annotation.Value;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Singleton;
 
-/**
- * MongoDB implementation of the ProfileRepository.
- */
+/** MongoDB implementation of the ProfileRepository. */
 @Singleton
 public class MongoProfileRepository implements ProfileRepository {
 
@@ -90,11 +88,7 @@ public class MongoProfileRepository implements ProfileRepository {
     @Override
     public List<UserProfile> findAll(int page, int pageSize) {
         List<UserProfile> results = new ArrayList<>();
-        getCollection()
-                .find()
-                .skip(page * pageSize)
-                .limit(pageSize)
-                .into(results);
+        getCollection().find().skip(page * pageSize).limit(pageSize).into(results);
         return results;
     }
 
@@ -121,11 +115,7 @@ public class MongoProfileRepository implements ProfileRepository {
                                 new Document("preferred_name", new Document("$regex", pattern)),
                                 new Document("email", new Document("$regex", pattern))));
 
-        getCollection()
-                .find(regexFilter)
-                .skip(page * pageSize)
-                .limit(pageSize)
-                .into(results);
+        getCollection().find(regexFilter).skip(page * pageSize).limit(pageSize).into(results);
         return results;
     }
 
@@ -173,8 +163,7 @@ public class MongoProfileRepository implements ProfileRepository {
 
     @Override
     public boolean deleteByOauthSubject(String oauthSubject) {
-        DeleteResult result =
-                getCollection().deleteOne(Filters.eq("oauth_subject", oauthSubject));
+        DeleteResult result = getCollection().deleteOne(Filters.eq("oauth_subject", oauthSubject));
         return result.getDeletedCount() > 0;
     }
 

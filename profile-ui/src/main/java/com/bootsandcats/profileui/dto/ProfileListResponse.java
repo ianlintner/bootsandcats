@@ -5,9 +5,7 @@ import java.util.List;
 import io.micronaut.core.annotation.Introspected;
 import io.micronaut.serde.annotation.Serdeable;
 
-/**
- * DTO for paginated profile list responses.
- */
+/** DTO for paginated profile list responses. */
 @Introspected
 @Serdeable
 public class ProfileListResponse {
@@ -18,8 +16,7 @@ public class ProfileListResponse {
     private int pageSize;
     private int totalPages;
 
-    public ProfileListResponse() {
-    }
+    public ProfileListResponse() {}
 
     public ProfileListResponse(
             List<ProfileResponse> profiles, long totalCount, int page, int pageSize) {

@@ -1,5 +1,7 @@
 package com.bootsandcats.profileui.config;
 
+import static org.mockito.Mockito.mock;
+
 import com.bootsandcats.profileui.repository.MongoProfileRepository;
 import com.bootsandcats.profileui.repository.ProfileRepository;
 import com.mongodb.client.MongoClient;
@@ -8,10 +10,7 @@ import io.micronaut.context.annotation.Factory;
 import io.micronaut.context.annotation.Primary;
 import io.micronaut.context.annotation.Replaces;
 import io.micronaut.context.annotation.Requires;
-
 import jakarta.inject.Singleton;
-
-import static org.mockito.Mockito.mock;
 
 /**
  * Test configuration that provides mock MongoDB beans.

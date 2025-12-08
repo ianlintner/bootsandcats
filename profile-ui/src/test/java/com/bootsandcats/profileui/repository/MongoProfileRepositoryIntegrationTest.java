@@ -2,6 +2,12 @@ package com.bootsandcats.profileui.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.*;
+
 import com.bootsandcats.profileui.model.Address;
 import com.bootsandcats.profileui.model.SocialMedia;
 import com.bootsandcats.profileui.model.UserProfile;
@@ -9,26 +15,18 @@ import com.bootsandcats.profileui.model.UserProfile;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import jakarta.inject.Inject;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
-
-import org.junit.jupiter.api.*;
-
 /**
  * Integration tests for MongoProfileRepository.
  *
- * <p>Note: These tests require a MongoDB instance to be running.
- * For local development, use Docker or the embedded MongoDB for testing.
- * Tests are disabled by default when MongoDB is not available.
+ * <p>Note: These tests require a MongoDB instance to be running. For local development, use Docker
+ * or the embedded MongoDB for testing. Tests are disabled by default when MongoDB is not available.
  */
 @MicronautTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Disabled("Requires MongoDB to be running - enable for integration testing")
 class MongoProfileRepositoryIntegrationTest {
 
-    @Inject
-    ProfileRepository profileRepository;
+    @Inject ProfileRepository profileRepository;
 
     @BeforeEach
     void cleanUp() {
@@ -85,8 +83,7 @@ class MongoProfileRepositoryIntegrationTest {
 
     @Test
     void findById_whenNotExists_returnsEmpty() {
-        Optional<UserProfile> found =
-                profileRepository.findById("000000000000000000000000");
+        Optional<UserProfile> found = profileRepository.findById("000000000000000000000000");
 
         assertThat(found).isEmpty();
     }

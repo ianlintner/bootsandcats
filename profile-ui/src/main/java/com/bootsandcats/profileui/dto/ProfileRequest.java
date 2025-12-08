@@ -1,17 +1,15 @@
 package com.bootsandcats.profileui.dto;
 
+import com.bootsandcats.profileui.model.Address;
+import com.bootsandcats.profileui.model.SocialMedia;
+
 import io.micronaut.core.annotation.Introspected;
 import io.micronaut.serde.annotation.Serdeable;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 
-import com.bootsandcats.profileui.model.Address;
-import com.bootsandcats.profileui.model.SocialMedia;
-
-/**
- * DTO for creating or updating a user profile.
- */
+/** DTO for creating or updating a user profile. */
 @Introspected
 @Serdeable
 public class ProfileRequest {
@@ -32,11 +30,9 @@ public class ProfileRequest {
     @Size(max = 50, message = "Phone number must be at most 50 characters")
     private String phoneNumber;
 
-    @Valid
-    private Address address;
+    @Valid private Address address;
 
-    @Valid
-    private SocialMedia socialMedia;
+    @Valid private SocialMedia socialMedia;
 
     @Size(max = 2000, message = "Bio must be at most 2000 characters")
     private String bio;
@@ -44,8 +40,7 @@ public class ProfileRequest {
     @Size(max = 500, message = "Picture URL must be at most 500 characters")
     private String pictureUrl;
 
-    public ProfileRequest() {
-    }
+    public ProfileRequest() {}
 
     public String getFirstName() {
         return firstName;

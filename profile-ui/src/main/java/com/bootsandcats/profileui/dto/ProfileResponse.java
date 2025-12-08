@@ -2,16 +2,14 @@ package com.bootsandcats.profileui.dto;
 
 import java.time.Instant;
 
-import io.micronaut.core.annotation.Introspected;
-import io.micronaut.serde.annotation.Serdeable;
-
 import com.bootsandcats.profileui.model.Address;
 import com.bootsandcats.profileui.model.SocialMedia;
 import com.bootsandcats.profileui.model.UserProfile;
 
-/**
- * DTO for returning profile data to the client.
- */
+import io.micronaut.core.annotation.Introspected;
+import io.micronaut.serde.annotation.Serdeable;
+
+/** DTO for returning profile data to the client. */
 @Introspected
 @Serdeable
 public class ProfileResponse {
@@ -32,8 +30,7 @@ public class ProfileResponse {
     private Instant createdAt;
     private Instant updatedAt;
 
-    public ProfileResponse() {
-    }
+    public ProfileResponse() {}
 
     /**
      * Create a ProfileResponse from a UserProfile entity.

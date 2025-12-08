@@ -3,9 +3,7 @@ package com.bootsandcats.profileui.model;
 import io.micronaut.core.annotation.Introspected;
 import io.micronaut.serde.annotation.Serdeable;
 
-/**
- * Social media links and handles for a user profile.
- */
+/** Social media links and handles for a user profile. */
 @Introspected
 @Serdeable
 public class SocialMedia {
@@ -17,8 +15,7 @@ public class SocialMedia {
     private String instagram;
     private String website;
 
-    public SocialMedia() {
-    }
+    public SocialMedia() {}
 
     public SocialMedia(
             String twitter,

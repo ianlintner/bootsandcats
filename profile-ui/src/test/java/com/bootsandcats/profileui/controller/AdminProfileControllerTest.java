@@ -4,12 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import com.bootsandcats.profileui.AdminProfileController;
-import com.bootsandcats.profileui.dto.ProfileListResponse;
-import com.bootsandcats.profileui.dto.ProfileRequest;
-import com.bootsandcats.profileui.dto.ProfileResponse;
-import com.bootsandcats.profileui.service.ProfileService;
-
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -20,6 +14,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.bootsandcats.profileui.AdminProfileController;
+import com.bootsandcats.profileui.dto.ProfileListResponse;
+import com.bootsandcats.profileui.dto.ProfileRequest;
+import com.bootsandcats.profileui.dto.ProfileResponse;
+import com.bootsandcats.profileui.service.ProfileService;
+
 /**
  * Unit tests for AdminProfileController.
  *
@@ -28,8 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class AdminProfileControllerTest {
 
-    @Mock
-    private ProfileService profileService;
+    @Mock private ProfileService profileService;
 
     private AdminProfileController controller;
 
@@ -41,8 +40,7 @@ class AdminProfileControllerTest {
     @Test
     void listProfiles_returnsPagedProfiles() {
         ProfileListResponse mockResponse =
-                new ProfileListResponse(
-                        List.of(createTestResponse()), 1L, 0, 10);
+                new ProfileListResponse(List.of(createTestResponse()), 1L, 0, 10);
         when(profileService.listProfiles(0, 10)).thenReturn(mockResponse);
 
         ProfileListResponse result = profileService.listProfiles(0, 10);
@@ -55,8 +53,7 @@ class AdminProfileControllerTest {
     @Test
     void listProfiles_withSearch_returnsFilteredProfiles() {
         ProfileListResponse mockResponse =
-                new ProfileListResponse(
-                        List.of(createTestResponse()), 1L, 0, 10);
+                new ProfileListResponse(List.of(createTestResponse()), 1L, 0, 10);
         when(profileService.searchProfiles("john", 0, 10)).thenReturn(mockResponse);
 
         ProfileListResponse result = profileService.searchProfiles("john", 0, 10);

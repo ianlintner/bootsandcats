@@ -5,9 +5,7 @@ import java.util.Optional;
 
 import com.bootsandcats.profileui.model.UserProfile;
 
-/**
- * Repository interface for user profile data access operations.
- */
+/** Repository interface for user profile data access operations. */
 public interface ProfileRepository {
 
     /**

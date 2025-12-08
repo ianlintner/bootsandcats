@@ -39,9 +39,7 @@ public class ProfileController {
         this.profileService = profileService;
     }
 
-    /**
-     * Returns the authenticated user's OAuth2 token attributes.
-     */
+    /** Returns the authenticated user's OAuth2 token attributes. */
     @Get(value = "/me", produces = MediaType.APPLICATION_JSON)
     HttpResponse<Map<String, Object>> me(Authentication authentication) {
         if (authentication == null) {
@@ -76,8 +74,10 @@ public class ProfileController {
         } else {
             return HttpResponse.notFound(
                     Map.of(
-                            "exists", false,
-                            "message", "No profile found. Create one to get started."));
+                            "exists",
+                            false,
+                            "message",
+                            "No profile found. Create one to get started."));
         }
     }
 
@@ -89,7 +89,8 @@ public class ProfileController {
      * @return the created profile
      */
     @Post(value = "/profile", produces = MediaType.APPLICATION_JSON)
-    HttpResponse<?> createProfile(Authentication authentication, @Body @Valid ProfileRequest request) {
+    HttpResponse<?> createProfile(
+            Authentication authentication, @Body @Valid ProfileRequest request) {
         if (authentication == null) {
             return HttpResponse.unauthorized();
         }
@@ -120,7 +121,8 @@ public class ProfileController {
      * @return the updated profile
      */
     @Put(value = "/profile", produces = MediaType.APPLICATION_JSON)
-    HttpResponse<?> updateProfile(Authentication authentication, @Body @Valid ProfileRequest request) {
+    HttpResponse<?> updateProfile(
+            Authentication authentication, @Body @Valid ProfileRequest request) {
         if (authentication == null) {
             return HttpResponse.unauthorized();
         }
@@ -130,7 +132,11 @@ public class ProfileController {
         // Check if profile exists
         if (!profileService.profileExists(subject)) {
             return HttpResponse.notFound(
-                    Map.of("error", "not_found", "message", "Profile not found. Create one first."));
+                    Map.of(
+                            "error",
+                            "not_found",
+                            "message",
+                            "Profile not found. Create one first."));
         }
 
         ProfileResponse profile = profileService.updateProfile(subject, request);
