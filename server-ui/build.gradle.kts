@@ -41,9 +41,14 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-test")
     testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
     testImplementation("org.springframework.security:spring-security-test")
+    // Testcontainers
     testImplementation("org.testcontainers:testcontainers:1.20.4")
     testImplementation("org.testcontainers:postgresql:1.20.4")
     testImplementation("org.testcontainers:junit-jupiter:1.20.4")
+    // Redis Testcontainers (uses GenericContainer with Redis image)
+    testImplementation("com.redis:testcontainers-redis:2.2.2")
+    // WireMock for mocking external OIDC providers (GitHub, Google, etc.)
+    testImplementation("org.wiremock:wiremock-standalone:3.9.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     
     compileOnly("org.projectlombok:lombok:1.18.32")
