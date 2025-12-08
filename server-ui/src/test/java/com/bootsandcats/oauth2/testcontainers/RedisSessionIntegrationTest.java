@@ -54,17 +54,23 @@ import org.springframework.web.context.WebApplicationContext;
  * </ul>
  */
 @SpringBootTest
-@AutoConfigureMockMvc
 @ActiveProfiles("testcontainers-redis")
 @Tag("testcontainers")
 @Tag("redis")
 @DisplayName("Redis Session Integration Tests")
 class RedisSessionIntegrationTest extends AbstractRedisContainerTest {
 
-    @Autowired private MockMvc mockMvc;
+    @Autowired private WebApplicationContext context;
+
+    private MockMvc mockMvc;
 
     @Autowired(required = false)
     private RedisTemplate<String, Object> redisTemplate;
+
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
+    }
 
     @Nested
     @DisplayName("Session Creation")
