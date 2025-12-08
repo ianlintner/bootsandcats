@@ -177,8 +177,9 @@ tasks.register<Test>("testcontainersTests") {
 tasks.register<Test>("postgresTests") {
     description = "Runs PostgreSQL Testcontainers integration tests"
     group = "verification"
-    useJUnitPlatform()
-    include("**/testcontainers/Postgres*Test.class")
+    useJUnitPlatform {
+        includeTags("postgres")
+    }
     testLogging {
         events("passed", "skipped", "failed")
         showStandardStreams = true
@@ -189,8 +190,9 @@ tasks.register<Test>("postgresTests") {
 tasks.register<Test>("redisTests") {
     description = "Runs Redis Testcontainers integration tests"
     group = "verification"
-    useJUnitPlatform()
-    include("**/testcontainers/Redis*Test.class")
+    useJUnitPlatform {
+        includeTags("redis")
+    }
     testLogging {
         events("passed", "skipped", "failed")
         showStandardStreams = true
@@ -201,8 +203,9 @@ tasks.register<Test>("redisTests") {
 tasks.register<Test>("federatedIdentityTests") {
     description = "Runs federated identity flow tests with mocked OAuth providers"
     group = "verification"
-    useJUnitPlatform()
-    include("**/testcontainers/FederatedIdentity*Test.class")
+    useJUnitPlatform {
+        includeTags("oauth-flow")
+    }
     testLogging {
         events("passed", "skipped", "failed")
         showStandardStreams = true
