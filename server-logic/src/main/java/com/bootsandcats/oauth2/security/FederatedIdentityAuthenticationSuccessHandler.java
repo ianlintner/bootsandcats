@@ -2,6 +2,8 @@ package com.bootsandcats.oauth2.security;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import com.bootsandcats.oauth2.model.User;
 import com.bootsandcats.oauth2.repository.UserRepository;
+import com.bootsandcats.oauth2.service.SecurityAuditService;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,18 +24,22 @@ import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Handles successful federated identity (GitHub, Google, etc.) authentication. After federated
- * login completes, this handler: 1. Creates or updates the user record in the database 2. Redirects
- * back to the original saved request (typically /oauth2/authorize for the OAuth2 flow)
+ * login completes, this handler: 1. Creates or updates the user record in the database 2. Records
+ * the authentication event for audit compliance 3. Redirects back to the original saved request
+ * (typically /oauth2/authorize for the OAuth2 flow)
  */
 @Component
 public class FederatedIdentityAuthenticationSuccessHandler
         extends SavedRequestAwareAuthenticationSuccessHandler {
 
     private final UserRepository userRepository;
+    private final SecurityAuditService securityAuditService;
     private final RequestCache requestCache = new HttpSessionRequestCache();
 
-    public FederatedIdentityAuthenticationSuccessHandler(UserRepository userRepository) {
+    public FederatedIdentityAuthenticationSuccessHandler(
+            UserRepository userRepository, SecurityAuditService securityAuditService) {
         this.userRepository = userRepository;
+        this.securityAuditService = securityAuditService;
         // Ensure we use the session-based request cache
         setRequestCache(requestCache);
     }
@@ -81,6 +88,18 @@ public class FederatedIdentityAuthenticationSuccessHandler
             user.setLastLogin(Instant.now());
 
             userRepository.save(user);
+
+            // Record successful federated login for audit compliance
+            Map<String, Object> auditDetails = new HashMap<>();
+            auditDetails.put("email", email);
+            auditDetails.put("username", username);
+            auditDetails.put("providerId", providerId);
+            securityAuditService.recordFederatedLoginSuccess(
+                    username != null ? username : email,
+                    provider,
+                    request,
+                    user.getId(),
+                    auditDetails);
         }
 
         // Check if there's a saved OAuth2 authorization request to continue
