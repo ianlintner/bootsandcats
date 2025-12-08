@@ -71,5 +71,7 @@ dependencies {
     testImplementation("io.micronaut:micronaut-http-client")
     testImplementation("io.micronaut.test:micronaut-test-junit5")
     testImplementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo:4.12.2")
+    testImplementation("org.mockito:mockito-core:5.11.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.11.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
