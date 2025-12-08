@@ -2,11 +2,15 @@ package com.bootsandcats.oauth2;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -20,6 +24,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @ActiveProfiles("prod")
 @Testcontainers
 @Tag("testcontainers")
+@Import(ProdSchemaValidationIntegrationTest.ObjectMapperConfig.class)
 @TestPropertySource(
         properties = {
             "spring.session.store-type=none",
@@ -33,6 +38,14 @@ import org.testcontainers.junit.jupiter.Testcontainers;
             "azure.keyvault.enabled=false"
         })
 class ProdSchemaValidationIntegrationTest {
+
+    @TestConfiguration
+    static class ObjectMapperConfig {
+        @Bean
+        ObjectMapper objectMapper() {
+            return new ObjectMapper();
+        }
+    }
 
     private static final String STATIC_JWK_JSON =
             "{\"keys\":[{\"kty\":\"EC\",\"d\":\"mwhKr9BIDjuB-OajeULLA4RORdJLUL8816YenVZwlMs\",\"use\":\"sig\",\"crv\":\"P-256\",\"kid\":\"586e7c9b-a4dc-4ea9-9cf7-197c3fae5d7f\",\"x\":\"0yuOTwftybMpxjSc1liSpftWHi5-YyyqvdlYclgF4zw\",\"y\":\"qboYXttcfjXXSYFlUEMkBOVmsMMDATyRv-UN4AR8Fl0\",\"alg\":\"ES256\"}]}";
