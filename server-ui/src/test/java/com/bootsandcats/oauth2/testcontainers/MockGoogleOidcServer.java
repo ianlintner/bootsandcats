@@ -113,6 +113,34 @@ public class MockGoogleOidcServer {
     }
 
     /**
+     * Returns the issuer URI for Google OIDC.
+     */
+    public String getIssuerUri() {
+        return getBaseUrl();
+    }
+
+    /**
+     * Returns the authorization URI for Google OIDC.
+     */
+    public String getAuthorizationUri() {
+        return getBaseUrl() + "/o/oauth2/v2/auth";
+    }
+
+    /**
+     * Returns the token URI for Google OIDC.
+     */
+    public String getTokenUri() {
+        return getBaseUrl() + "/token";
+    }
+
+    /**
+     * Returns the userinfo URI for Google OIDC.
+     */
+    public String getUserInfoUri() {
+        return getBaseUrl() + "/userinfo";
+    }
+
+    /**
      * Configures all Google OIDC endpoint mocks.
      */
     private void setupStubs() {
