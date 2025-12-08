@@ -22,15 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * <p>The configuration is conditionally enabled based on the {@code spring.session.store-type}
  * property. Set it to "redis" to enable Redis sessions, or "none" to use default in-memory
  * sessions.
- *
- * <p>Key features:
- *
- * <ul>
- *   <li>Sessions are stored in Redis with a configurable namespace
- *   <li>Session timeout is configurable via {@code server.servlet.session.timeout}
- *   <li>JSON serialization for session attributes
- *   <li>Support for Redis standalone and cluster modes
- * </ul>
  */
 @Configuration
 @ConditionalOnProperty(name = "spring.session.store-type", havingValue = "redis")

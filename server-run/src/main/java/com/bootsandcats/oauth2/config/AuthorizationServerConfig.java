@@ -230,22 +230,7 @@ public class AuthorizationServerConfig {
     }
 
     /**
-     * Registered OAuth2 client repository.
-     *
-     * <p>WARNING: Client secrets shown here are defaults for demonstration. In production, load
-     * secrets from environment variables (e.g., DEMO_CLIENT_SECRET, M2M_CLIENT_SECRET).
-     *
-     * @return RegisteredClientRepository with demo clients
-     */
-    /* Removed registeredClientRepository bean and helper methods */
-
-    /**
      * JWK Source for JWT signing/verification.
-     *
-     * <p>WARNING: The RSA key pair is generated dynamically on each server startup, which means
-     * tokens issued before a restart will become invalid after restart. For production use,
-     * consider persisting the JWK to a database or loading from a keystore to maintain token
-     * validity across restarts.
      *
      * @return JWKSource with RSA key pair
      */

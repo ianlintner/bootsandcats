@@ -5,8 +5,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":server-logic"))
-    implementation(project(":server-dao"))
+    implementation(project(":server-run"))
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-security")
