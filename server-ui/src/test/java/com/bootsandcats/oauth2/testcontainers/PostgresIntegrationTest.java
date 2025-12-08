@@ -150,7 +150,7 @@ class PostgresIntegrationTest extends AbstractPostgresContainerTest {
             // WHEN: Updating user fields
             savedUser.setEmail("newemail@example.com");
             savedUser.setName("Updated Name");
-            savedUser.setLastLogin(LocalDateTime.now());
+            savedUser.setLastLogin(Instant.now());
             userRepository.save(savedUser);
 
             // THEN: Changes are persisted
