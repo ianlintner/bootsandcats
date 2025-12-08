@@ -168,6 +168,8 @@ public class AuthorizationServerConfig {
                                                 "/applications/**",
                                                 "/.well-known/jwks.json")
                                         .permitAll()
+                                        .requestMatchers("/api/audit/**")
+                                        .hasRole("ADMIN")
                                         .anyRequest()
                                         .authenticated())
                 .formLogin(form -> form.loginPage("/login").permitAll())
