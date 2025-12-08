@@ -173,6 +173,8 @@ tasks.register<Test>("fastTests") {
 tasks.register<Test>("testcontainersTests") {
     description = "Runs all Testcontainers integration tests (PostgreSQL, Redis, WireMock)"
     group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
     useJUnitPlatform {
         includeTags("testcontainers")
     }
@@ -187,6 +189,8 @@ tasks.register<Test>("testcontainersTests") {
 tasks.register<Test>("postgresTests") {
     description = "Runs PostgreSQL Testcontainers integration tests"
     group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
     useJUnitPlatform {
         includeTags("postgres")
     }
@@ -200,6 +204,8 @@ tasks.register<Test>("postgresTests") {
 tasks.register<Test>("redisTests") {
     description = "Runs Redis Testcontainers integration tests"
     group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
     useJUnitPlatform {
         includeTags("redis")
     }
@@ -213,6 +219,8 @@ tasks.register<Test>("redisTests") {
 tasks.register<Test>("federatedIdentityTests") {
     description = "Runs federated identity flow tests with mocked OAuth providers"
     group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
     useJUnitPlatform {
         includeTags("oauth-flow")
     }
