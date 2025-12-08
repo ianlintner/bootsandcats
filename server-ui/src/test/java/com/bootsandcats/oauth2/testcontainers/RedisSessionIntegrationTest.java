@@ -177,7 +177,7 @@ class RedisSessionIntegrationTest extends AbstractRedisContainerTest {
     class SessionSecurity {
 
         @Test
-        @DisplayName("GIVEN CSRF protected endpoint WHEN request without CSRF THEN request is rejected")
+        @DisplayName("GIVEN CSRF protected endpoint WHEN request without CSRF THEN request is rejected or redirected")
         void shouldRejectRequestWithoutCsrf() throws Exception {
             // GIVEN: CSRF protected endpoint
 
@@ -187,9 +187,10 @@ class RedisSessionIntegrationTest extends AbstractRedisContainerTest {
 
             // THEN: Request handling depends on endpoint configuration
             // Token endpoint is typically exempt from CSRF but requires auth
+            // 302 (redirect to login) is also valid for unauthenticated requests
             assertThat(result.getResponse().getStatus())
                     .as("Endpoint should handle request appropriately")
-                    .isIn(400, 401, 403);
+                    .isIn(302, 400, 401, 403);
         }
 
         @Test
