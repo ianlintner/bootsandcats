@@ -1,32 +1,16 @@
-package com.bootsandcats.oauth2.dto;
+package com.bootsandcats.oauth2.mapper;
 
-import java.time.Instant;
-import java.util.UUID;
-
-import com.bootsandcats.oauth2.model.AuditEventResult;
-import com.bootsandcats.oauth2.model.AuditEventType;
+import com.bootsandcats.oauth2.dto.AuditEventSummary;
 import com.bootsandcats.oauth2.model.SecurityAuditEvent;
 
 /**
- * DTO for audit event summary information.
- *
- * <p>Provides a simplified view of security audit events for API responses.
+ * Mapper utility for converting entities to DTOs.
  */
-public record AuditEventSummary(
-        UUID eventId,
-        AuditEventType eventType,
-        String eventCategory,
-        Instant eventTimestamp,
-        String principal,
-        String principalType,
-        String clientId,
-        String ipAddress,
-        AuditEventResult result,
-        String resultCode,
-        String errorMessage,
-        String grantType,
-        String scopes,
-        String tokenType) {
+public final class AuditEventMapper {
+
+    private AuditEventMapper() {
+        // Utility class
+    }
 
     /**
      * Create an AuditEventSummary from a SecurityAuditEvent entity.
@@ -34,7 +18,7 @@ public record AuditEventSummary(
      * @param event the source audit event
      * @return the summary DTO
      */
-    public static AuditEventSummary from(SecurityAuditEvent event) {
+    public static AuditEventSummary toSummary(SecurityAuditEvent event) {
         return new AuditEventSummary(
                 event.getEventId(),
                 event.getEventType(),
