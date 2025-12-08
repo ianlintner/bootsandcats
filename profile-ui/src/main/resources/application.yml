@@ -53,15 +53,20 @@ micronaut:
       clients:
         oauth2server:
           client-id: ${OAUTH2_CLIENT_ID:profile-ui}
-          client-secret: ${OAUTH2_CLIENT_SECRET:profile-ui-secret}
+          client-secret: ${OAUTH2_CLIENT_SECRET:}
           openid:
             issuer: ${OAUTH2_ISSUER_URI:https://oauth2.cat-herding.net}
+          authorization:
+            url: ${OAUTH2_AUTHORIZATION_URL:}
+          token:
+            url: ${OAUTH2_TOKEN_URL:}
           scopes:
             - openid
             - profile
             - email
             - profile:read
             - profile:write
+            - profile:admin
   metrics:
     enabled: true
     export:
