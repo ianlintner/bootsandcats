@@ -331,6 +331,10 @@ jobs:
         run: |
           kubectl apply -f infrastructure/k8s/flyway-migrations-configmap.yaml -n default
 
+      - name: Ensure profile-service deployment exists
+        run: |
+          kubectl apply -f infrastructure/k8s/profile-service-deployment.yaml -n default
+
       - name: Deploy to AKS
         run: |
           set -euo pipefail
