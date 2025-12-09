@@ -7,32 +7,59 @@ import (
 	"os"
 	"time"
 
+	oauth2 "github.com/bootsandcats/oauth2-client-go"
 	"github.com/bootsandcats/oauth2-client-go/tracing"
 )
-
-// Note: After code generation, you would import:
-// oauth2 "github.com/bootsandcats/oauth2-client-go"
 
 func basicUsage() {
 	fmt.Println("Basic OAuth2 Client Usage")
 	fmt.Println("========================================")
 
-	// After code generation, you would use:
-	// config := oauth2.NewConfiguration()
-	// config.Servers = oauth2.ServerConfigurations{
-	// 	{URL: "https://auth.example.com"},
-	// }
-	//
-	// ctx := context.WithValue(context.Background(), oauth2.ContextAccessToken, "your-access-token")
-	// client := oauth2.NewAPIClient(config)
-	//
-	// userInfo, _, err := client.OAuth2Api.GetUserInfo(ctx).Execute()
+	// Create configuration
+	baseURL := os.Getenv("OAUTH2_SERVER_URL")
+	if baseURL == "" {
+		baseURL = "http://localhost:9000"
+	}
+
+	config := oauth2.NewConfiguration()
+	config.BasePath = baseURL
+	config.AccessToken = "your-access-token" // Replace with actual token
+
+	// Create API client
+	client := oauth2.NewAPIClient(config)
+	
+	fmt.Printf("API client created for: %s\n", config.BasePath)
+
+	// Create context with access token
+	ctx := context.Background()
+
+	// Example: Get OpenID Configuration (discovery)
+	// openIDConfig, err := client.DiscoveryApi.GetOpenIDConfiguration(ctx)
 	// if err != nil {
 	// 	log.Fatalf("Error: %v", err)
 	// }
-	// fmt.Printf("User: %+v\n", userInfo)
+	// fmt.Printf("Issuer: %s\n", openIDConfig.Issuer)
 
-	fmt.Println("Note: Run code generation first to use the full API client")
+	// Example: Exchange authorization code for tokens
+	// tokens, err := client.TokenApi.ExchangeCode(ctx, oauth2.TokenRequest{
+	// 	Code:        "authorization-code",
+	// 	RedirectUri: "http://localhost:3000/callback",
+	// 	ClientId:    "your-client-id",
+	// })
+	// if err != nil {
+	// 	log.Fatalf("Error: %v", err)
+	// }
+	// fmt.Printf("Access token: %s\n", tokens.AccessToken)
+
+	// Example: Get user info
+	// userInfo, err := client.UserInfoApi.GetUserInfo(ctx)
+	// if err != nil {
+	// 	log.Fatalf("Error: %v", err)
+	// }
+	// fmt.Printf("User: %s\n", userInfo.Name)
+
+	_ = ctx // Suppress unused variable warning
+	_ = client
 }
 
 func usageWithTracing() error {
@@ -61,35 +88,42 @@ func usageWithTracing() error {
 
 	fmt.Println("Tracing initialized successfully")
 
-	// After code generation, you would use:
-	// config := oauth2.NewConfiguration()
-	// config.Servers = oauth2.ServerConfigurations{
-	// 	{URL: "https://auth.example.com"},
-	// }
-	// config.HTTPClient = tracing.InstrumentedHTTPClient()
-	//
-	// client := oauth2.NewAPIClient(config)
-	//
-	// ctx, span := tracing.StartSpan(ctx, "get-user-info")
+	// Create configuration with instrumented HTTP client
+	baseURL := os.Getenv("OAUTH2_SERVER_URL")
+	if baseURL == "" {
+		baseURL = "http://localhost:9000"
+	}
+
+	config := oauth2.NewConfiguration()
+	config.BasePath = baseURL
+	config.HTTPClient = tracing.InstrumentedHTTPClient()
+
+	// Create API client
+	client := oauth2.NewAPIClient(config)
+
+	fmt.Printf("Traced API client created for: %s\n", config.BasePath)
+
+	// Example: Use traced API calls
+	// ctx, span := tracing.StartSpan(ctx, "get-openid-configuration")
 	// defer span.End()
 	//
-	// userInfo, _, err := client.OAuth2Api.GetUserInfo(ctx).Execute()
+	// openIDConfig, err := client.DiscoveryApi.GetOpenIDConfiguration(ctx)
 	// if err != nil {
 	// 	span.RecordError(err)
 	// 	return err
 	// }
-	// fmt.Printf("User: %+v\n", userInfo)
 
 	// Example of manual tracing
 	tracer := tracing.GetTracer()
-	ctx, span := tracer.Start(ctx, "example-operation")
-	span.SetAttributes()
+	_, span := tracer.Start(ctx, "example-operation")
 	fmt.Println("Span created successfully")
 
 	// Simulate some work
 	time.Sleep(100 * time.Millisecond)
 
 	span.End()
+
+	_ = client // Suppress unused variable warning
 
 	fmt.Println("Tracing shutdown complete")
 	return nil

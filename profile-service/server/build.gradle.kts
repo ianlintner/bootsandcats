@@ -60,6 +60,9 @@ dependencies {
     implementation("io.micronaut.security:micronaut-security-jwt")
     implementation("io.micronaut.validation:micronaut-validation")
     implementation("io.micronaut.micrometer:micronaut-micrometer-registry-prometheus")
+    // Prometheus simpleclient libraries for older Micrometer
+    runtimeOnly("io.prometheus:simpleclient:0.16.0")
+    runtimeOnly("io.prometheus:simpleclient_common:0.16.0")
     // OpenTelemetry for distributed tracing
     implementation("io.micronaut.tracing:micronaut-tracing-opentelemetry")
     implementation("io.opentelemetry:opentelemetry-exporter-otlp")

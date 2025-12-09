@@ -4,14 +4,18 @@ Example: Basic usage of the OAuth2 client
 
 import os
 from bootsandcats_oauth2_client import (
+    Configuration,
+    ApiClient,
+    DiscoveryApi,
+    TokenApi,
+    UserInfoApi,
+    TokenResponse,
+    UserInfo,
+)
+from bootsandcats_oauth2_client.tracing import (
     setup_tracing,
     traced_api_call,
-    TracedApiClient,
 )
-
-# Note: After code generation, you would import:
-# from bootsandcats_oauth2_client import ApiClient, Configuration
-# from bootsandcats_oauth2_client.api import OAuth2Api
 
 
 def basic_usage():
@@ -19,18 +23,38 @@ def basic_usage():
     print("Basic OAuth2 Client Usage")
     print("=" * 40)
     
-    # After code generation, you would use:
-    # config = Configuration(
-    #     host="https://auth.example.com",
-    #     access_token="your-access-token"
-    # )
-    # 
-    # with ApiClient(config) as client:
-    #     api = OAuth2Api(client)
-    #     user_info = api.get_user_info()
-    #     print(f"User: {user_info}")
+    # Create configuration
+    config = Configuration(
+        base_url=os.environ.get("OAUTH2_SERVER_URL", "http://localhost:9000"),
+        access_token="your-access-token",  # Replace with actual token
+    )
     
-    print("Note: Run code generation first to use the full API client")
+    # Create API client
+    client = ApiClient(config)
+    
+    # Create API instances
+    discovery_api = DiscoveryApi(client)
+    token_api = TokenApi(client)
+    userinfo_api = UserInfoApi(client)
+    
+    print(f"API client created for: {config.base_url}")
+    
+    # Example: Get OpenID Configuration (discovery)
+    # openid_config = discovery_api.get_openid_configuration()
+    # print(f"Issuer: {openid_config.issuer}")
+    # print(f"Authorization endpoint: {openid_config.authorization_endpoint}")
+    
+    # Example: Exchange authorization code for tokens
+    # tokens = token_api.exchange_code(
+    #     code="authorization-code",
+    #     redirect_uri="http://localhost:3000/callback",
+    #     client_id="your-client-id",
+    # )
+    # print(f"Access token: {tokens.access_token}")
+    
+    # Example: Get user info
+    # user_info = userinfo_api.get_user_info()
+    # print(f"User: {user_info.name}")
 
 
 def usage_with_tracing():
@@ -50,15 +74,22 @@ def usage_with_tracing():
     
     print("Tracing initialized successfully")
     
-    # After code generation, you would use:
-    # config = Configuration(host="https://auth.example.com")
-    # 
-    # with ApiClient(config) as client:
-    #     api = OAuth2Api(client)
-    #     traced_api = TracedApiClient(api, tracer, "oauth2")
-    #     
-    #     # This call will be automatically traced
-    #     user_info = traced_api.get_user_info()
+    # Create configuration
+    config = Configuration(
+        base_url=os.environ.get("OAUTH2_SERVER_URL", "http://localhost:9000"),
+    )
+    
+    # Create traced API client
+    client = ApiClient(config)
+    discovery_api = DiscoveryApi(client)
+    
+    # Use traced API call decorator
+    @traced_api_call("get_openid_configuration")
+    def get_openid_config():
+        # return discovery_api.get_openid_configuration()
+        pass  # Uncomment above when API is implemented
+    
+    print("Traced API client created")
     
     # Example of manual tracing
     with tracer.start_as_current_span("example-operation") as span:

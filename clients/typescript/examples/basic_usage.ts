@@ -2,26 +2,43 @@
  * Example: Basic usage of the OAuth2 client with OpenTelemetry tracing
  */
 
+import { Configuration, DiscoveryApi, TokenApi, UserInfoApi } from '../src';
 import { setupTracing, createTracedApi } from '../src/tracing';
-
-// Note: After code generation, you would import:
-// import { Configuration, OAuth2Api } from '../src';
 
 async function basicUsage(): Promise<void> {
   console.log('Basic OAuth2 Client Usage');
   console.log('='.repeat(40));
 
-  // After code generation, you would use:
-  // const config = new Configuration({
-  //   basePath: 'https://auth.example.com',
-  //   accessToken: 'your-access-token',
-  // });
-  //
-  // const api = new OAuth2Api(config);
-  // const userInfo = await api.getUserInfo();
-  // console.log('User:', userInfo);
+  // Create configuration
+  const config = new Configuration({
+    basePath: process.env.OAUTH2_SERVER_URL || 'http://localhost:9000',
+    accessToken: 'your-access-token', // Replace with actual token
+  });
 
-  console.log('Note: Run code generation first to use the full API client');
+  // Create API clients
+  const discoveryApi = new DiscoveryApi(config);
+  const tokenApi = new TokenApi(config);
+  const userInfoApi = new UserInfoApi(config);
+
+  console.log('API clients created successfully');
+  console.log('Base path:', config.basePath);
+
+  // Example: Get OpenID Configuration (discovery)
+  // const openIdConfig = await discoveryApi.getOpenIDConfiguration();
+  // console.log('Issuer:', openIdConfig.issuer);
+  // console.log('Authorization endpoint:', openIdConfig.authorization_endpoint);
+
+  // Example: Exchange authorization code for tokens
+  // const tokens = await tokenApi.exchangeCode({
+  //   code: 'authorization-code',
+  //   redirect_uri: 'http://localhost:3000/callback',
+  //   client_id: 'your-client-id',
+  // });
+  // console.log('Access token:', tokens.access_token);
+
+  // Example: Get user info
+  // const userInfo = await userInfoApi.getUserInfo();
+  // console.log('User:', userInfo);
 }
 
 async function usageWithTracing(): Promise<void> {
@@ -37,16 +54,16 @@ async function usageWithTracing(): Promise<void> {
 
   console.log('Tracing initialized successfully');
 
-  // After code generation, you would use:
-  // const config = new Configuration({
-  //   basePath: 'https://auth.example.com',
-  // });
-  //
-  // const api = new OAuth2Api(config);
-  // const tracedApi = createTracedApi(tracer, api, 'OAuth2Api');
-  //
-  // // This call will be automatically traced
-  // const userInfo = await tracedApi.getUserInfo();
+  // Create configuration
+  const config = new Configuration({
+    basePath: process.env.OAUTH2_SERVER_URL || 'http://localhost:9000',
+  });
+
+  // Create API and wrap with tracing
+  const discoveryApi = new DiscoveryApi(config);
+  const tracedDiscoveryApi = createTracedApi(tracer, discoveryApi, 'DiscoveryApi');
+
+  console.log('Traced API client created');
 
   // Example of manual tracing
   const span = tracer.startSpan('example-operation');
