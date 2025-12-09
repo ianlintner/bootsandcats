@@ -4,6 +4,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.function.Supplier;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +22,10 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 
+import com.bootsandcats.oauth2.model.AuditEventResult;
+import com.bootsandcats.oauth2.model.AuditEventType;
+import com.bootsandcats.oauth2.service.SecurityAuditService;
+
 @Configuration
 public class DataInitializer {
 
@@ -33,36 +39,43 @@ public class DataInitializer {
 
     @Bean
     public CommandLineRunner initializeClients(
-            RegisteredClientRepository repository, PasswordEncoder passwordEncoder) {
+            RegisteredClientRepository repository,
+            PasswordEncoder passwordEncoder,
+            SecurityAuditService securityAuditService) {
         return args -> {
-            registerClientIfMissing(
+            registerOrUpdateClient(
                     repository,
+                    securityAuditService,
                     "demo-client",
                     () ->
                             buildConfidentialClient(
                                     passwordEncoder.encode(demoClientSecret),
                                     UUID.randomUUID().toString()));
 
-            registerClientIfMissing(
+            registerOrUpdateClient(
                     repository,
+                    securityAuditService,
                     "public-client",
                     () -> buildPublicClient(UUID.randomUUID().toString()));
 
-            registerClientIfMissing(
+            registerOrUpdateClient(
                     repository,
+                    securityAuditService,
                     "m2m-client",
                     () -> buildMachineToMachineClient(passwordEncoder.encode(m2mClientSecret)));
 
-            registerClientIfMissing(
+            registerOrUpdateClient(
                     repository,
+                    securityAuditService,
                     "profile-ui",
                     () ->
                             buildProfileUiClient(
                                     passwordEncoder.encode(demoClientSecret),
                                     UUID.randomUUID().toString()));
 
-            registerClientIfMissing(
+            registerOrUpdateClient(
                     repository,
+                    securityAuditService,
                     "profile-service",
                     () ->
                             buildProfileServiceClient(
@@ -71,13 +84,78 @@ public class DataInitializer {
         };
     }
 
-    private void registerClientIfMissing(
+    private void registerOrUpdateClient(
             RegisteredClientRepository repository,
+            SecurityAuditService securityAuditService,
             String clientId,
             Supplier<RegisteredClient> supplier) {
-        if (repository.findByClientId(clientId) == null) {
+        RegisteredClient existing = repository.findByClientId(clientId);
+        RegisteredClient desired = supplier.get();
+
+        if (existing == null) {
             log.info("Registering OAuth client '{}' in database", clientId);
-            repository.save(supplier.get());
+            repository.save(desired);
+            auditClientEvent(securityAuditService, AuditEventType.CLIENT_REGISTERED, desired);
+            return;
+        }
+
+        RegisteredClient.Builder builder = RegisteredClient.from(existing);
+
+        builder.clientId(desired.getClientId());
+        builder.clientIdIssuedAt(existing.getClientIdIssuedAt());
+        builder.clientSecret(desired.getClientSecret());
+        builder.clientSecretExpiresAt(desired.getClientSecretExpiresAt());
+        builder.clientName(desired.getClientName());
+        builder.clientAuthenticationMethods(
+                methods -> {
+                    methods.clear();
+                    methods.addAll(desired.getClientAuthenticationMethods());
+                });
+        builder.authorizationGrantTypes(
+                grantTypes -> {
+                    grantTypes.clear();
+                    grantTypes.addAll(desired.getAuthorizationGrantTypes());
+                });
+        builder.redirectUris(
+                uris -> {
+                    uris.clear();
+                    uris.addAll(desired.getRedirectUris());
+                });
+        builder.postLogoutRedirectUris(
+                uris -> {
+                    uris.clear();
+                    uris.addAll(desired.getPostLogoutRedirectUris());
+                });
+        builder.scopes(
+                scopes -> {
+                    scopes.clear();
+                    scopes.addAll(desired.getScopes());
+                });
+        builder.clientSettings(desired.getClientSettings());
+        builder.tokenSettings(desired.getTokenSettings());
+
+        log.info("Updating OAuth client '{}' in database", clientId);
+        RegisteredClient updated = builder.build();
+        repository.save(updated);
+        auditClientEvent(securityAuditService, AuditEventType.CLIENT_UPDATED, updated);
+    }
+
+    private void auditClientEvent(
+            SecurityAuditService securityAuditService,
+            AuditEventType type,
+            RegisteredClient client) {
+        try {
+            Map<String, Object> details = new HashMap<>();
+            details.put("clientId", client.getClientId());
+            details.put("scopes", String.join(" ", client.getScopes()));
+            details.put("grantTypes", client.getAuthorizationGrantTypes().toString());
+            securityAuditService.recordGenericEvent(
+                    type, AuditEventResult.SUCCESS, client.getClientId(), null, details);
+        } catch (Exception e) {
+            log.debug(
+                    "Failed to record audit event for client {}: {}",
+                    client.getClientId(),
+                    e.getMessage());
         }
     }
 

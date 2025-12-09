@@ -4,5 +4,10 @@ micronaut:
   application:
     name: profile-ui-test
 
+auth:
+  events:
+    consumer:
+      enabled: false
+
 # Disable MongoDB for unit tests - controller tests use mocks
 # Integration tests use Flapdoodle embedded MongoDB

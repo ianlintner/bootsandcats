@@ -73,6 +73,7 @@ dependencies {
     // MongoDB support for Azure CosmosDB
     implementation("io.micronaut.mongodb:micronaut-mongo-sync")
     implementation("io.micronaut.serde:micronaut-serde-jackson")
+    implementation("io.micronaut.redis:micronaut-redis-lettuce")
 
     runtimeOnly("org.yaml:snakeyaml")
 

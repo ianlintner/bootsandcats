@@ -17,6 +17,7 @@ import com.bootsandcats.oauth2.model.AuditEventResult;
 import com.bootsandcats.oauth2.model.AuditEventType;
 import com.bootsandcats.oauth2.model.SecurityAuditEvent;
 import com.bootsandcats.oauth2.repository.SecurityAuditEventRepository;
+import com.bootsandcats.oauth2.events.AuthEventPublisher;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -35,11 +36,15 @@ public class SecurityAuditService {
 
     private final SecurityAuditEventRepository auditEventRepository;
     private final ObjectMapper objectMapper;
+    private final AuthEventPublisher authEventPublisher;
 
     public SecurityAuditService(
-            SecurityAuditEventRepository auditEventRepository, ObjectMapper objectMapper) {
+            SecurityAuditEventRepository auditEventRepository,
+            ObjectMapper objectMapper,
+            AuthEventPublisher authEventPublisher) {
         this.auditEventRepository = auditEventRepository;
         this.objectMapper = objectMapper;
+        this.authEventPublisher = authEventPublisher;
     }
 
     /**
@@ -50,16 +55,8 @@ public class SecurityAuditService {
     @Async("auditTaskExecutor")
     @Transactional
     public void recordEventAsync(SecurityAuditEvent event) {
-        try {
-            auditEventRepository.save(event);
-            log.debug(
-                    "Recorded audit event: type={}, principal={}, result={}",
-                    event.getEventType(),
-                    event.getPrincipal(),
-                    event.getResult());
-        } catch (Exception e) {
-            log.error("Failed to record audit event: {}", event, e);
-        }
+        SecurityAuditEvent saved = persistEvent(event);
+        publishEvent(saved);
     }
 
     /**
@@ -70,6 +67,12 @@ public class SecurityAuditService {
      */
     @Transactional
     public SecurityAuditEvent recordEvent(SecurityAuditEvent event) {
+        SecurityAuditEvent saved = persistEvent(event);
+        publishEvent(saved);
+        return saved;
+    }
+
+    private SecurityAuditEvent persistEvent(SecurityAuditEvent event) {
         try {
             SecurityAuditEvent saved = auditEventRepository.save(event);
             log.debug(
@@ -81,6 +84,19 @@ public class SecurityAuditService {
         } catch (Exception e) {
             log.error("Failed to record audit event: {}", event, e);
             throw e;
+        }
+    }
+
+    private void publishEvent(SecurityAuditEvent event) {
+        try {
+            authEventPublisher.publish(event);
+        } catch (Exception e) {
+            // Publishing failures should not interrupt auth flows
+            log.warn(
+                    "Auth event publishing failed for event {} of type {}",
+                    event.getEventId(),
+                    event.getEventType(),
+                    e);
         }
     }
 

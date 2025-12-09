@@ -11,6 +11,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
     implementation("org.springframework.security:spring-security-oauth2-authorization-server")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("io.micrometer:micrometer-core")
     implementation("com.azure:azure-identity:1.15.0")
     implementation("com.azure:azure-security-keyvault-secrets:4.8.3")
