@@ -21,6 +21,8 @@ resources:
   - virtualservices.yaml
   - flyway-migrations-configmap.yaml
   - istio-authz-policy.yaml
+  - requestauthentication-profile.yaml
+  - envoyfilter-profile-jwt-to-headers.yaml
 
 
 # You can add configMapGenerator/secretGenerator later if you want kustomize to build these dynamically

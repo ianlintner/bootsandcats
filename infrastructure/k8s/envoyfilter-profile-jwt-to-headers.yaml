@@ -1,0 +1,122 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: profile-jwt-to-headers
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    project: bootsandcats
+spec:
+  # Applied at the profile-service sidecar to shape inbound traffic
+  workloadSelector:
+    labels:
+      app: profile-service
+  configPatches:
+  - applyTo: HTTP_FILTER
+    match:
+      context: SIDECAR_INBOUND
+      listener:
+        filterChain:
+          filter:
+            name: envoy.filters.network.http_connection_manager
+            subFilter:
+              name: envoy.filters.http.router
+    patch:
+      operation: INSERT_BEFORE
+      value:
+        name: envoy.filters.http.lua
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+          inlineCode: |
+            local cjson = require("cjson")
+
+            local oauth_host = "oauth2.cat-herding.net"
+            local client_id = "profile-service"
+
+            local function urlencode(str)
+              return (str:gsub("([^%w_.%-~])", function(c)
+                return string.format("%%%02X", string.byte(c))
+              end))
+            end
+
+            local function to_header_value(value)
+              if value == nil then
+                return nil
+              end
+              if type(value) == "table" then
+                local parts = {}
+                for _, v in ipairs(value) do
+                  table.insert(parts, tostring(v))
+                end
+                return table.concat(parts, ",")
+              end
+              return tostring(value)
+            end
+
+            function envoy_on_request(handle)
+              local payload_json = handle:headers():get("x-jwt-payload")
+              local path_with_query = handle:headers():get(":path") or "/"
+              local path_only = path_with_query:match("^[^?]+") or "/"
+
+              -- Allow OAuth2 callback and actuator endpoints to reach the app without JWTs
+              if path_only:find("^/login/oauth2/code/") == 1
+                  or path_only:find("^/actuator") == 1
+                  or path_only == "/favicon.ico" then
+                return
+              end
+
+              -- Redirect unauthenticated callers to OAuth2 authorize endpoint
+              if payload_json == nil then
+                local authority = handle:headers():get(":authority") or "profile.cat-herding.net"
+                local redirect_uri = "https://" .. authority .. path_with_query
+                local location = "https://" .. oauth_host .. "/oauth2/authorize" ..
+                  "?response_type=code" ..
+                  "&client_id=" .. client_id ..
+                  "&scope=" .. urlencode("openid profile") ..
+                  "&redirect_uri=" .. urlencode(redirect_uri)
+
+                handle:respond({
+                  [":status"] = "302",
+                  ["Location"] = location,
+                  ["Cache-Control"] = "no-store",
+                  ["Pragma"] = "no-cache"
+                }, "")
+                return
+              end
+
+              local ok, claims = pcall(cjson.decode, payload_json)
+              if not ok then
+                handle:logWarn("Failed to decode JWT payload; sending redirect")
+                local authority = handle:headers():get(":authority") or "profile.cat-herding.net"
+                local redirect_uri = "https://" .. authority .. path_with_query
+                local location = "https://" .. oauth_host .. "/oauth2/authorize" ..
+                  "?response_type=code" ..
+                  "&client_id=" .. client_id ..
+                  "&scope=" .. urlencode("openid profile") ..
+                  "&redirect_uri=" .. urlencode(redirect_uri)
+
+                handle:respond({
+                  [":status"] = "302",
+                  ["Location"] = location,
+                  ["Cache-Control"] = "no-store",
+                  ["Pragma"] = "no-cache"
+                }, "")
+                return
+              end
+
+              local function add_claim(header, claim)
+                local value = to_header_value(claims[claim])
+                if value ~= nil then
+                  handle:headers():add(header, value)
+                end
+              end
+
+              add_claim("x-jwt-sub", "sub")
+              add_claim("x-jwt-username", "preferred_username")
+              add_claim("x-jwt-email", "email")
+              add_claim("x-jwt-name", "name")
+              add_claim("x-jwt-scope", "scope")
+
+              -- Remove the raw payload header so it is not forwarded downstream
+              handle:headers():remove("x-jwt-payload")
+            end
