@@ -18,6 +18,50 @@ spec:
         version: v1
     spec:
       initContainers:
+      # Repair any failed migrations before attempting migrate
+      - name: flyway-repair
+        image: flyway/flyway:11-alpine
+        args:
+        - -url=jdbc:postgresql://postgres.default.svc.cluster.local:5432/$(DATABASE_NAME)
+        - -user=$(DATABASE_USERNAME)
+        - -password=$(DATABASE_PASSWORD)
+        - -locations=filesystem:/flyway/sql
+        - repair
+        env:
+        - name: DATABASE_NAME
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: database-name
+        - name: DATABASE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: database-username
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: database-password
+        volumeMounts:
+        - name: flyway-migrations
+          mountPath: /flyway/sql
+          readOnly: true
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
       - name: flyway-migrate
         image: flyway/flyway:11-alpine
         args:
