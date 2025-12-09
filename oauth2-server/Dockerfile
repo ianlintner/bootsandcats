@@ -133,5 +133,15 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport \
     -XX:+ExitOnOutOfMemoryError \
     -Djava.security.egd=file:/dev/./urandom"
 
-# Run the application
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS org.springframework.boot.loader.launch.JarLauncher"]
+# OpenTelemetry agent configuration (disabled by default, enable via OTEL_ENABLED=true)
+# The agent provides automatic instrumentation for Spring Boot, JDBC, HTTP clients, etc.
+ENV OTEL_ENABLED="false"
+ENV OTEL_SERVICE_NAME="oauth2-server"
+ENV OTEL_EXPORTER_OTLP_ENDPOINT=""
+ENV OTEL_TRACES_EXPORTER="otlp"
+ENV OTEL_METRICS_EXPORTER="otlp"
+ENV OTEL_LOGS_EXPORTER="none"
+
+# Run the application with optional OpenTelemetry agent
+# When OTEL_ENABLED=true, the agent is attached for automatic tracing
+ENTRYPOINT ["sh", "-c", "if [ \"$OTEL_ENABLED\" = \"true\" ]; then exec java $JAVA_OPTS -javaagent:/app/opentelemetry-javaagent.jar org.springframework.boot.loader.launch.JarLauncher; else exec java $JAVA_OPTS org.springframework.boot.loader.launch.JarLauncher; fi"]
