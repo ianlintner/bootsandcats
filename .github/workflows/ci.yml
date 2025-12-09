@@ -90,14 +90,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-jar
-          path: server-ui/build/libs/server-ui-1.0.0-SNAPSHOT.jar
+          path: oauth2-server/server-ui/build/libs/server-ui-1.0.0-SNAPSHOT.jar
           if-no-files-found: error
 
-      - name: Upload profile-ui fat JAR
+      - name: Upload profile-service fat JAR
         uses: actions/upload-artifact@v4
         with:
-          name: profile-ui-jar
-          path: profile-ui/build/libs/profile-ui-1.0.0-SNAPSHOT-all.jar
+          name: profile-service-jar
+          path: profile-service/server/build/libs/server-1.0.0-SNAPSHOT-all.jar
           if-no-files-found: error
 
   static-analysis:
@@ -154,7 +154,7 @@ jobs:
           cache-read-only: true
 
       - name: Run Testcontainers tests
-        run: gradle :server-ui:testcontainersTests --no-daemon --build-cache
+        run: gradle :oauth2-server:server-ui:testcontainersTests --no-daemon --build-cache
 
       - name: Upload Testcontainers test reports (always)
         if: always()
@@ -184,13 +184,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: app-jar
-          path: server-ui/build/libs
+          path: oauth2-server/server-ui/build/libs
 
-      - name: Download profile-ui fat JAR
+      - name: Download profile-service fat JAR
         uses: actions/download-artifact@v4
         with:
-          name: profile-ui-jar
-          path: profile-ui/build/libs
+          name: profile-service-jar
+          path: profile-service/server/build/libs
 
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
@@ -198,8 +198,8 @@ jobs:
       - name: Run app
         run: |
           echo "Available JARs:"
-          ls -la server-ui/build/libs/
-          JAR_FILE="server-ui/build/libs/server-ui-1.0.0-SNAPSHOT.jar"
+          ls -la oauth2-server/server-ui/build/libs/
+          JAR_FILE="oauth2-server/server-ui/build/libs/server-ui-1.0.0-SNAPSHOT.jar"
           echo "Starting JAR: $JAR_FILE"
           OTEL_SDK_DISABLED=true nohup java -jar "$JAR_FILE" --spring.profiles.active=ci --server.port=9000 > app.log 2>&1 &
           echo $! > app.pid
@@ -261,13 +261,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: app-jar
-          path: server-ui/build/libs
+          path: oauth2-server/server-ui/build/libs
 
-      - name: Download profile-ui JAR
+      - name: Download profile-service JAR
         uses: actions/download-artifact@v4
         with:
-          name: profile-ui-jar
-          path: profile-ui/build/libs
+          name: profile-service-jar
+          path: profile-service/server/build/libs
 
       - name: Azure Login
         uses: azure/login@v2
