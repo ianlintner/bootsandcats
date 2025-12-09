@@ -1,6 +1,6 @@
 plugins {
     id("io.micronaut.application") version "4.3.8"
-    // Removed test-resources plugin - using Flapdoodle embedded MongoDB instead
+    id("io.micronaut.openapi") version "4.3.8"
 }
 
 val micronautVersion = "4.3.8"
@@ -51,6 +51,7 @@ dependencies {
     annotationProcessor("io.micronaut:micronaut-inject-java")
     annotationProcessor("io.micronaut.validation:micronaut-validation-processor:$micronautVersion")
     annotationProcessor("io.micronaut.serde:micronaut-serde-processor")
+    annotationProcessor("io.micronaut.openapi:micronaut-openapi")
 
     implementation("io.micronaut:micronaut-http-server-netty")
     implementation("io.micronaut:micronaut-management")
@@ -59,6 +60,12 @@ dependencies {
     implementation("io.micronaut.security:micronaut-security-jwt")
     implementation("io.micronaut.validation:micronaut-validation:$micronautVersion")
     implementation("io.micronaut.micrometer:micronaut-micrometer-registry-prometheus")
+    // OpenTelemetry for distributed tracing
+    implementation("io.micronaut.tracing:micronaut-tracing-opentelemetry")
+    implementation("io.opentelemetry:opentelemetry-exporter-otlp")
+    // OpenAPI/Swagger UI
+    implementation("io.swagger.core.v3:swagger-annotations")
+    runtimeOnly("io.micronaut.openapi:micronaut-openapi-adoc")
     implementation("ch.qos.logback:logback-classic")
 
     // MongoDB support for Azure CosmosDB
