@@ -25,8 +25,11 @@ dependencies {
     implementation("io.micrometer:micrometer-registry-prometheus")
     // OpenTelemetry API for manual instrumentation (optional, agent provides auto-instrumentation)
     implementation("io.opentelemetry:opentelemetry-api:1.44.0")
-    // Micrometer tracing bridge for metrics correlation
-    implementation("io.micrometer:micrometer-tracing-bridge-otel")
+    // NOTE: micrometer-tracing-bridge-otel is NOT compatible with Spring Boot 4.0.0 
+    // because it depends on OTel SDK classes that reference removed Spring classes.
+    // Use the OTel Java Agent (-javaagent) for tracing instead - it instruments at runtime
+    // without compile-time dependencies on OTel SDK autoconfiguration.
+    // implementation("io.micrometer:micrometer-tracing-bridge-otel")
     implementation("com.azure:azure-identity:1.15.0")
     implementation("com.azure:azure-security-keyvault-secrets:4.8.3")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
