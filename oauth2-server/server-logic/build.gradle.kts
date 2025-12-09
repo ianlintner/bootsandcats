@@ -17,9 +17,15 @@ dependencies {
     implementation("com.azure:azure-security-keyvault-secrets:4.8.3")
     implementation("com.nimbusds:nimbus-jose-jwt:9.40")
 
+    testImplementation(enforcedPlatform("org.junit:junit-bom:5.10.3"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     compileOnly("org.projectlombok:lombok:1.18.32")
     annotationProcessor("org.projectlombok:lombok:1.18.32")
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 tasks.register<JavaExec>("runGenerator") {
