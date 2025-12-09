@@ -9,16 +9,35 @@ from __future__ import annotations
 __version__ = "1.0.0"
 __author__ = "Bootsandcats Team"
 
-# Note: The following imports will be available after code generation
-# from bootsandcats_oauth2_client.api_client import ApiClient
-# from bootsandcats_oauth2_client.configuration import Configuration
-# from bootsandcats_oauth2_client.exceptions import (
-#     ApiException,
-#     ApiValueError,
-#     ApiTypeError,
-# )
+# API client and configuration
+from bootsandcats_oauth2_client.api_client import (
+    ApiClient,
+    ApiException,
+    ApiTypeError,
+    ApiValueError,
+    Configuration,
+    OAuth2Api,
+    TokenApi,
+    UserInfoApi,
+)
 
-# Tracing utilities (available immediately)
+# Models
+from bootsandcats_oauth2_client.models import (
+    ClientRegistrationRequest,
+    ClientRegistrationResponse,
+    IntrospectionRequest,
+    IntrospectionResponse,
+    JWKS,
+    JWK,
+    OAuth2Error,
+    OpenIDConfiguration,
+    RevocationRequest,
+    TokenRequest,
+    TokenResponse,
+    UserInfo,
+)
+
+# Tracing utilities
 from bootsandcats_oauth2_client.tracing import (
     setup_tracing,
     traced_api_call,
@@ -29,6 +48,28 @@ from bootsandcats_oauth2_client.tracing import (
 __all__ = [
     "__version__",
     "__author__",
+    # API Client
+    "ApiClient",
+    "ApiException",
+    "ApiTypeError",
+    "ApiValueError",
+    "Configuration",
+    "OAuth2Api",
+    "TokenApi",
+    "UserInfoApi",
+    # Models
+    "ClientRegistrationRequest",
+    "ClientRegistrationResponse",
+    "IntrospectionRequest",
+    "IntrospectionResponse",
+    "JWKS",
+    "JWK",
+    "OAuth2Error",
+    "OpenIDConfiguration",
+    "RevocationRequest",
+    "TokenRequest",
+    "TokenResponse",
+    "UserInfo",
     # Tracing
     "setup_tracing",
     "traced_api_call",

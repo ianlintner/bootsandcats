@@ -49,7 +49,7 @@ dependencies {
     implementation(platform("io.micronaut.platform:micronaut-platform:$micronautVersion"))
 
     annotationProcessor("io.micronaut:micronaut-inject-java")
-    annotationProcessor("io.micronaut.validation:micronaut-validation-processor:$micronautVersion")
+    annotationProcessor("io.micronaut.validation:micronaut-validation-processor")
     annotationProcessor("io.micronaut.serde:micronaut-serde-processor")
     annotationProcessor("io.micronaut.openapi:micronaut-openapi")
 
@@ -58,7 +58,7 @@ dependencies {
     implementation("io.micronaut:micronaut-jackson-databind")
     implementation("io.micronaut.security:micronaut-security-oauth2")
     implementation("io.micronaut.security:micronaut-security-jwt")
-    implementation("io.micronaut.validation:micronaut-validation:$micronautVersion")
+    implementation("io.micronaut.validation:micronaut-validation")
     implementation("io.micronaut.micrometer:micronaut-micrometer-registry-prometheus")
     // OpenTelemetry for distributed tracing
     implementation("io.micronaut.tracing:micronaut-tracing-opentelemetry")
