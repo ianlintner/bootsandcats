@@ -85,11 +85,11 @@ spec:
   # Resource limits
   resources:
     requests:
-      memory: "256Mi"
-      cpu: "200m"
+      memory: "128Mi"
+      cpu: "100m"
     limits:
-      memory: "1Gi"
-      cpu: "500m"
+      memory: "512Mi"
+      cpu: "250m"
 
   # Tolerate spot instances
   affinity:
