@@ -6,7 +6,7 @@ dependencies {
     implementation(platform("org.springframework.boot:spring-boot-dependencies:4.0.0"))
     
     // Project dependencies
-    api(project(":server-model"))
+    api(project(":oauth2-server:server-model"))
     
     api("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")

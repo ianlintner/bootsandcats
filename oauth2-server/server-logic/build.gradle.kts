@@ -4,7 +4,7 @@ plugins {
 
 dependencies {
     implementation(platform("org.springframework.boot:spring-boot-dependencies:4.0.0"))
-    api(project(":server-dao"))
+    api(project(":oauth2-server:server-dao"))
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-web")

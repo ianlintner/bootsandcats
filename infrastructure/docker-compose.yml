@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   oauth2-server:
-    build: .
+    build:
+      context: ..
+      dockerfile: oauth2-server/Dockerfile
     ports:
       - "9000:9000"
     environment:
@@ -71,8 +73,8 @@ services:
 
   profile-ui:
     build:
-      context: .
-      dockerfile: profile-ui/Dockerfile
+      context: ..
+      dockerfile: profile-service/server/Dockerfile
     ports:
       - "8080:8080"
     environment:

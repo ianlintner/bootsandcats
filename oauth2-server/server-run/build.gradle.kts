@@ -6,8 +6,8 @@ dependencies {
     implementation(platform("org.springframework.boot:spring-boot-dependencies:4.0.0"))
     
     // Project dependencies
-    api(project(":server-logic"))
-    api(project(":server-dao"))
+    api(project(":oauth2-server:server-logic"))
+    api(project(":oauth2-server:server-dao"))
     
     // Spring Boot starters for running the server
     implementation("org.springframework.boot:spring-boot-starter-web")
