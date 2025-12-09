@@ -7,6 +7,11 @@
  */
 
 /**
+ * Credentials mode for fetch requests.
+ */
+export type CredentialsMode = 'omit' | 'same-origin' | 'include';
+
+/**
  * Configuration parameters for the API client.
  */
 export interface ConfigurationParameters {
@@ -45,7 +50,7 @@ export interface ConfigurationParameters {
   /**
    * Custom credentials mode for fetch requests.
    */
-  credentials?: RequestCredentials;
+  credentials?: CredentialsMode;
 }
 
 /**
@@ -85,7 +90,7 @@ export class Configuration {
   /**
    * Custom credentials mode for fetch requests.
    */
-  credentials?: RequestCredentials;
+  credentials?: CredentialsMode;
 
   constructor(params: ConfigurationParameters = {}) {
     this.basePath = params.basePath ?? 'http://localhost:9000';

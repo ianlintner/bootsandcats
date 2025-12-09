@@ -3,7 +3,7 @@
 use crate::configuration::Configuration;
 use crate::error::{Error, Result};
 use crate::models::*;
-use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
+use reqwest::header::{AUTHORIZATION, CONTENT_TYPE};
 
 /// Discovery API client for OpenID Connect discovery endpoints.
 pub struct DiscoveryApi {
