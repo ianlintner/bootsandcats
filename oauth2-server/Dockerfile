@@ -58,6 +58,11 @@ COPY oauth2-server/server-ui/build/libs/server-ui-1.0.0-SNAPSHOT.jar app.jar
 # Extract layers for optimized Docker image
 RUN java -Djarmode=layertools -jar app.jar extract
 
+# Download OpenTelemetry Java Agent for runtime instrumentation
+# Using the agent approach instead of Spring Boot Starter for compatibility with Spring Boot 4.0.0
+ARG OTEL_AGENT_VERSION=2.12.0
+ADD https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v${OTEL_AGENT_VERSION}/opentelemetry-javaagent.jar /app/opentelemetry-javaagent.jar
+
 # Runtime stage
 FROM eclipse-temurin:21-jre
 
@@ -75,6 +80,9 @@ COPY --from=builder /app/dependencies/ ./
 COPY --from=builder /app/spring-boot-loader/ ./
 COPY --from=builder /app/snapshot-dependencies/ ./
 COPY --from=builder /app/application/ ./
+
+# Copy OpenTelemetry Java Agent
+COPY --from=builder /app/opentelemetry-javaagent.jar ./opentelemetry-javaagent.jar
 
 # Bring in both possible doc sources. We’ll choose in a RUN step to avoid
 # variable substitution limits in COPY --from.
