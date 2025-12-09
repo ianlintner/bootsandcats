@@ -11,7 +11,7 @@ labels:
     includeTemplates: true
 
 resources:
-  - deployment.yaml
+  - oauth2-server-deployment.yaml
   - cnpg-operator.yaml
   - postgres.yaml
   - redis.yaml
