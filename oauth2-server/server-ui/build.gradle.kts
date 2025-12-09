@@ -4,6 +4,10 @@ plugins {
     id("java")
 }
 
+// OpenTelemetry Java Agent version - use agent approach instead of starter library
+// The agent attaches via -javaagent and is compatible with any Spring Boot version
+val otelAgentVersion = "2.12.0"
+
 dependencies {
     implementation(project(":oauth2-server:server-run"))
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -19,13 +23,10 @@ dependencies {
     implementation("org.apache.commons:commons-pool2")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.0")
     implementation("io.micrometer:micrometer-registry-prometheus")
-    // OpenTelemetry tracing - can be disabled at runtime via OTEL_SDK_DISABLED=true
-    implementation("io.micrometer:micrometer-tracing-bridge-otel")
+    // OpenTelemetry API for manual instrumentation (optional, agent provides auto-instrumentation)
     implementation("io.opentelemetry:opentelemetry-api:1.44.0")
-    implementation("io.opentelemetry:opentelemetry-sdk:1.44.0")
-    implementation("io.opentelemetry:opentelemetry-exporter-otlp:1.44.0")
-    implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure:1.44.0")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-spring-boot-starter:2.12.0")
+    // Micrometer tracing bridge for metrics correlation
+    implementation("io.micrometer:micrometer-tracing-bridge-otel")
     implementation("com.azure:azure-identity:1.15.0")
     implementation("com.azure:azure-security-keyvault-secrets:4.8.3")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
