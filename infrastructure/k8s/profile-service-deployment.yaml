@@ -27,6 +27,19 @@ spec:
           value: "native"
         - name: PROFILE_SERVICE_PORT
           value: "8080"
+        - name: REDIS_URI
+          valueFrom:
+            secretKeyRef:
+              name: redis-auth
+              key: redis-uri
+        - name: AUTH_EVENTS_CONSUMER_ENABLED
+          value: "true"
+        - name: AUTH_EVENTS_STREAM
+          value: "auth:events"
+        - name: AUTH_EVENTS_CONSUMER_GROUP
+          value: "profile-service"
+        - name: AUTH_EVENTS_CONSUMER_NAME
+          value: "profile-service-1"
         - name: OAUTH2_ISSUER_URI
           value: "https://oauth2.cat-herding.net"
         - name: OAUTH2_CLIENT_ID
@@ -36,6 +49,11 @@ spec:
             secretKeyRef:
               name: oauth2-app-secrets
               key: demo-client-secret
+        - name: REDIS_URI
+          valueFrom:
+            secretKeyRef:
+              name: redis-auth
+              key: redis-uri
         # OpenTelemetry
         - name: OTEL_EXPORTER_OTLP_ENDPOINT
           value: "http://otel-collector:4317"

@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: Secret
-metadata:
-  name: redis-auth
-  namespace: default
-type: Opaque
-stringData:
-  redis-host: redis
-  redis-password: redisPass3453clrtjlHFEnf139@!

@@ -13,11 +13,11 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bootsandcats.oauth2.events.AuthEventPublisher;
 import com.bootsandcats.oauth2.model.AuditEventResult;
 import com.bootsandcats.oauth2.model.AuditEventType;
 import com.bootsandcats.oauth2.model.SecurityAuditEvent;
 import com.bootsandcats.oauth2.repository.SecurityAuditEventRepository;
-import com.bootsandcats.oauth2.events.AuthEventPublisher;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

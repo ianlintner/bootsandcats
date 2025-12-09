@@ -15,7 +15,6 @@ resources:
   - cnpg-operator.yaml
   - postgres.yaml
   - redis.yaml
-  - redis-auth.yaml
   - pdb.yaml
   - profile-service-deployment.yaml
   - virtualservices.yaml
@@ -23,6 +22,7 @@ resources:
   - istio-authz-policy.yaml
   - requestauthentication-profile.yaml
   - envoyfilter-profile-jwt-to-headers.yaml
+  - secret-provider-class.yaml
 
 
 # You can add configMapGenerator/secretGenerator later if you want kustomize to build these dynamically

@@ -8,9 +8,7 @@ import java.util.Optional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-/**
- * Representation of an auth activity event consumed from Redis Streams.
- */
+/** Representation of an auth activity event consumed from Redis Streams. */
 public class AuthActivityEvent {
 
     private String eventId;
@@ -63,8 +61,7 @@ public class AuthActivityEvent {
         if (event.detailsJson != null && mapper != null) {
             try {
                 @SuppressWarnings("unchecked")
-                Map<String, Object> parsed =
-                        mapper.readValue(event.detailsJson, Map.class);
+                Map<String, Object> parsed = mapper.readValue(event.detailsJson, Map.class);
                 event.setDetails(parsed);
             } catch (Exception ignored) {
                 // Keep empty map on parse failure

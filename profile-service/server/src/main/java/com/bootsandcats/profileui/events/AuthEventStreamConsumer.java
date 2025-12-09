@@ -13,12 +13,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.lettuce.core.Consumer;
 import io.lettuce.core.RedisBusyException;
+import io.lettuce.core.RedisClient;
 import io.lettuce.core.StreamMessage;
 import io.lettuce.core.XGroupCreateArgs;
 import io.lettuce.core.XReadArgs;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
-import io.lettuce.core.RedisClient;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.scheduling.annotation.Scheduled;
 import jakarta.annotation.PostConstruct;
@@ -111,6 +111,7 @@ public class AuthEventStreamConsumer {
             return;
         }
 
+        boolean prepared = false;
         try {
             commands.xgroupCreate(
                     XReadArgs.StreamOffset.from(config.getStream(), "0-0"),
@@ -120,11 +121,13 @@ public class AuthEventStreamConsumer {
                     "Created Redis consumer group '{}' for stream '{}'",
                     config.getGroup(),
                     config.getStream());
+            prepared = true;
         } catch (RedisBusyException alreadyExists) {
             log.debug(
                     "Redis consumer group '{}' already exists on stream '{}'",
                     config.getGroup(),
                     config.getStream());
+            prepared = true;
         } catch (Exception e) {
             log.warn(
                     "Unable to create consumer group '{}' on stream '{}'",
@@ -133,7 +136,7 @@ public class AuthEventStreamConsumer {
                     e);
         }
 
-        groupPrepared = true;
+        groupPrepared = prepared;
     }
 
     private void handleMessage(StreamMessage<String, String> message) {

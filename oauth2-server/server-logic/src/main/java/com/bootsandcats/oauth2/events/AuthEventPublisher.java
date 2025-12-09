@@ -74,15 +74,12 @@ public class AuthEventPublisher {
                 StreamRecords.mapBacked(payload).withStreamKey(properties.getStreamName());
 
         try {
-            RecordId recordId;
-            if (properties.getMaxLength() > 0) {
-                recordId =
-                        redisTemplate
-                                .opsForStream()
-                                .add(record, properties.getMaxLength(), true /* approximate */);
-            } else {
-                recordId = redisTemplate.opsForStream().add(record);
-            }
+                RecordId recordId = redisTemplate.opsForStream().add(record);
+                if (properties.getMaxLength() > 0) {
+                redisTemplate
+                    .opsForStream()
+                    .trim(properties.getStreamName(), properties.getMaxLength(), true);
+                }
             log.debug(
                     "Published auth event {} ({}) to stream {} as record {}",
                     event.getEventId(),

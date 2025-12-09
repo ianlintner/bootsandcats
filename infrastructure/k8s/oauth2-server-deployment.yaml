@@ -161,6 +161,12 @@ spec:
             secretKeyRef:
               name: oauth2-app-secrets
               key: admin-user-password
+        - name: AUTH_EVENTS_ENABLED
+          value: "true"
+        - name: AUTH_EVENTS_STREAM
+          value: "auth:events"
+        - name: AUTH_EVENTS_MAX_LENGTH
+          value: "1000"
         - name: GITHUB_CLIENT_ID
           valueFrom:
             secretKeyRef:

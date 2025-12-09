@@ -4,9 +4,7 @@ import java.time.Duration;
 
 import io.micronaut.context.annotation.ConfigurationProperties;
 
-/**
- * Configuration for consuming auth events from Redis Streams.
- */
+/** Configuration for consuming auth events from Redis Streams. */
 @ConfigurationProperties("auth.events.consumer")
 public class AuthEventConsumerConfiguration {
 
