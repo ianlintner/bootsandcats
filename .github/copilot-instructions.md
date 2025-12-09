@@ -69,3 +69,10 @@ profile-ui/         # Profile UI deployment test application
 
 - Run `./gradlew spotbugsMain` for static analysis with FindSecBugs
 - SpotBugs is configured with "Max" effort and "Medium" threshold
+
+
+### JWT Errors investigate
+* Oauth Server
+* Istio Policy
+* Calling Application
+* use kubeview-mcp to get logs and troubleshooting 

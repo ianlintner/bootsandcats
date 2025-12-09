@@ -60,6 +60,14 @@ public class DataInitializer {
                             buildProfileUiClient(
                                     passwordEncoder.encode(demoClientSecret),
                                     UUID.randomUUID().toString()));
+
+            registerClientIfMissing(
+                    repository,
+                    "profile-service",
+                    () ->
+                            buildProfileServiceClient(
+                                    passwordEncoder.encode(demoClientSecret),
+                                    UUID.randomUUID().toString()));
         };
     }
 
@@ -168,6 +176,36 @@ public class DataInitializer {
                                 .accessTokenTimeToLive(Duration.ofMinutes(15))
                                 .build())
                 .clientSettings(ClientSettings.builder().requireAuthorizationConsent(false).build())
+                .build();
+    }
+
+    private RegisteredClient buildProfileServiceClient(String encodedSecret, String id) {
+        return RegisteredClient.withId(id)
+                .clientId("profile-service")
+                .clientIdIssuedAt(Instant.now())
+                .clientSecret(encodedSecret)
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
+                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                .redirectUri("https://profile.cat-herding.net/")
+                .postLogoutRedirectUri("https://profile.cat-herding.net/")
+                .scope(OidcScopes.OPENID)
+                .scope(OidcScopes.PROFILE)
+                .scope(OidcScopes.EMAIL)
+                .scope("profile:read")
+                .scope("profile:write")
+                .tokenSettings(
+                        TokenSettings.builder()
+                                .accessTokenTimeToLive(Duration.ofMinutes(15))
+                                .refreshTokenTimeToLive(Duration.ofDays(7))
+                                .reuseRefreshTokens(false)
+                                .build())
+                .clientSettings(
+                        ClientSettings.builder()
+                                .requireAuthorizationConsent(false)
+                                .requireProofKey(false)
+                                .build())
                 .build();
     }
 }
