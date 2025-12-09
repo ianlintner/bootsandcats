@@ -1,0 +1,73 @@
+# OpenAPI Generator
+.openapi-generator/
+.openapi-generator-ignore
+
+# Downloaded specs (regenerated on each build)
+specs/*.json
+specs/*.yaml
+
+# TypeScript
+typescript/node_modules/
+typescript/dist/
+typescript/build/
+typescript/*.tgz
+typescript/.npm/
+typescript/coverage/
+
+# Python
+python/__pycache__/
+python/*.py[cod]
+python/*$py.class
+python/*.so
+python/.Python
+python/build/
+python/develop-eggs/
+python/dist/
+python/downloads/
+python/eggs/
+python/.eggs/
+python/lib/
+python/lib64/
+python/parts/
+python/sdist/
+python/var/
+python/wheels/
+python/*.egg-info/
+python/.installed.cfg
+python/*.egg
+python/.venv/
+python/venv/
+python/ENV/
+python/.pytest_cache/
+python/.coverage
+python/htmlcov/
+
+# Go
+go/vendor/
+go/*.exe
+go/*.exe~
+go/*.dll
+go/*.so
+go/*.dylib
+go/*.test
+go/*.out
+go/go.sum
+
+# Rust
+rust/target/
+rust/Cargo.lock
+rust/**/*.rs.bk
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

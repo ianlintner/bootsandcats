@@ -1,0 +1,75 @@
+# OpenAPI Generator Configuration for Go
+# https://openapi-generator.tech/docs/generators/go
+
+generatorName: go
+outputDir: ../go
+inputSpec: ../specs/oauth2-server.json
+
+# Package Information
+additionalProperties:
+  packageName: "oauth2client"
+  packageVersion: "1.0.0"
+  moduleName: "github.com/bootsandcats/oauth2-client-go"
+  
+  # Go specific
+  isGoSubmodule: false
+  withGoMod: true
+  generateInterfaces: true
+  structPrefix: true
+  enumClassPrefix: true
+  
+  # Documentation
+  infoName: "OAuth2 Authorization Server Go Client"
+  infoEmail: "support@example.com"
+  licenseName: "MIT"
+  
+  # Features
+  withXml: false
+  prependFormOrBodyParameters: false
+  useOneOfDiscriminatorLookup: false
+  disallowAdditionalPropertiesIfNotPresent: true
+
+# Global Properties
+globalProperties:
+  models: ""
+  apis: ""
+  supportingFiles: ""
+
+# Type Mappings
+typeMappings:
+  DateTime: time.Time
+  date: string
+  File: "*os.File"
+  binary: "*os.File"
+
+# Import Mappings
+importMappings:
+  time.Time: time
+
+# Reserved Words Mappings
+reservedWordsMappings:
+  type: type_
+  error: error_
+  package: package_
+  import: import_
+  map: map_
+  range: range_
+  return: return_
+  var: var_
+  const: const_
+  func: func_
+  interface: interface_
+  struct: struct_
+  chan: chan_
+  go: go_
+  defer: defer_
+  select: select_
+  case: case_
+  default: default_
+  break: break_
+  continue: continue_
+  for: for_
+  if: if_
+  else: else_
+  switch: switch_
+  fallthrough: fallthrough_

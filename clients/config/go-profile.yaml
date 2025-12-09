@@ -1,0 +1,53 @@
+# OpenAPI Generator Configuration for Go (Profile Service)
+# https://openapi-generator.tech/docs/generators/go
+
+generatorName: go
+outputDir: ../go-profile
+inputSpec: ../specs/profile-service.json
+
+# Package Information
+additionalProperties:
+  packageName: "profileclient"
+  packageVersion: "1.0.0"
+  moduleName: "github.com/bootsandcats/profile-client-go"
+  
+  # Go specific
+  isGoSubmodule: false
+  withGoMod: true
+  generateInterfaces: true
+  structPrefix: true
+  enumClassPrefix: true
+  
+  # Documentation
+  infoName: "Profile Service Go Client"
+  infoEmail: "support@example.com"
+  licenseName: "MIT"
+  
+  # Features
+  withXml: false
+  prependFormOrBodyParameters: false
+  useOneOfDiscriminatorLookup: false
+  disallowAdditionalPropertiesIfNotPresent: true
+
+# Global Properties
+globalProperties:
+  models: ""
+  apis: ""
+  supportingFiles: ""
+
+# Type Mappings
+typeMappings:
+  DateTime: time.Time
+  date: string
+  File: "*os.File"
+  binary: "*os.File"
+
+# Import Mappings
+importMappings:
+  time.Time: time
+
+# Reserved Words Mappings
+reservedWordsMappings:
+  type: type_
+  error: error_
+  package: package_

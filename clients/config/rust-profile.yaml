@@ -1,0 +1,42 @@
+# OpenAPI Generator Configuration for Rust (Profile Service)
+# https://openapi-generator.tech/docs/generators/rust
+
+generatorName: rust
+outputDir: ../rust-profile
+inputSpec: ../specs/profile-service.json
+
+# Package Information
+additionalProperties:
+  packageName: "bootsandcats_profile_client"
+  packageVersion: "1.0.0"
+  
+  # Rust specific
+  library: reqwest
+  supportAsync: true
+  supportMiddleware: true
+  supportMultipleResponses: true
+  useSingleRequestParameter: false
+  preferUnsignedInt: false
+  bestFitInt: false
+  avoidBoxedModels: false
+  
+  # Documentation
+  infoName: "Profile Service Rust Client"
+  infoEmail: "support@example.com"
+  licenseName: "MIT"
+
+# Global Properties
+globalProperties:
+  models: ""
+  apis: ""
+  supportingFiles: ""
+
+# Type Mappings
+typeMappings:
+  DateTime: "chrono::DateTime<chrono::Utc>"
+  date: "chrono::NaiveDate"
+  File: "std::path::PathBuf"
+  binary: "Vec<u8>"
+  ByteArray: "Vec<u8>"
+  UUID: "uuid::Uuid"
+  URI: "String"

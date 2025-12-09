@@ -1,0 +1,45 @@
+# OpenAPI Generator Configuration for TypeScript (Profile Service)
+# https://openapi-generator.tech/docs/generators/typescript-axios
+
+generatorName: typescript-axios
+outputDir: ../typescript
+inputSpec: ../specs/profile-service.json
+
+# Package Information
+additionalProperties:
+  npmName: "@bootsandcats/profile-client"
+  npmVersion: "1.0.0"
+  npmRepository: "https://npm.pkg.github.com"
+  supportsES6: true
+  withInterfaces: true
+  withSeparateModelsAndApi: true
+  modelPackage: models
+  apiPackage: api
+  withNodeImports: true
+  useSingleRequestParameter: true
+  
+  # Documentation
+  projectName: "Profile Service Client"
+  projectDescription: "TypeScript client for Profile Service API"
+  projectVersion: "1.0.0"
+  projectLicenseName: "MIT"
+
+# Global Properties
+globalProperties:
+  models: ""
+  apis: ""
+  supportingFiles: ""
+
+# Type Mappings
+typeMappings:
+  DateTime: Date
+  date: Date
+
+# Import Mappings
+importMappings: {}
+
+# Instantiation Types
+instantiationTypes: {}
+
+# Reserved Words Mappings
+reservedWordsMappings: {}

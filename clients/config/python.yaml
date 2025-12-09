@@ -1,0 +1,49 @@
+# OpenAPI Generator Configuration for Python
+# https://openapi-generator.tech/docs/generators/python
+
+generatorName: python
+outputDir: ../python
+inputSpec: ../specs/oauth2-server.json
+
+# Package Information
+additionalProperties:
+  packageName: "bootsandcats_oauth2_client"
+  projectName: "bootsandcats-oauth2-client"
+  packageVersion: "1.0.0"
+  packageUrl: "https://github.com/ianlintner/bootsandcats"
+  
+  # Python specific
+  pythonVersion: "3.9"
+  library: urllib3
+  generateSourceCodeOnly: false
+  
+  # Documentation
+  infoName: "OAuth2 Client"
+  infoEmail: "support@example.com"
+  licenseName: "MIT"
+  
+  # Features
+  useNose: false
+  recursionLimit: 1200
+
+# Global Properties
+globalProperties:
+  models: ""
+  apis: ""
+  supportingFiles: ""
+
+# Type Mappings
+typeMappings:
+  DateTime: datetime
+  date: date
+  File: file
+
+# Reserved Words Mappings
+reservedWordsMappings:
+  type: type_
+  from: from_
+  import: import_
+  class: class_
+  global: global_
+  format: format_
+  property: property_

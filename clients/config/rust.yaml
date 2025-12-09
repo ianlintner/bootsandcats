@@ -1,0 +1,102 @@
+# OpenAPI Generator Configuration for Rust
+# https://openapi-generator.tech/docs/generators/rust
+
+generatorName: rust
+outputDir: ../rust
+inputSpec: ../specs/oauth2-server.json
+
+# Package Information
+additionalProperties:
+  packageName: "bootsandcats_oauth2_client"
+  packageVersion: "1.0.0"
+  
+  # Rust specific
+  library: reqwest
+  supportAsync: true
+  supportMiddleware: true
+  supportMultipleResponses: true
+  useSingleRequestParameter: false
+  preferUnsignedInt: false
+  bestFitInt: false
+  avoidBoxedModels: false
+  
+  # Documentation
+  infoName: "OAuth2 Authorization Server Rust Client"
+  infoEmail: "support@example.com"
+  licenseName: "MIT"
+
+# Global Properties
+globalProperties:
+  models: ""
+  apis: ""
+  supportingFiles: ""
+
+# Type Mappings
+typeMappings:
+  DateTime: "chrono::DateTime<chrono::Utc>"
+  date: "chrono::NaiveDate"
+  File: "std::path::PathBuf"
+  binary: "Vec<u8>"
+  ByteArray: "Vec<u8>"
+  UUID: "uuid::Uuid"
+  URI: "String"
+
+# Schema Mappings
+schemaMappings: {}
+
+# Import Mappings
+importMappings: {}
+
+# Reserved Words Mappings
+reservedWordsMappings:
+  type: type_
+  self: self_
+  Self: Self_
+  abstract: abstract_
+  as: as_
+  async: async_
+  await: await_
+  become: become_
+  box: box_
+  break: break_
+  const: const_
+  continue: continue_
+  crate: crate_
+  do: do_
+  dyn: dyn_
+  else: else_
+  enum: enum_
+  extern: extern_
+  false: false_
+  final: final_
+  fn: fn_
+  for: for_
+  if: if_
+  impl: impl_
+  in: in_
+  let: let_
+  loop: loop_
+  macro: macro_
+  match: match_
+  mod: mod_
+  move: move_
+  mut: mut_
+  override: override_
+  priv: priv_
+  pub: pub_
+  ref: ref_
+  return: return_
+  static: static_
+  struct: struct_
+  super: super_
+  trait: trait_
+  true: true_
+  try: try_
+  typeof: typeof_
+  unsafe: unsafe_
+  unsized: unsized_
+  use: use_
+  virtual: virtual_
+  where: where_
+  while: while_
+  yield: yield_

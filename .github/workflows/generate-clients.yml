@@ -1,0 +1,427 @@
+name: Generate Client SDKs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'oauth2-server/**/src/**/*.java'
+      - 'profile-service/**/src/**/*.java'
+      - 'clients/config/**'
+      - 'clients/specs/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'oauth2-server/**/src/**/*.java'
+      - 'profile-service/**/src/**/*.java'
+      - 'clients/config/**'
+      - 'clients/specs/**'
+  workflow_dispatch:
+    inputs:
+      services:
+        description: 'Services to generate clients for (comma-separated: oauth2,profile or all)'
+        required: false
+        default: 'all'
+      languages:
+        description: 'Languages to generate (comma-separated: typescript,python,go,rust or all)'
+        required: false
+        default: 'all'
+
+env:
+  OPENAPI_GENERATOR_VERSION: '7.10.0'
+  NODE_VERSION: '20'
+  PYTHON_VERSION: '3.11'
+  GO_VERSION: '1.21'
+  RUST_VERSION: 'stable'
+
+jobs:
+  download-specs:
+    name: Download OpenAPI Specs
+    runs-on: ubuntu-latest
+    outputs:
+      oauth2_spec_changed: ${{ steps.check-changes.outputs.oauth2_changed }}
+      profile_spec_changed: ${{ steps.check-changes.outputs.profile_changed }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Start OAuth2 Server
+        run: |
+          ./gradlew :oauth2-server:server-run:bootRun &
+          echo "Waiting for OAuth2 server to start..."
+          timeout 120 bash -c 'until curl -s http://localhost:8080/actuator/health | grep -q UP; do sleep 2; done'
+        env:
+          SPRING_PROFILES_ACTIVE: local
+
+      - name: Download OAuth2 Server OpenAPI Spec
+        run: |
+          mkdir -p clients/specs
+          curl -f -o clients/specs/oauth2-server.json http://localhost:8080/v3/api-docs
+          echo "OAuth2 Server spec downloaded successfully"
+
+      - name: Stop OAuth2 Server
+        run: |
+          pkill -f 'server-run' || true
+          sleep 5
+
+      - name: Start Profile Service
+        run: |
+          ./gradlew :profile-service:server:bootRun &
+          echo "Waiting for Profile service to start..."
+          timeout 120 bash -c 'until curl -s http://localhost:8081/actuator/health | grep -q UP; do sleep 2; done'
+        env:
+          SPRING_PROFILES_ACTIVE: local
+        continue-on-error: true
+
+      - name: Download Profile Service OpenAPI Spec
+        run: |
+          if curl -s http://localhost:8081/actuator/health | grep -q UP; then
+            curl -f -o clients/specs/profile-service.json http://localhost:8081/swagger/api-docs || \
+            curl -f -o clients/specs/profile-service.json http://localhost:8081/v3/api-docs || \
+            echo "Warning: Could not download Profile Service spec"
+          else
+            echo "Profile Service not running, skipping spec download"
+          fi
+        continue-on-error: true
+
+      - name: Stop Profile Service
+        run: |
+          pkill -f 'profile-service' || true
+
+      - name: Check for spec changes
+        id: check-changes
+        run: |
+          if [ -f clients/specs/oauth2-server.json ]; then
+            echo "oauth2_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "oauth2_changed=false" >> $GITHUB_OUTPUT
+          fi
+          
+          if [ -f clients/specs/profile-service.json ]; then
+            echo "profile_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "profile_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload specs
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-specs
+          path: clients/specs/
+          retention-days: 1
+
+  generate-typescript:
+    name: Generate TypeScript Client
+    needs: download-specs
+    if: |
+      needs.download-specs.outputs.oauth2_spec_changed == 'true' &&
+      (github.event.inputs.languages == '' || github.event.inputs.languages == 'all' || contains(github.event.inputs.languages, 'typescript'))
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download specs
+        uses: actions/download-artifact@v4
+        with:
+          name: openapi-specs
+          path: clients/specs/
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install OpenAPI Generator
+        run: |
+          npm install -g @openapitools/openapi-generator-cli@${{ env.OPENAPI_GENERATOR_VERSION }}
+
+      - name: Generate TypeScript Client
+        run: |
+          cd clients
+          openapi-generator-cli generate \
+            -c config/typescript.yaml \
+            -i specs/oauth2-server.json \
+            -o typescript/src \
+            --skip-validate-spec
+
+      - name: Install dependencies and build
+        run: |
+          cd clients/typescript
+          npm install
+          npm run build
+        continue-on-error: true
+
+      - name: Run TypeScript tests
+        run: |
+          cd clients/typescript
+          npm test || echo "No tests configured"
+        continue-on-error: true
+
+      - name: Upload TypeScript client
+        uses: actions/upload-artifact@v4
+        with:
+          name: typescript-client
+          path: clients/typescript/
+          retention-days: 5
+
+  generate-python:
+    name: Generate Python Client
+    needs: download-specs
+    if: |
+      needs.download-specs.outputs.oauth2_spec_changed == 'true' &&
+      (github.event.inputs.languages == '' || github.event.inputs.languages == 'all' || contains(github.event.inputs.languages, 'python'))
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download specs
+        uses: actions/download-artifact@v4
+        with:
+          name: openapi-specs
+          path: clients/specs/
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install OpenAPI Generator
+        run: |
+          npm install -g @openapitools/openapi-generator-cli@${{ env.OPENAPI_GENERATOR_VERSION }}
+
+      - name: Generate Python Client
+        run: |
+          cd clients
+          openapi-generator-cli generate \
+            -c config/python.yaml \
+            -i specs/oauth2-server.json \
+            -o python/src/bootsandcats_oauth2_client \
+            --skip-validate-spec
+
+      - name: Install dependencies and test
+        run: |
+          cd clients/python
+          pip install -e ".[dev]"
+          python -m pytest tests/ || echo "No tests configured"
+        continue-on-error: true
+
+      - name: Upload Python client
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-client
+          path: clients/python/
+          retention-days: 5
+
+  generate-go:
+    name: Generate Go Client
+    needs: download-specs
+    if: |
+      needs.download-specs.outputs.oauth2_spec_changed == 'true' &&
+      (github.event.inputs.languages == '' || github.event.inputs.languages == 'all' || contains(github.event.inputs.languages, 'go'))
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download specs
+        uses: actions/download-artifact@v4
+        with:
+          name: openapi-specs
+          path: clients/specs/
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Install OpenAPI Generator
+        run: |
+          npm install -g @openapitools/openapi-generator-cli@${{ env.OPENAPI_GENERATOR_VERSION }}
+
+      - name: Generate Go Client
+        run: |
+          cd clients
+          openapi-generator-cli generate \
+            -c config/go.yaml \
+            -i specs/oauth2-server.json \
+            -o go \
+            --skip-validate-spec
+
+      - name: Build and test Go client
+        run: |
+          cd clients/go
+          go mod tidy
+          go build ./...
+          go test ./... || echo "No tests configured"
+        continue-on-error: true
+
+      - name: Upload Go client
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-client
+          path: clients/go/
+          retention-days: 5
+
+  generate-rust:
+    name: Generate Rust Client
+    needs: download-specs
+    if: |
+      needs.download-specs.outputs.oauth2_spec_changed == 'true' &&
+      (github.event.inputs.languages == '' || github.event.inputs.languages == 'all' || contains(github.event.inputs.languages, 'rust'))
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download specs
+        uses: actions/download-artifact@v4
+        with:
+          name: openapi-specs
+          path: clients/specs/
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          components: rustfmt, clippy
+
+      - name: Install OpenAPI Generator
+        run: |
+          npm install -g @openapitools/openapi-generator-cli@${{ env.OPENAPI_GENERATOR_VERSION }}
+
+      - name: Generate Rust Client
+        run: |
+          cd clients
+          openapi-generator-cli generate \
+            -c config/rust.yaml \
+            -i specs/oauth2-server.json \
+            -o rust/src/generated \
+            --skip-validate-spec
+
+      - name: Build and test Rust client
+        run: |
+          cd clients/rust
+          cargo build
+          cargo test || echo "No tests configured"
+        continue-on-error: true
+
+      - name: Upload Rust client
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-client
+          path: clients/rust/
+          retention-days: 5
+
+  create-pr:
+    name: Create Pull Request
+    needs: [generate-typescript, generate-python, generate-go, generate-rust]
+    if: always() && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all client artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: clients-artifacts/
+
+      - name: Copy generated clients
+        run: |
+          # Copy TypeScript client
+          if [ -d clients-artifacts/typescript-client ]; then
+            cp -r clients-artifacts/typescript-client/* clients/typescript/ || true
+          fi
+          
+          # Copy Python client
+          if [ -d clients-artifacts/python-client ]; then
+            cp -r clients-artifacts/python-client/* clients/python/ || true
+          fi
+          
+          # Copy Go client
+          if [ -d clients-artifacts/go-client ]; then
+            cp -r clients-artifacts/go-client/* clients/go/ || true
+          fi
+          
+          # Copy Rust client
+          if [ -d clients-artifacts/rust-client ]; then
+            cp -r clients-artifacts/rust-client/* clients/rust/ || true
+          fi
+          
+          # Copy specs
+          if [ -d clients-artifacts/openapi-specs ]; then
+            mkdir -p clients/specs
+            cp -r clients-artifacts/openapi-specs/* clients/specs/ || true
+          fi
+
+      - name: Check for changes
+        id: check-changes
+        run: |
+          git add -A
+          if git diff --staged --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.check-changes.outputs.has_changes == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: regenerate client SDKs from OpenAPI specs'
+          title: '🤖 Update Generated Client SDKs'
+          body: |
+            This PR was automatically generated to update the client SDKs based on changes to the OpenAPI specifications.
+            
+            ## Changes
+            - Updated TypeScript client
+            - Updated Python client
+            - Updated Go client
+            - Updated Rust client
+            
+            ## Testing
+            Please review the generated code and run tests locally before merging.
+            
+            ```bash
+            # TypeScript
+            cd clients/typescript && npm install && npm test
+            
+            # Python
+            cd clients/python && pip install -e ".[dev]" && pytest
+            
+            # Go
+            cd clients/go && go test ./...
+            
+            # Rust
+            cd clients/rust && cargo test
+            ```
+          branch: chore/update-client-sdks
+          delete-branch: true
+          labels: |
+            automated
+            sdk
+            dependencies

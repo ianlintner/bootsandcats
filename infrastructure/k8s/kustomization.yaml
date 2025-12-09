@@ -17,7 +17,7 @@ resources:
   - redis.yaml
   - redis-auth.yaml
   - pdb.yaml
-  - profile-ui-deployment.yaml
+  - profile-service-deployment.yaml
   - virtualservices.yaml
   - flyway-migrations-configmap.yaml
   - istio-authz-policy.yaml

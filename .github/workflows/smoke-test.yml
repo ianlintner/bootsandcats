@@ -33,11 +33,11 @@ jobs:
           gradle-version: '9.0.0'
 
       - name: Build application JAR
-        run: gradle :server-ui:bootJar :profile-ui:fatJar -x test --no-daemon --build-cache --parallel
+        run: gradle :oauth2-server:server-ui:bootJar :profile-service:server:fatJar -x test --no-daemon --build-cache --parallel
 
       - name: Start Docker Compose environment
         run: |
-          docker compose up -d --build --wait
+          cd infrastructure && docker compose up -d --build --wait
           echo "All services are healthy."
 
       - name: Show OAuth2 server health status
@@ -45,9 +45,9 @@ jobs:
           echo "OAuth2 server health status:"
           curl -s http://localhost:9000/actuator/health | jq .
 
-      - name: Show profile-ui health status
+      - name: Show profile-service health status
         run: |
-          echo "Profile UI health status:"
+          echo "Profile Service health status:"
           curl -s http://localhost:8080/actuator/health | jq .
 
       - name: Run smoke tests
@@ -202,14 +202,15 @@ jobs:
         if: always()
         run: |
           mkdir -p build/smoke-test-results/docker-logs
-          docker compose logs oauth2-server > build/smoke-test-results/docker-logs/oauth2-server.log 2>&1 || true
-          docker compose logs postgres > build/smoke-test-results/docker-logs/postgres.log 2>&1 || true
-          docker compose logs otel-collector > build/smoke-test-results/docker-logs/otel-collector.log 2>&1 || true
-          docker compose logs profile-ui > build/smoke-test-results/docker-logs/profile-ui.log 2>&1 || true
+          cd infrastructure
+          docker compose logs oauth2-server > ../build/smoke-test-results/docker-logs/oauth2-server.log 2>&1 || true
+          docker compose logs postgres > ../build/smoke-test-results/docker-logs/postgres.log 2>&1 || true
+          docker compose logs otel-collector > ../build/smoke-test-results/docker-logs/otel-collector.log 2>&1 || true
+          docker compose logs profile-ui > ../build/smoke-test-results/docker-logs/profile-service.log 2>&1 || true
 
       - name: Stop Docker Compose environment
         if: always()
-        run: docker compose down -v
+        run: cd infrastructure && docker compose down -v
 
       - name: Upload smoke test results
         uses: actions/upload-artifact@v4

@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: profile-ui
+  name: profile-service
   namespace: default
   labels:
-    app: profile-ui
+    app: profile-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: profile-ui
+      app: profile-service
   template:
     metadata:
       labels:
-        app: profile-ui
+        app: profile-service
     spec:
       containers:
-      - name: profile-ui
-        image: gabby.azurecr.io/profile-ui:latest
+      - name: profile-service
+        image: gabby.azurecr.io/profile-service:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
@@ -25,17 +25,22 @@ spec:
         env:
         - name: SERVER_FORWARD_HEADERS_STRATEGY
           value: "native"
-        - name: PROFILE_UI_PORT
+        - name: PROFILE_SERVICE_PORT
           value: "8080"
         - name: OAUTH2_ISSUER_URI
           value: "https://oauth2.cat-herding.net"
         - name: OAUTH2_CLIENT_ID
-          value: "profile-ui"
+          value: "profile-service"
         - name: OAUTH2_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
               name: oauth2-app-secrets
               key: demo-client-secret
+        # OpenTelemetry
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://otel-collector:4317"
+        - name: OTEL_SERVICE_NAME
+          value: "profile-service"
         # MongoDB configuration
         - name: MONGODB_URI
           valueFrom:
@@ -69,11 +74,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: profile-ui
+  name: profile-service
   namespace: default
 spec:
   selector:
-    app: profile-ui
+    app: profile-service
   ports:
   - port: 80
     targetPort: 8080

@@ -1,0 +1,4 @@
+# Keep the specs directory but not the contents
+*.json
+*.yaml
+!.gitkeep

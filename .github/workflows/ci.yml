@@ -290,21 +290,22 @@ jobs:
             --platform linux/amd64,linux/arm64 \
             --build-arg DOCS_SOURCE=auto \
             --push \
+            -f oauth2-server/Dockerfile \
             -t $IMAGE_TAG \
             -t $IMAGE_LATEST \
             .
 
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
-      - name: Build and push profile-ui image
+      - name: Build and push profile-service image
         run: |
-          PROFILE_IMAGE_TAG="gabby.azurecr.io/profile-ui:${{ github.sha }}"
-          PROFILE_IMAGE_LATEST="gabby.azurecr.io/profile-ui:latest"
+          PROFILE_IMAGE_TAG="gabby.azurecr.io/profile-service:${{ github.sha }}"
+          PROFILE_IMAGE_LATEST="gabby.azurecr.io/profile-service:latest"
 
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
             --push \
-            -f profile-ui/Dockerfile \
+            -f profile-service/server/Dockerfile \
             -t $PROFILE_IMAGE_TAG \
             -t $PROFILE_IMAGE_LATEST \
             .
@@ -315,7 +316,7 @@ jobs:
         run: |
           az storage blob sync \
             --account-name chngitops \
-            --source ./k8s \
+            --source ./infrastructure/k8s \
             --container flux \
             --destination bootsandcats \
             --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
@@ -328,28 +329,28 @@ jobs:
 
       - name: Apply Flyway migrations ConfigMap
         run: |
-          kubectl apply -f k8s/flyway-migrations-configmap.yaml -n default
+          kubectl apply -f infrastructure/k8s/flyway-migrations-configmap.yaml -n default
 
       - name: Deploy to AKS
         run: |
           set -euo pipefail
 
           kubectl set image deployment/oauth2-server oauth2-server=${{ env.IMAGE_TAG }} -n default
-          kubectl set image deployment/profile-ui profile-ui=${{ env.PROFILE_IMAGE_TAG }} -n default
+          kubectl set image deployment/profile-service profile-service=${{ env.PROFILE_IMAGE_TAG }} -n default
 
           if ! kubectl rollout status deployment/oauth2-server -n default --timeout=5m; then
             kubectl rollout undo deployment/oauth2-server -n default || true
             exit 1
           fi
 
-          if ! kubectl rollout status deployment/profile-ui -n default --timeout=5m; then
-            kubectl rollout undo deployment/profile-ui -n default || true
+          if ! kubectl rollout status deployment/profile-service -n default --timeout=5m; then
+            kubectl rollout undo deployment/profile-service -n default || true
             exit 1
           fi
 
       - name: Verify deployment
         run: |
           kubectl get pods -n default -l app=oauth2-server
-          kubectl get pods -n default -l app=profile-ui
+          kubectl get pods -n default -l app=profile-service
           kubectl get service oauth2-server -n default
-          kubectl get service profile-ui -n default
+          kubectl get service profile-service -n default
