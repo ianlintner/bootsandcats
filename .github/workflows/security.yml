@@ -2,7 +2,7 @@ name: Security Scan
 
 on:
   schedule:
-    - cron: '0 5 * * 1' # Mondays at 05:00 UTC
+    - cron: "0 5 * * 1" # Mondays at 05:00 UTC
   workflow_dispatch:
 
 permissions:
@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  JAVA_VERSION: '21'
+  JAVA_VERSION: "21"
 
 jobs:
   owasp-dep-check:
@@ -27,13 +27,13 @@ jobs:
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: "temurin"
           java-version: ${{ env.JAVA_VERSION }}
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '9.0.0'
+          gradle-version: "9.0.0"
 
       - name: Cache OWASP NVD database
         uses: actions/cache@v4

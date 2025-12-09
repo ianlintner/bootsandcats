@@ -2,14 +2,14 @@ name: Smoke Test
 
 on:
   schedule:
-    - cron: '0 4 * * 1' # Mondays at 05:00 UTC
+    - cron: "0 4 * * 1" # Mondays at 05:00 UTC
   workflow_dispatch:
 
 env:
-  JAVA_VERSION: '21'
+  JAVA_VERSION: "21"
   # Test client credentials (these are demo/test values already present in the codebase)
-  TEST_CLIENT_ID: 'm2m-client'
-  TEST_CLIENT_SECRET: 'm2m-secret'
+  TEST_CLIENT_ID: "m2m-client"
+  TEST_CLIENT_SECRET: "m2m-secret"
 
 jobs:
   smoke-test:
@@ -25,12 +25,12 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'temurin'
+          distribution: "temurin"
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '9.0.0'
+          gradle-version: "9.0.0"
 
       - name: Build application JAR
         run: gradle :oauth2-server:server-ui:bootJar :profile-service:server:fatJar -x test --no-daemon --build-cache --parallel
@@ -54,14 +54,14 @@ jobs:
         id: smoke-tests
         run: |
           mkdir -p build/smoke-test-results
-          
+
           echo "=== Smoke Test Results ===" > build/smoke-test-results/smoke-test-report.txt
           echo "Timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> build/smoke-test-results/smoke-test-report.txt
           echo "" >> build/smoke-test-results/smoke-test-report.txt
-          
+
           TESTS_PASSED=0
           TESTS_FAILED=0
-          
+
           # Test 1: Health endpoint
           echo "Test 1: Health Endpoint" >> build/smoke-test-results/smoke-test-report.txt
           if HEALTH_RESPONSE=$(curl -sf http://localhost:9000/actuator/health); then
@@ -73,7 +73,7 @@ jobs:
             ((TESTS_FAILED++)) || true
           fi
           echo "" >> build/smoke-test-results/smoke-test-report.txt
-          
+
           # Test 2: Liveness probe
           echo "Test 2: Liveness Probe" >> build/smoke-test-results/smoke-test-report.txt
           if curl -sf http://localhost:9000/actuator/health/liveness > /dev/null; then
@@ -84,7 +84,7 @@ jobs:
             ((TESTS_FAILED++)) || true
           fi
           echo "" >> build/smoke-test-results/smoke-test-report.txt
-          
+
           # Test 3: Readiness probe
           echo "Test 3: Readiness Probe" >> build/smoke-test-results/smoke-test-report.txt
           if curl -sf http://localhost:9000/actuator/health/readiness > /dev/null; then
@@ -95,7 +95,7 @@ jobs:
             ((TESTS_FAILED++)) || true
           fi
           echo "" >> build/smoke-test-results/smoke-test-report.txt
-          
+
           # Test 4: OIDC Discovery endpoint
           echo "Test 4: OIDC Discovery Endpoint" >> build/smoke-test-results/smoke-test-report.txt
           if OIDC_RESPONSE=$(curl -sf http://localhost:9000/.well-known/openid-configuration); then
@@ -107,7 +107,7 @@ jobs:
             ((TESTS_FAILED++)) || true
           fi
           echo "" >> build/smoke-test-results/smoke-test-report.txt
-          
+
           # Test 5: JWKS endpoint
           echo "Test 5: JWKS Endpoint" >> build/smoke-test-results/smoke-test-report.txt
           if JWKS_RESPONSE=$(curl -sf http://localhost:9000/oauth2/jwks); then
@@ -120,7 +120,7 @@ jobs:
             ((TESTS_FAILED++)) || true
           fi
           echo "" >> build/smoke-test-results/smoke-test-report.txt
-          
+
           # Test 6: Client Credentials token request
           echo "Test 6: Client Credentials Token Request" >> build/smoke-test-results/smoke-test-report.txt
           if TOKEN_RESPONSE=$(curl -sf -X POST http://localhost:9000/oauth2/token \
@@ -141,7 +141,7 @@ jobs:
             ((TESTS_FAILED++)) || true
           fi
           echo "" >> build/smoke-test-results/smoke-test-report.txt
-          
+
           # Test 7: Token introspection (only if token was obtained)
           echo "Test 7: Token Introspection" >> build/smoke-test-results/smoke-test-report.txt
           if [ -n "$ACCESS_TOKEN" ]; then
@@ -166,7 +166,7 @@ jobs:
             echo "  Status: SKIPPED (no token available)" >> build/smoke-test-results/smoke-test-report.txt
           fi
           echo "" >> build/smoke-test-results/smoke-test-report.txt
-          
+
           # Test 8: Prometheus metrics endpoint
           echo "Test 8: Prometheus Metrics Endpoint" >> build/smoke-test-results/smoke-test-report.txt
           if curl -sf http://localhost:9000/actuator/prometheus > /dev/null; then
@@ -177,21 +177,21 @@ jobs:
             ((TESTS_FAILED++)) || true
           fi
           echo "" >> build/smoke-test-results/smoke-test-report.txt
-          
+
           # Summary
           echo "=== Summary ===" >> build/smoke-test-results/smoke-test-report.txt
           echo "Tests Passed: $TESTS_PASSED" >> build/smoke-test-results/smoke-test-report.txt
           echo "Tests Failed: $TESTS_FAILED" >> build/smoke-test-results/smoke-test-report.txt
           TOTAL_TESTS=$((TESTS_PASSED + TESTS_FAILED))
           echo "Total Tests: $TOTAL_TESTS" >> build/smoke-test-results/smoke-test-report.txt
-          
+
           # Output for GitHub Actions
           echo "tests_passed=$TESTS_PASSED" >> $GITHUB_OUTPUT
           echo "tests_failed=$TESTS_FAILED" >> $GITHUB_OUTPUT
-          
+
           # Display report
           cat build/smoke-test-results/smoke-test-report.txt
-          
+
           # Fail if any tests failed
           if [ $TESTS_FAILED -gt 0 ]; then
             echo "::error::$TESTS_FAILED smoke test(s) failed"

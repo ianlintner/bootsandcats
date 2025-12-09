@@ -4,34 +4,34 @@ on:
   push:
     branches: [main]
     paths:
-      - 'oauth2-server/**/src/**/*.java'
-      - 'profile-service/**/src/**/*.java'
-      - 'clients/config/**'
-      - 'clients/specs/**'
+      - "oauth2-server/**/src/**/*.java"
+      - "profile-service/**/src/**/*.java"
+      - "clients/config/**"
+      - "clients/specs/**"
   pull_request:
     branches: [main]
     paths:
-      - 'oauth2-server/**/src/**/*.java'
-      - 'profile-service/**/src/**/*.java'
-      - 'clients/config/**'
-      - 'clients/specs/**'
+      - "oauth2-server/**/src/**/*.java"
+      - "profile-service/**/src/**/*.java"
+      - "clients/config/**"
+      - "clients/specs/**"
   workflow_dispatch:
     inputs:
       services:
-        description: 'Services to generate clients for (comma-separated: oauth2,profile or all)'
+        description: "Services to generate clients for (comma-separated: oauth2,profile or all)"
         required: false
-        default: 'all'
+        default: "all"
       languages:
-        description: 'Languages to generate (comma-separated: typescript,python,go,rust or all)'
+        description: "Languages to generate (comma-separated: typescript,python,go,rust or all)"
         required: false
-        default: 'all'
+        default: "all"
 
 env:
-  OPENAPI_GENERATOR_VERSION: '7.10.0'
-  NODE_VERSION: '20'
-  PYTHON_VERSION: '3.11'
-  GO_VERSION: '1.21'
-  RUST_VERSION: 'stable'
+  OPENAPI_GENERATOR_VERSION: "7.10.0"
+  NODE_VERSION: "20"
+  PYTHON_VERSION: "3.11"
+  GO_VERSION: "1.21"
+  RUST_VERSION: "stable"
 
 jobs:
   download-specs:
@@ -40,7 +40,7 @@ jobs:
     outputs:
       oauth2_spec_changed: ${{ steps.check-changes.outputs.oauth2_changed }}
       profile_spec_changed: ${{ steps.check-changes.outputs.profile_changed }}
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -48,8 +48,8 @@ jobs:
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          java-version: "21"
+          distribution: "temurin"
 
       - name: Cache Gradle packages
         uses: actions/cache@v4
@@ -112,7 +112,7 @@ jobs:
           else
             echo "oauth2_changed=false" >> $GITHUB_OUTPUT
           fi
-          
+
           if [ -f clients/specs/profile-service.json ]; then
             echo "profile_changed=true" >> $GITHUB_OUTPUT
           else
@@ -133,7 +133,6 @@ jobs:
       needs.download-specs.outputs.oauth2_spec_changed == 'true' &&
       (github.event.inputs.languages == '' || github.event.inputs.languages == 'all' || contains(github.event.inputs.languages, 'typescript'))
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -189,7 +188,6 @@ jobs:
       needs.download-specs.outputs.oauth2_spec_changed == 'true' &&
       (github.event.inputs.languages == '' || github.event.inputs.languages == 'all' || contains(github.event.inputs.languages, 'python'))
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -239,7 +237,6 @@ jobs:
       needs.download-specs.outputs.oauth2_spec_changed == 'true' &&
       (github.event.inputs.languages == '' || github.event.inputs.languages == 'all' || contains(github.event.inputs.languages, 'go'))
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -290,7 +287,6 @@ jobs:
       needs.download-specs.outputs.oauth2_spec_changed == 'true' &&
       (github.event.inputs.languages == '' || github.event.inputs.languages == 'all' || contains(github.event.inputs.languages, 'rust'))
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -339,7 +335,7 @@ jobs:
     needs: [generate-typescript, generate-python, generate-go, generate-rust]
     if: always() && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -355,22 +351,22 @@ jobs:
           if [ -d clients-artifacts/typescript-client ]; then
             cp -r clients-artifacts/typescript-client/* clients/typescript/ || true
           fi
-          
+
           # Copy Python client
           if [ -d clients-artifacts/python-client ]; then
             cp -r clients-artifacts/python-client/* clients/python/ || true
           fi
-          
+
           # Copy Go client
           if [ -d clients-artifacts/go-client ]; then
             cp -r clients-artifacts/go-client/* clients/go/ || true
           fi
-          
+
           # Copy Rust client
           if [ -d clients-artifacts/rust-client ]; then
             cp -r clients-artifacts/rust-client/* clients/rust/ || true
           fi
-          
+
           # Copy specs
           if [ -d clients-artifacts/openapi-specs ]; then
             mkdir -p clients/specs
@@ -392,30 +388,30 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: 'chore: regenerate client SDKs from OpenAPI specs'
-          title: '🤖 Update Generated Client SDKs'
+          commit-message: "chore: regenerate client SDKs from OpenAPI specs"
+          title: "🤖 Update Generated Client SDKs"
           body: |
             This PR was automatically generated to update the client SDKs based on changes to the OpenAPI specifications.
-            
+
             ## Changes
             - Updated TypeScript client
             - Updated Python client
             - Updated Go client
             - Updated Rust client
-            
+
             ## Testing
             Please review the generated code and run tests locally before merging.
-            
+
             ```bash
             # TypeScript
             cd clients/typescript && npm install && npm test
-            
+
             # Python
             cd clients/python && pip install -e ".[dev]" && pytest
-            
+
             # Go
             cd clients/go && go test ./...
-            
+
             # Rust
             cd clients/rust && cargo test
             ```
