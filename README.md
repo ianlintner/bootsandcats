@@ -2,6 +2,9 @@
 
 A production-ready Spring Boot OAuth2 Authorization Server with OpenID Connect (OIDC), PKCE, JWT support, and comprehensive observability features.
 
+<img width="1163" height="659" alt="Screenshot 2025-12-10 at 15 08 18" src="https://github.com/user-attachments/assets/b159cab6-cd21-4b35-af11-94b5c7faa240" />
+
+
 ## Features
 
 - **OAuth2 Authorization Server** - Full OAuth2 2.1 compliance
