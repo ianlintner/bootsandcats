@@ -30,6 +30,18 @@ micronaut:
         http-method: GET
         access:
           - isAnonymous()
+      - pattern: /profile-app.js
+        http-method: GET
+        access:
+          - isAnonymous()
+      - pattern: /favicon.ico
+        http-method: GET
+        access:
+          - isAnonymous()
+      - pattern: /index.html
+        http-method: GET
+        access:
+          - isAnonymous()
       - pattern: /public/**
         http-method: GET
         access:

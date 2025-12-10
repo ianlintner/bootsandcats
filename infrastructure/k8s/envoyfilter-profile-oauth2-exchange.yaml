@@ -153,6 +153,8 @@ spec:
               local function is_public_path(path)
                 return path:find("^/actuator") == 1
                     or path == "/favicon.ico"
+                    or path == "/profile-app.js"
+                    or path == "/index.html"
                     or path:find("^/api/status") == 1
                     or path:find("^/public/") == 1
                     or path:find("^/css/") == 1
