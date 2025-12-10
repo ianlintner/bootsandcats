@@ -110,14 +110,14 @@ public class ErrorPageController {
                             align-items: center;
                             justify-content: center;
                             font-family: \"Inter\", system-ui, -apple-system, \"Segoe UI\", sans-serif;
-                            background: radial-gradient(circle at 15% 20%, rgba(8,47,73,0.28), transparent 30%),
-                                        radial-gradient(circle at 85% 10%, rgba(139,92,246,0.18), transparent 26%),
+                            background: radial-gradient(circle at 15%% 20%%, rgba(8,47,73,0.28), transparent 30%%),
+                                        radial-gradient(circle at 85%% 10%%, rgba(139,92,246,0.18), transparent 26%%),
                                         var(--bg);
                             color: var(--text);
                             padding: 24px;
                         }
                         .card {
-                            width: min(880px, 100%);
+                            width: min(880px, 100%%);
                             background: linear-gradient(135deg, rgba(15,23,42,0.92), rgba(12,19,35,0.94));
                             border: 1px solid rgba(255,255,255,0.06);
                             border-radius: 18px;
@@ -130,8 +130,8 @@ public class ErrorPageController {
                             content: \"\";
                             position: absolute;
                             inset: 0;
-                            background: radial-gradient(circle at 10% 10%, rgba(6,182,212,0.08), transparent 38%),
-                                        radial-gradient(circle at 90% 10%, rgba(139,92,246,0.1), transparent 32%);
+                            background: radial-gradient(circle at 10%% 10%%, rgba(6,182,212,0.08), transparent 38%%),
+                                        radial-gradient(circle at 90%% 10%%, rgba(139,92,246,0.1), transparent 32%%);
                             pointer-events: none;
                         }
                         .eyebrow {
