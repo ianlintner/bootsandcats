@@ -91,12 +91,12 @@ micronaut:
       enabled: true
 
 redis:
-  uri: ${REDIS_URI:redis://localhost:6379}
+  uri: ${REDIS_URI:redis://redis:6379}
 
 auth:
   events:
     consumer:
-      enabled: ${AUTH_EVENTS_CONSUMER_ENABLED:true}
+      enabled: ${AUTH_EVENTS_CONSUMER_ENABLED:false}
       stream: ${AUTH_EVENTS_STREAM:auth:events}
       group: ${AUTH_EVENTS_CONSUMER_GROUP:profile-service}
       consumer-name: ${AUTH_EVENTS_CONSUMER_NAME:profile-service-1}
