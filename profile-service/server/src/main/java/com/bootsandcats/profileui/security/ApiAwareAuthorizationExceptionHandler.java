@@ -46,46 +46,38 @@ public class ApiAwareAuthorizationExceptionHandler implements HttpStatusCodeReje
             "/actuator/"
     );
 
-    public ApiAwareAuthorizationExceptionHandler(
-            ErrorResponseProcessor<?> errorResponseProcessor,
-            RedirectConfiguration redirectConfiguration,
-            RedirectService redirectService,
-            PriorToLoginPersistence priorToLoginPersistence) {
-        super(errorResponseProcessor, redirectConfiguration, redirectService, priorToLoginPersistence);
-    }
-
     @Override
-    public MutableHttpResponse<?> handle(HttpRequest request, AuthorizationException exception) {
+    public MutableHttpResponse<?> reject(HttpRequest<?> request, boolean forbidden) {
         String path = request.getPath();
 
-        // Check if this is an anonymous endpoint
+        // Check if this is an anonymous endpoint - should not be rejected
         if (isAnonymousPath(path)) {
             LOG.debug("Anonymous endpoint {} - returning empty OK response", path);
-            // For anonymous endpoints, we should never get here, but if we do,
-            // don't redirect - just allow through
             return HttpResponse.ok();
         }
 
-        // Check if this is an API call (Accept header doesn't include HTML)
-        String acceptHeader = request.getHeaders().get("Accept");
-        boolean isApiCall = acceptHeader != null && !acceptHeader.contains("text/html");
-
-        // Check for Bearer token in Authorization header
-        String authHeader = request.getHeaders().get("Authorization");
-        boolean hasBearerToken = authHeader != null && authHeader.startsWith("Bearer ");
-
-        if (isApiCall || hasBearerToken || path.startsWith("/api/")) {
-            LOG.debug("API request {} - returning 401 instead of redirect", path);
-            // For API calls, return 401 instead of redirect
-            if (exception.isForbidden()) {
-                return HttpResponse.status(HttpStatus.FORBIDDEN);
-            }
-            return HttpResponse.unauthorized();
+        LOG.debug("Rejecting request to {} - forbidden={}", path, forbidden);
+        
+        if (forbidden) {
+            return HttpResponse.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of(
+                            "status", HttpStatus.FORBIDDEN.getCode(),
+                            "error", "Forbidden",
+                            "message", "Access Denied"));
         }
+        
+        return HttpResponse.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of(
+                        "status", HttpStatus.UNAUTHORIZED.getCode(),
+                        "error", "Unauthorized",
+                        "message", "Authentication required"));
+    }
 
-        // For browser requests to non-API endpoints, use default behavior (redirect)
-        LOG.debug("Browser request {} - using default redirect behavior", path);
-        return super.handle(request, exception);
+    /**
+     * Handle AuthorizationException for cases where it's explicitly thrown.
+     */
+    public MutableHttpResponse<?> handle(HttpRequest<?> request, AuthorizationException exception) {
+        return reject(request, exception.isForbidden());
     }
 
     private boolean isAnonymousPath(String path) {
