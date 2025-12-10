@@ -1,33 +1,30 @@
 package com.bootsandcats.profileui.security;
 
 import io.micronaut.context.annotation.Replaces;
-import io.micronaut.context.annotation.Requires;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
 import io.micronaut.http.MutableHttpResponse;
-import io.micronaut.http.server.exceptions.response.ErrorResponseProcessor;
 import io.micronaut.security.authentication.AuthorizationException;
 import io.micronaut.security.authentication.DefaultAuthorizationExceptionHandler;
-import io.micronaut.security.config.RedirectConfiguration;
-import io.micronaut.security.config.RedirectService;
-import io.micronaut.security.errors.PriorToLoginPersistence;
+import io.micronaut.security.handlers.HttpStatusCodeRejectionHandler;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
 import java.util.Set;
 
 /**
  * Custom authorization exception handler that returns 401/403 for API endpoints
  * instead of redirecting to OAuth2 login.
  * <p>
- * For anonymous endpoints that match our whitelist, we allow the request through.
- * For API endpoints (non-browser), we return a 401 instead of redirecting.
+ * This handler is designed for bearer token authentication (JWT) and does not
+ * require OAuth2 login redirect functionality.
  */
 @Singleton
 @Replaces(DefaultAuthorizationExceptionHandler.class)
-public class ApiAwareAuthorizationExceptionHandler extends DefaultAuthorizationExceptionHandler {
+public class ApiAwareAuthorizationExceptionHandler implements HttpStatusCodeRejectionHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(ApiAwareAuthorizationExceptionHandler.class);
 
