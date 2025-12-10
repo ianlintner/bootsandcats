@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Something went wrong | Boots & Cats</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            --bg: #0f172a;
+            --card: #111827;
+            --text: #e5e7eb;
+            --muted: #94a3b8;
+            --accent: #06b6d4;
+            --accent-2: #8b5cf6;
+            --danger: #f87171;
+            --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+            background: radial-gradient(circle at 20% 20%, rgba(8,47,73,0.35), transparent 35%),
+                        radial-gradient(circle at 80% 0%, rgba(99,102,241,0.25), transparent 30%),
+                        var(--bg);
+            color: var(--text);
+            padding: 24px;
+        }
+        .card {
+            width: min(880px, 100%);
+            background: linear-gradient(135deg, rgba(17,24,39,0.95), rgba(15,23,42,0.92));
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        .card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 10% 10%, rgba(6,182,212,0.08), transparent 35%),
+                        radial-gradient(circle at 90% 10%, rgba(139,92,246,0.1), transparent 30%);
+            pointer-events: none;
+        }
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(6,182,212,0.15);
+            color: #67e8f9;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+        h1 {
+            margin: 16px 0 8px;
+            font-size: clamp(28px, 4vw, 36px);
+            letter-spacing: -0.02em;
+        }
+        .muted { color: var(--muted); font-size: 15px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 24px; }
+        .panel {
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .panel strong { display: block; margin-bottom: 6px; color: #c7d2fe; font-size: 13px; letter-spacing: 0.01em; }
+        .actions { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 12px; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+        }
+        .btn.primary {
+            background: linear-gradient(120deg, var(--accent), var(--accent-2));
+            color: #0b1021;
+            box-shadow: 0 10px 30px rgba(6,182,212,0.35);
+        }
+        .btn.secondary {
+            border: 1px solid rgba(255,255,255,0.15);
+            color: var(--text);
+            background: rgba(255,255,255,0.05);
+        }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 14px 32px rgba(0,0,0,0.22); }
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: 10px;
+            background: rgba(248,113,113,0.12);
+            color: var(--danger);
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+        code {
+            background: rgba(255,255,255,0.08);
+            padding: 3px 6px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="eyebrow">Boots & Cats • Auth Server</div>
+    <div class="status">${statusCode} • ${reasonPhrase}</div>
+    <h1>Something went wrong</h1>
+    <p class="muted">${statusMessage}</p>
+
+    <div class="grid">
+        <div class="panel">
+            <strong>Path</strong>
+            <div>${path}</div>
+        </div>
+        <div class="panel">
+            <strong>Timestamp</strong>
+            <div>${timestamp}</div>
+        </div>
+        <div class="panel">
+            <strong>Next steps</strong>
+            <div>Try again, or return to the dashboard.</div>
+        </div>
+    </div>
+
+    <div class="actions">
+        <a class="btn primary" href="/">Go home</a>
+        <a class="btn secondary" href="/login">Back to login</a>
+    </div>
+</div>
+</body>
+</html>
