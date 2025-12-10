@@ -63,21 +63,21 @@ jobs:
 
       - name: Start OAuth2 Server
         run: |
-          ./gradlew :oauth2-server:server-run:bootRun &
+          ./gradlew :oauth2-server:server-ui:bootRun &
           echo "Waiting for OAuth2 server to start..."
-          timeout 120 bash -c 'until curl -s http://localhost:8080/actuator/health | grep -q UP; do sleep 2; done'
+          timeout 120 bash -c 'until curl -s http://localhost:9000/actuator/health | grep -q UP; do sleep 2; done'
         env:
           SPRING_PROFILES_ACTIVE: local
 
       - name: Download OAuth2 Server OpenAPI Spec
         run: |
           mkdir -p clients/specs
-          curl -f -o clients/specs/oauth2-server.json http://localhost:8080/v3/api-docs
+          curl -f -o clients/specs/oauth2-server.json http://localhost:9000/v3/api-docs
           echo "OAuth2 Server spec downloaded successfully"
 
       - name: Stop OAuth2 Server
         run: |
-          pkill -f 'server-run' || true
+          pkill -f 'server-ui' || true
           sleep 5
 
       - name: Start Profile Service
