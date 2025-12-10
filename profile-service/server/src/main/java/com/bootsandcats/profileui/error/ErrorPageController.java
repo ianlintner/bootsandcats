@@ -60,6 +60,12 @@ public class ErrorPageController {
     @Error(global = true)
     @Produces(MediaType.TEXT_HTML)
     public HttpResponse<String> onException(HttpRequest<?> request, Throwable throwable) {
+        System.out.println("ErrorPageController.onException called for " + request.getPath());
+        if (throwable != null) {
+            throwable.printStackTrace();
+        } else {
+            System.out.println("Throwable is null");
+        }
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         if (throwable instanceof HttpStatusException statusException) {
             status = statusException.getStatus();
@@ -67,6 +73,7 @@ public class ErrorPageController {
             // If throwable is null, it's likely a 404 (no route found)
             status = HttpStatus.NOT_FOUND;
         }
+        System.out.println("Returning status: " + status);
         return renderResponse(status, request.getPath());
     }
 
