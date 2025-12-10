@@ -85,10 +85,12 @@ spec:
               local path_with_query = handle:headers():get(":path") or "/"
               local path_only = path_with_query:match("^[^?]+") or "/"
 
-              -- Allow OAuth2 callback and actuator endpoints to reach the app without JWTs
+              -- Allow OAuth2 callback, actuator, and public API endpoints to reach the app without JWTs
               if path_only:find("^/login/oauth2/code/") == 1
                   or path_only:find("^/actuator") == 1
-                  or path_only == "/favicon.ico" then
+                  or path_only == "/favicon.ico"
+                  or path_only == "/api/status"
+                  or path_only:find("^/public/") == 1 then
                 return
               end
 
