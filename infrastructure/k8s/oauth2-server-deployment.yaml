@@ -48,9 +48,6 @@ spec:
           mountPath: /flyway/sql
           readOnly: true
         resources:
-          requests:
-            memory: "64Mi"
-            cpu: "50m"
           limits:
             memory: "256Mi"
             cpu: "500m"
@@ -92,9 +89,6 @@ spec:
           mountPath: /flyway/sql
           readOnly: true
         resources:
-          requests:
-            memory: "64Mi"
-            cpu: "50m"
           limits:
             memory: "256Mi"
             cpu: "500m"
@@ -251,9 +245,6 @@ spec:
           mountPath: "/mnt/keystore"
           readOnly: true
         resources:
-          requests:
-            memory: "256Mi"
-            cpu: "50m"
           limits:
             memory: "1024Mi"
             cpu: "500m"
