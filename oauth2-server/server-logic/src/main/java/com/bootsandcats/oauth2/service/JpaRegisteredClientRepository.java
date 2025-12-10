@@ -149,7 +149,16 @@ public class JpaRegisteredClientRepository implements RegisteredClientRepository
         try {
             return this.objectMapper.readValue(data, new TypeReference<Map<String, Object>>() {});
         } catch (Exception ex) {
-            throw new IllegalArgumentException(ex.getMessage(), ex);
+            // Fallback for JSON without type info (e.g., plain '{}' or simple JSON maps)
+            // This handles legacy data or migrations that don't include @class type markers
+            try {
+                ObjectMapper simpleMapper = new ObjectMapper();
+                simpleMapper.registerModule(new JavaTimeModule());
+                return simpleMapper.readValue(data, new TypeReference<Map<String, Object>>() {});
+            } catch (Exception fallbackEx) {
+                throw new IllegalArgumentException(
+                        "Failed to parse map data: " + ex.getMessage(), ex);
+            }
         }
     }
 

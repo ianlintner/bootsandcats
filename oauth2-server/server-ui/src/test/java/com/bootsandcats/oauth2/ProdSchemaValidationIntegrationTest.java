@@ -25,6 +25,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
             "spring.session.store-type=none",
             "spring.data.redis.host=localhost",
             "spring.data.redis.port=6379",
+            "auth.events.enabled=false",
             "oauth2.issuer-url=http://localhost:9000",
             "oauth2.demo-client-secret=test-demo-secret",
             "oauth2.m2m-client-secret=test-m2m-secret",
