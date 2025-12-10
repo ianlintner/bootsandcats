@@ -10,7 +10,7 @@ micronaut:
         mapping: /**
   security:
     enabled: true
-    authentication: idtoken
+    authentication: bearer
     token-propagation:
       enabled: true
     redirect:
@@ -18,6 +18,12 @@ micronaut:
     reject-not-found: false
     ip-patterns:
       - 127.0.0.1
+    token:
+      jwt:
+        signatures:
+          jwks:
+            oauth2server:
+              url: ${OAUTH2_JWKS_URI:https://oauth2.cat-herding.net/oauth2/jwks}
     intercept-url-map:
       - pattern: /api/status
         http-method: GET
