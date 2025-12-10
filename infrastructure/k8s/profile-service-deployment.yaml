@@ -49,11 +49,6 @@ spec:
             secretKeyRef:
               name: oauth2-app-secrets
               key: demo-client-secret
-        - name: REDIS_URI
-          valueFrom:
-            secretKeyRef:
-              name: redis-auth
-              key: redis-uri
         # OpenTelemetry
         - name: OTEL_EXPORTER_OTLP_ENDPOINT
           value: "http://otel-collector:4317"
