@@ -393,7 +393,7 @@ jobs:
         if: steps.check-changes.outputs.has_changes == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ github.token }}
           commit-message: "chore: regenerate client SDKs from OpenAPI specs"
           title: "🤖 Update Generated Client SDKs"
           body: |
@@ -440,7 +440,7 @@ jobs:
       - name: Analyze Workflow Failure
         uses: ianlintner/ai_summary_action@v0.0.4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ github.token }}
           llm-provider: 'openai'
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           create-issue: 'true'
