@@ -3,7 +3,6 @@ package com.bootsandcats.oauth2.events;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
@@ -58,7 +57,7 @@ class AuthEventPublisherTest {
         publisher.publish(event);
 
         ArgumentCaptor<MapRecord<String, String, String>> recordCaptor =
-            ArgumentCaptor.forClass(MapRecord.class);
+                ArgumentCaptor.forClass(MapRecord.class);
         verify(streamOperations).add(recordCaptor.capture());
         verify(streamOperations).trim("auth:events", 1000L, true);
 
