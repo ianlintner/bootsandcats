@@ -12,8 +12,8 @@ import io.micronaut.http.annotation.Get;
 import io.micronaut.http.server.types.files.StreamedFile;
 
 /**
- * Explicit controllers for static assets that must be reachable in locked-down environments
- * (e.g., when the static resource resolver is bypassed or security filters run first).
+ * Explicit controllers for static assets that must be reachable in locked-down environments (e.g.,
+ * when the static resource resolver is bypassed or security filters run first).
  */
 @Controller
 public class StaticAssetController {
