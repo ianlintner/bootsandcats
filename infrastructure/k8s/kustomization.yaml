@@ -21,7 +21,7 @@ resources:
   - flyway-migrations-configmap.yaml
   - istio-authz-policy.yaml
   - requestauthentication-profile.yaml
-  - envoyfilter-profile-jwt-to-headers.yaml
+  - envoyfilter-profile-oauth2-exchange.yaml
   - secret-provider-class.yaml
 
 
