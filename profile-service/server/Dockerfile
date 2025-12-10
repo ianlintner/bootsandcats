@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Simple runtime image for profile-ui
 FROM eclipse-temurin:21-jre
 
