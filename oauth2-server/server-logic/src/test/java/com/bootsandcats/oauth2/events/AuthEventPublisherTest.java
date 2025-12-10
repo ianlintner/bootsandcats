@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -44,7 +45,7 @@ class AuthEventPublisherTest {
         properties.setStreamName("auth:events");
         properties.setMaxLength(1000);
         properties.setEnabled(true);
-        when(redisTemplate.opsForStream()).thenReturn(streamOperations);
+        lenient().when(redisTemplate.opsForStream()).thenReturn(streamOperations);
 
         publisher = new AuthEventPublisher(redisTemplate, properties);
     }
