@@ -17,38 +17,56 @@ micronaut:
       enabled: true
       login-success: /
       login-failure: /
+      unauthorized:
+        enabled: true
+        url: /oauth/login/oauth2server
+      prior-to-login: true
+    reject-not-found: false
+    ip-patterns:
+      - 127.0.0.1
     intercept-url-map:
       - pattern: /api/status
         http-method: GET
-        access: isAnonymous()
+        access:
+          - isAnonymous()
       - pattern: /public/**
         http-method: GET
-        access: isAnonymous()
+        access:
+          - isAnonymous()
       - pattern: /actuator/health
         http-method: GET
-        access: isAnonymous()
+        access:
+          - isAnonymous()
       - pattern: /actuator/prometheus
         http-method: GET
-        access: isAnonymous()
+        access:
+          - isAnonymous()
       - pattern: /api/me
         http-method: GET
-        access: isAuthenticated()
+        access:
+          - isAuthenticated()
       - pattern: /api/profile
         http-method: GET
-        access: isAuthenticated()
+        access:
+          - isAuthenticated()
       - pattern: /api/profile
         http-method: POST
-        access: isAuthenticated()
+        access:
+          - isAuthenticated()
       - pattern: /api/profile
         http-method: PUT
-        access: isAuthenticated()
+        access:
+          - isAuthenticated()
       - pattern: /api/profile
         http-method: DELETE
-        access: isAuthenticated()
+        access:
+          - isAuthenticated()
       - pattern: /api/admin/**
-        access: isAuthenticated()
+        access:
+          - isAuthenticated()
       - pattern: /**
-        access: isAuthenticated()
+        access:
+          - isAuthenticated()
     oauth2:
       clients:
         oauth2server:
