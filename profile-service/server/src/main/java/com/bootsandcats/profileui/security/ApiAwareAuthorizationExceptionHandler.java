@@ -49,7 +49,7 @@ public class ApiAwareAuthorizationExceptionHandler
     );
 
     @Override
-    public MutableHttpResponse<?> reject(HttpRequest<?> request, boolean forbidden) {
+    public MutableHttpResponse<?> handle(HttpRequest request, AuthorizationException exception) {
         String path = request.getPath();
 
         // Check if this is an anonymous endpoint - should not be rejected
@@ -58,6 +58,7 @@ public class ApiAwareAuthorizationExceptionHandler
             return HttpResponse.ok();
         }
 
+        boolean forbidden = exception.isForbidden();
         LOG.debug("Rejecting request to {} - forbidden={}", path, forbidden);
         
         if (forbidden) {
@@ -73,13 +74,6 @@ public class ApiAwareAuthorizationExceptionHandler
                         "status", HttpStatus.UNAUTHORIZED.getCode(),
                         "error", "Unauthorized",
                         "message", "Authentication required"));
-    }
-
-    /**
-     * Handle AuthorizationException for cases where it's explicitly thrown.
-     */
-    public MutableHttpResponse<?> handle(HttpRequest<?> request, AuthorizationException exception) {
-        return reject(request, exception.isForbidden());
     }
 
     private boolean isAnonymousPath(String path) {
