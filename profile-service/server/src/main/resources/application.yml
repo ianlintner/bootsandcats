@@ -14,13 +14,7 @@ micronaut:
     token-propagation:
       enabled: true
     redirect:
-      enabled: true
-      login-success: /
-      login-failure: /
-      unauthorized:
-        enabled: true
-        url: /oauth/login/oauth2server
-      prior-to-login: true
+      enabled: false
     reject-not-found: false
     ip-patterns:
       - 127.0.0.1
