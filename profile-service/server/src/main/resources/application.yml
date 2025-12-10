@@ -10,18 +10,21 @@ micronaut:
         mapping: /**
   security:
     enabled: true
-    authentication: bearer
+    # JWT validation is handled by Istio - we only read headers
+    # authentication: bearer (disabled - using IstioHeaderAuthenticationProvider)
     redirect:
       enabled: false
     reject-not-found: false
     ip-patterns:
       - 127.0.0.1
-    token:
-      jwt:
-        signatures:
-          jwks:
-            oauth2server:
-              url: ${OAUTH2_JWKS_URI:https://oauth2.cat-herding.net/oauth2/jwks}
+    # JWT validation disabled - Istio handles it and passes headers:
+    # x-jwt-sub, x-jwt-username, x-jwt-email, x-jwt-name, x-jwt-scope
+    # token:
+    #   jwt:
+    #     signatures:
+    #       jwks:
+    #         oauth2server:
+    #           url: ${OAUTH2_JWKS_URI:https://oauth2.cat-herding.net/oauth2/jwks}
     intercept-url-map:
       - pattern: /api/status
         http-method: GET
