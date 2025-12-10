@@ -7,6 +7,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
+import java.util.Objects;
+import java.util.function.Consumer;
+
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -17,8 +20,18 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
+import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeRequestAuthenticationContext;
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeRequestAuthenticationException;
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeRequestAuthenticationProvider;
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeRequestAuthenticationToken;
+import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeRequestAuthenticationValidator;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
@@ -27,6 +40,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
+import org.springframework.util.StringUtils;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import com.bootsandcats.oauth2.log.AuthorizationDiagnosticsFilter;
 import com.bootsandcats.oauth2.security.FederatedIdentityAuthenticationSuccessHandler;
@@ -81,7 +97,26 @@ public class AuthorizationServerConfig {
                 .with(
                         authorizationServerConfigurer,
                         (authorizationServer) ->
-                                authorizationServer.oidc(
+                                authorizationServer
+                                        .authorizationEndpoint(
+                                                endpoint ->
+                                                        endpoint.authenticationProviders(
+                                                                providers ->
+                                                                        providers.forEach(
+                                                                                provider -> {
+                                                                                    if (provider
+                                                                                            instanceof
+                                                                                            OAuth2AuthorizationCodeRequestAuthenticationProvider
+                                                                                            codeProvider) {
+                                                                                        codeProvider
+                                                                                                .setAuthenticationValidator(
+                                                                                                        redirectUriPathOnlyValidator()
+                                                                                                                .andThen(
+                                                                                                                        OAuth2AuthorizationCodeRequestAuthenticationValidator
+                                                                                                                                .DEFAULT_SCOPE_VALIDATOR));
+                                                                                    }
+                                                                                })))
+                                        .oidc(
                                         oidc ->
                                                 oidc.providerConfigurationEndpoint(
                                                         providerConfig ->
@@ -333,4 +368,155 @@ public class AuthorizationServerConfig {
                 .oidcLogoutEndpoint("/connect/logout")
                 .build();
     }
+
+        private Consumer<OAuth2AuthorizationCodeRequestAuthenticationContext> redirectUriPathOnlyValidator() {
+                return authenticationContext -> {
+                            OAuth2AuthorizationCodeRequestAuthenticationToken authorizationCodeRequestAuthentication =
+                                    authenticationContext.getAuthentication();
+                            RegisteredClient registeredClient = authenticationContext.getRegisteredClient();
+
+                        String requestedRedirectUri = authorizationCodeRequestAuthentication.getRedirectUri();
+
+                        if (StringUtils.hasText(requestedRedirectUri)) {
+                                UriComponents requestedRedirect = null;
+                                try {
+                                        requestedRedirect = UriComponentsBuilder.fromUriString(requestedRedirectUri).build();
+                                } catch (Exception ex) {
+                                        log.debug("Failed to parse requested redirect URI", ex);
+                                }
+
+                                if (requestedRedirect == null || requestedRedirect.getFragment() != null) {
+                                            throwRedirectError(
+                                                    OAuth2ErrorCodes.INVALID_REQUEST,
+                                                    OAuth2ParameterNames.REDIRECT_URI,
+                                                    authorizationCodeRequestAuthentication);
+                                }
+
+                                UriComponents requestedWithoutQuery =
+                                                UriComponentsBuilder.fromUriString(requestedRedirectUri)
+                                                                .replaceQuery(null)
+                                                                .fragment(null)
+                                                                .build();
+                                Integer requestedPort = requestedRedirect.getPort();
+
+                                boolean validRedirect;
+                                if (!isLoopbackAddress(requestedRedirect.getHost())) {
+                                        validRedirect = registeredClient.getRedirectUris().stream()
+                                                        .anyMatch(
+                                                                        registeredUri ->
+                                                                                        redirectWithoutQueryMatches(
+                                                                                                        registeredUri, requestedWithoutQuery));
+                                } else {
+                                        validRedirect = registeredClient.getRedirectUris().stream()
+                                                        .anyMatch(
+                                                                        registeredUri ->
+                                                                                        redirectWithoutQueryMatches(
+                                                                                                        UriComponentsBuilder.fromUriString(registeredUri)
+                                                                                            .port(requestedPort)
+                                                                                                                        .replaceQuery(null)
+                                                                                                                        .fragment(null)
+                                                                                                                        .build(),
+                                                                                                        requestedWithoutQuery));
+                                }
+
+                                if (!validRedirect) {
+                                        throwRedirectError(
+                                                        OAuth2ErrorCodes.INVALID_REQUEST,
+                                                        OAuth2ParameterNames.REDIRECT_URI,
+                                                        authorizationCodeRequestAuthentication);
+                                }
+
+                        } else {
+                                if (authorizationCodeRequestAuthentication.getScopes().contains(OidcScopes.OPENID)
+                                                || registeredClient.getRedirectUris().size() != 1) {
+                                        throwRedirectError(
+                                                        OAuth2ErrorCodes.INVALID_REQUEST,
+                                                        OAuth2ParameterNames.REDIRECT_URI,
+                                                        authorizationCodeRequestAuthentication);
+                                }
+                        }
+                };
+        }
+
+        private boolean redirectWithoutQueryMatches(
+                        String registeredRedirectUri, UriComponents requestedWithoutQuery) {
+                try {
+                        UriComponents registered =
+                                        UriComponentsBuilder.fromUriString(registeredRedirectUri)
+                                                        .replaceQuery(null)
+                                                        .fragment(null)
+                                                        .build();
+                        return redirectWithoutQueryMatches(registered, requestedWithoutQuery);
+                } catch (Exception ex) {
+                        log.debug("Failed to parse registered redirect URI", ex);
+                        return false;
+                }
+        }
+
+        private boolean redirectWithoutQueryMatches(
+                        UriComponents registeredWithoutQuery, UriComponents requestedWithoutQuery) {
+                if (registeredWithoutQuery.getFragment() != null || requestedWithoutQuery.getFragment() != null) {
+                        return false;
+                }
+
+                String registeredPath = normalizePath(registeredWithoutQuery.getPath());
+                String requestedPath = normalizePath(requestedWithoutQuery.getPath());
+
+                return Objects.equals(registeredWithoutQuery.getScheme(), requestedWithoutQuery.getScheme())
+                                && Objects.equals(registeredWithoutQuery.getHost(), requestedWithoutQuery.getHost())
+                                && Objects.equals(registeredWithoutQuery.getPort(), requestedWithoutQuery.getPort())
+                                && Objects.equals(registeredWithoutQuery.getUserInfo(), requestedWithoutQuery.getUserInfo())
+                                && Objects.equals(registeredPath, requestedPath);
+        }
+
+        private String normalizePath(String path) {
+                if (!StringUtils.hasText(path)) {
+                        return "/";
+                }
+                if (path.length() > 1 && path.endsWith("/")) {
+                        return path.substring(0, path.length() - 1);
+                }
+                return path;
+        }
+
+            private void throwRedirectError(
+                    String errorCode,
+                    String parameterName,
+                    OAuth2AuthorizationCodeRequestAuthenticationToken authorizationCodeRequestAuthentication) {
+                OAuth2Error error =
+                                new OAuth2Error(
+                                                errorCode,
+                                                "Invalid request: " + parameterName,
+                                                "https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.2.1");
+                throw new OAuth2AuthorizationCodeRequestAuthenticationException(
+                        error, authorizationCodeRequestAuthentication);
+        }
+
+        private boolean isLoopbackAddress(String host) {
+                if (!StringUtils.hasText(host)) {
+                        return false;
+                }
+                if ("[0:0:0:0:0:0:0:1]".equals(host) || "[::1]".equals(host)) {
+                        return true;
+                }
+                String[] ipv4Octets = host.split("\\.");
+                if (ipv4Octets.length != 4) {
+                        return false;
+                }
+                try {
+                        int[] address = new int[ipv4Octets.length];
+                        for (int i = 0; i < ipv4Octets.length; i++) {
+                                address[i] = Integer.parseInt(ipv4Octets[i]);
+                        }
+                        return address[0] == 127
+                                        && address[1] >= 0
+                                        && address[1] <= 255
+                                        && address[2] >= 0
+                                        && address[2] <= 255
+                                        && address[3] >= 1
+                                        && address[3] <= 255;
+                } catch (NumberFormatException ex) {
+                        return false;
+                }
+        }
 }
