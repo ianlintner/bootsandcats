@@ -12,7 +12,7 @@ import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Error;
 import io.micronaut.http.annotation.Produces;
-import io.micronaut.http.server.exceptions.response.HttpStatusException;
+import io.micronaut.http.exceptions.HttpStatusException;
 
 /**
  * Serves a branded HTML error experience for browser users while preserving JSON responses
