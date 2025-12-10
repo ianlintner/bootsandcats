@@ -15,4 +15,5 @@ spec:
     jwksUri: "https://oauth2.cat-herding.net/oauth2/jwks"
     audiences:
     - "profile-service"
+    - "m2m-client"
     outputPayloadToHeader: "x-jwt-payload"
