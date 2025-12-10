@@ -16,6 +16,8 @@ micronaut:
     redirect:
       enabled: false
     reject-not-found: false
+    oauth2:
+      enabled: false
     ip-patterns:
       - 127.0.0.1
     token:
