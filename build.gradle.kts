@@ -55,6 +55,11 @@ subprojects {
 
     tasks.withType<Test> {
         useJUnitPlatform()
+        // Enable JUnit XML reports for GitHub Actions integration
+        reports {
+            junitXml.required.set(true)
+            html.required.set(true)
+        }
     }
 
     // SpotBugs configuration for each subproject - only run on main source

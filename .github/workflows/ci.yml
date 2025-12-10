@@ -54,6 +54,10 @@ jobs:
   build-unit:
     name: Build & Unit Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -76,6 +80,16 @@ jobs:
             -x :e2e-tests:test \
             --no-daemon --build-cache --parallel
 
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: |
+            **/build/test-results/test/**/*.xml
+          check_name: "Unit Test Results"
+          comment_title: "Unit Test Results"
+          comment_mode: "off"
+
       - name: Upload test reports (always)
         if: always()
         uses: actions/upload-artifact@v4
@@ -83,6 +97,7 @@ jobs:
           name: surefire-reports
           path: |
             **/build/reports/tests/**
+            **/build/test-results/**/*.xml
             **/build/reports/jacoco/**
           if-no-files-found: ignore
 
@@ -137,6 +152,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-unit
     timeout-minutes: 20
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -156,6 +175,16 @@ jobs:
       - name: Run Testcontainers tests
         run: gradle :oauth2-server:server-ui:testcontainersTests --no-daemon --build-cache
 
+      - name: Publish Integration Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: |
+            **/build/test-results/testcontainersTests/**/*.xml
+          check_name: "Integration Test Results"
+          comment_title: "Integration Test Results"
+          comment_mode: "off"
+
       - name: Upload Testcontainers test reports (always)
         if: always()
         uses: actions/upload-artifact@v4
@@ -163,6 +192,7 @@ jobs:
           name: testcontainers-reports
           path: |
             **/build/reports/tests/testcontainersTests/**
+            **/build/test-results/testcontainersTests/**/*.xml
           if-no-files-found: ignore
 
   smoke:
