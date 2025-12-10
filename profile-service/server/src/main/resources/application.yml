@@ -6,8 +6,13 @@ micronaut:
   router:
     static-resources:
       public:
+        enabled: true
         paths: classpath:public
         mapping: /**
+      js:
+        enabled: true
+        paths: classpath:public
+        mapping: /profile-app.js
   security:
     enabled: true
     # JWT validation is handled by Istio - we only read headers

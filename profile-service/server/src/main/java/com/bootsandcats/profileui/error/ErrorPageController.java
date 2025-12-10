@@ -63,6 +63,9 @@ public class ErrorPageController {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         if (throwable instanceof HttpStatusException statusException) {
             status = statusException.getStatus();
+        } else if (throwable == null) {
+            // If throwable is null, it's likely a 404 (no route found)
+            status = HttpStatus.NOT_FOUND;
         }
         return renderResponse(status, request.getPath());
     }
