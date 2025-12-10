@@ -37,6 +37,9 @@ public class DataInitializer {
     @Value("${oauth2.m2m-client-secret:m2m-secret}")
     private String m2mClientSecret;
 
+    @Value("${oauth2.preserve-client-secrets:true}")
+    private boolean preserveClientSecrets;
+
     @Bean
     public CommandLineRunner initializeClients(
             RegisteredClientRepository repository,
@@ -99,11 +102,22 @@ public class DataInitializer {
             return;
         }
 
+        // If preserveClientSecrets is true, don't update existing clients
+        if (preserveClientSecrets) {
+            log.info(
+                    "OAuth client '{}' already exists, preserving existing configuration "
+                            + "(oauth2.preserve-client-secrets=true)",
+                    clientId);
+            return;
+        }
+
         RegisteredClient.Builder builder = RegisteredClient.from(existing);
 
         builder.clientId(desired.getClientId());
         builder.clientIdIssuedAt(existing.getClientIdIssuedAt());
-        builder.clientSecret(desired.getClientSecret());
+        // Preserve the existing client secret - never overwrite it
+        // Use existing.getClientSecret() instead of desired.getClientSecret()
+        builder.clientSecret(existing.getClientSecret());
         builder.clientSecretExpiresAt(desired.getClientSecretExpiresAt());
         builder.clientName(desired.getClientName());
         builder.clientAuthenticationMethods(
@@ -134,7 +148,7 @@ public class DataInitializer {
         builder.clientSettings(desired.getClientSettings());
         builder.tokenSettings(desired.getTokenSettings());
 
-        log.info("Updating OAuth client '{}' in database", clientId);
+        log.info("Updating OAuth client '{}' in database (preserving secret)", clientId);
         RegisteredClient updated = builder.build();
         repository.save(updated);
         auditClientEvent(securityAuditService, AuditEventType.CLIENT_UPDATED, updated);
