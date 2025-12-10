@@ -22,8 +22,8 @@ micronaut:
     reject-not-found: false
     ip-patterns:
       - 127.0.0.1
-      - 0:0:0:0:0:0:0:1
       - ::1
+      - 0:0:0:0:0:0:0:1
     # JWT validation disabled - Istio handles it and passes headers:
     # x-jwt-sub, x-jwt-username, x-jwt-email, x-jwt-name, x-jwt-scope
     # token:
@@ -38,12 +38,27 @@ micronaut:
         access:
           - isAnonymous()
       - pattern: /profile-app.js
+        http-method: GET
+        access:
+          - isAnonymous()
+      - pattern: /profile-app.js
+        http-method: HEAD
         access:
           - isAnonymous()
       - pattern: /favicon.ico
+        http-method: GET
+        access:
+          - isAnonymous()
+      - pattern: /favicon.ico
+        http-method: HEAD
         access:
           - isAnonymous()
       - pattern: /index.html
+        http-method: GET
+        access:
+          - isAnonymous()
+      - pattern: /index.html
+        http-method: HEAD
         access:
           - isAnonymous()
       - pattern: /public/**
@@ -105,6 +120,9 @@ micronaut:
     #         - profile:admin
   metrics:
     enabled: true
+  health:
+    redis:
+      enabled: false
   export:
     prometheus:
       enabled: true
