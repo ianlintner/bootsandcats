@@ -281,6 +281,7 @@ public class DataInitializer {
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
                 .redirectUri("https://profile.cat-herding.net/")
+                .redirectUri("https://profile.cat-herding.net/oauth/callback/oauth2server")
                 .postLogoutRedirectUri("https://profile.cat-herding.net/")
                 .scope(OidcScopes.OPENID)
                 .scope(OidcScopes.PROFILE)
