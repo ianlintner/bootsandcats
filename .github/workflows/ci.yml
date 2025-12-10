@@ -15,6 +15,8 @@ on:
 
 permissions:
   contents: read
+  actions: read
+  issues: write
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -392,3 +394,25 @@ jobs:
           kubectl get pods -n default -l app=profile-service
           kubectl get service oauth2-server -n default
           kubectl get service profile-service -n default
+
+  analyze-failure:
+    name: Analyze Workflow Failure
+    runs-on: ubuntu-latest
+    if: failure()
+    needs: [mkdocs, build-unit, static-analysis, integration-tests, smoke, deploy]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Analyze Workflow Failure
+        uses: ianlintner/ai_summary_action@v0.0.4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          llm-provider: 'openai'
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          create-issue: 'true'
+          issue-label: 'ai-analysis'
+          enable-memory: 'true'
+          cache-strategy: 'actions-cache'
+          memory-scope: 'branch'
+          max-historical-runs: '10'

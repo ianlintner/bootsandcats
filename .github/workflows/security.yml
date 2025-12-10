@@ -7,6 +7,8 @@ on:
 
 permissions:
   contents: read
+  actions: read
+  issues: write
 
 concurrency:
   group: security-${{ github.ref }}
@@ -57,3 +59,25 @@ jobs:
           path: |
             build/reports/dependency-check-report.*
           if-no-files-found: ignore
+
+  analyze-failure:
+    name: Analyze Workflow Failure
+    runs-on: ubuntu-latest
+    if: failure()
+    needs: [owasp-dep-check]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Analyze Workflow Failure
+        uses: ianlintner/ai_summary_action@v0.0.4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          llm-provider: 'openai'
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          create-issue: 'true'
+          issue-label: 'ai-analysis'
+          enable-memory: 'true'
+          cache-strategy: 'actions-cache'
+          memory-scope: 'repository'
+          max-historical-runs: '5'

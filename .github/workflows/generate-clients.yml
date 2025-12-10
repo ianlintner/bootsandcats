@@ -26,6 +26,12 @@ on:
         required: false
         default: "all"
 
+permissions:
+  contents: read
+  actions: read
+  issues: write
+  pull-requests: write
+
 env:
   OPENAPI_GENERATOR_VERSION: "7.10.0"
   NODE_VERSION: "20"
@@ -421,3 +427,25 @@ jobs:
             automated
             sdk
             dependencies
+
+  analyze-failure:
+    name: Analyze Workflow Failure
+    runs-on: ubuntu-latest
+    if: failure()
+    needs: [download-specs, generate-typescript, generate-python, generate-go, generate-rust, create-pr]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Analyze Workflow Failure
+        uses: ianlintner/ai_summary_action@v0.0.4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          llm-provider: 'openai'
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          create-issue: 'true'
+          issue-label: 'ai-analysis'
+          enable-memory: 'true'
+          cache-strategy: 'actions-cache'
+          memory-scope: 'branch'
+          max-historical-runs: '5'

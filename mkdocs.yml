@@ -115,6 +115,8 @@ nav:
       - Scaling: operations/runbooks/scaling.md
       - Backup & Restore: operations/runbooks/backup-restore.md
       - Certificate Rotation: operations/runbooks/certificate-rotation.md
+  - Blog:
+    - AI Workflow Failure Analysis: blog/ai-workflow-failure-analysis.md
 
 extra:
   social:

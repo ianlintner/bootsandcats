@@ -5,6 +5,11 @@ on:
     - cron: "0 4 * * 1" # Mondays at 05:00 UTC
   workflow_dispatch:
 
+permissions:
+  contents: read
+  actions: read
+  issues: write
+
 env:
   JAVA_VERSION: "21"
   # Test client credentials (these are demo/test values already present in the codebase)
@@ -218,3 +223,25 @@ jobs:
         with:
           name: smoke-test-results
           path: build/smoke-test-results/
+
+  analyze-failure:
+    name: Analyze Workflow Failure
+    runs-on: ubuntu-latest
+    if: failure()
+    needs: [smoke-test]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Analyze Workflow Failure
+        uses: ianlintner/ai_summary_action@v0.0.4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          llm-provider: 'openai'
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          create-issue: 'true'
+          issue-label: 'ai-analysis'
+          enable-memory: 'true'
+          cache-strategy: 'actions-cache'
+          memory-scope: 'repository'
+          max-historical-runs: '10'
