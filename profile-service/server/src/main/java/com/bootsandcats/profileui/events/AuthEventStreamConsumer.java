@@ -20,17 +20,22 @@ import io.lettuce.core.XReadArgs;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.micronaut.context.annotation.Requires;
-import io.micronaut.scheduling.annotation.Scheduled;
+import io.micronaut.scheduling.TaskExecutors;
+import io.micronaut.scheduling.TaskScheduler;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 
 /**
  * Redis Stream consumer that listens for auth activity and auto-creates basic profiles for new
  * users.
+ *
+ * <p>Uses programmatic scheduling instead of @Scheduled annotation to avoid property resolution
+ * deadlocks during bean initialization in Micronaut.
  */
 @Singleton
-@Requires(property = "auth.events.consumer.enabled", notEquals = "false")
+@Requires(property = "auth.events.consumer.enabled", value = "true", defaultValue = "false")
 public class AuthEventStreamConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(AuthEventStreamConsumer.class);
@@ -39,34 +44,46 @@ public class AuthEventStreamConsumer {
     private final ProfileService profileService;
     private final ObjectMapper objectMapper;
     private final AuthEventConsumerConfiguration config;
+    private final TaskScheduler taskScheduler;
 
     private StatefulRedisConnection<String, String> connection;
     private boolean groupPrepared = false;
+    private volatile boolean running = false;
 
     public AuthEventStreamConsumer(
             RedisClient redisClient,
             ProfileService profileService,
             ObjectMapper objectMapper,
-            AuthEventConsumerConfiguration config) {
+            AuthEventConsumerConfiguration config,
+            @Named(TaskExecutors.SCHEDULED) TaskScheduler taskScheduler) {
         this.redisClient = redisClient;
         this.profileService = profileService;
         this.objectMapper = objectMapper;
         this.config = config;
+        this.taskScheduler = taskScheduler;
     }
 
     @PostConstruct
     void init() {
         if (config.isEnabled()) {
             ensureConnection();
+            startScheduledPolling();
         }
     }
 
     @PreDestroy
     void shutdown() {
+        running = false;
         closeConnection();
     }
 
-    @Scheduled(fixedDelay = "${auth.events.consumer.poll-interval:5s}")
+    private void startScheduledPolling() {
+        running = true;
+        Duration pollInterval = config.getPollInterval();
+        log.info("Starting auth event stream consumer with poll interval: {}", pollInterval);
+        taskScheduler.scheduleWithFixedDelay(pollInterval, pollInterval, this::pollStream);
+    }
+
     void pollStream() {
         if (!config.isEnabled() || !ensureConnection()) {
             return;
