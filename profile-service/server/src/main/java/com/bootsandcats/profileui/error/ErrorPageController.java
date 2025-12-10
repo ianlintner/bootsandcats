@@ -2,9 +2,7 @@ package com.bootsandcats.profileui.error;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Optional;
 
-import io.micronaut.http.HttpAttributes;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.HttpStatus;
@@ -15,48 +13,73 @@ import io.micronaut.http.annotation.Produces;
 import io.micronaut.http.exceptions.HttpStatusException;
 
 /**
- * Serves a branded HTML error experience for browser users while preserving JSON responses
- * for API clients.
+ * Serves a branded HTML error experience for browser users while preserving JSON responses for API
+ * clients.
  */
 @Controller
 public class ErrorPageController {
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
+    /** Handle 404 Not Found globally. */
+    @Error(status = HttpStatus.NOT_FOUND, global = true)
+    @Produces(MediaType.TEXT_HTML)
+    public HttpResponse<String> notFound(HttpRequest<?> request) {
+        return renderResponse(HttpStatus.NOT_FOUND, request.getPath());
+    }
+
+    /** Handle 500 Internal Server Error globally. */
+    @Error(status = HttpStatus.INTERNAL_SERVER_ERROR, global = true)
+    @Produces(MediaType.TEXT_HTML)
+    public HttpResponse<String> internalServerError(HttpRequest<?> request) {
+        return renderResponse(HttpStatus.INTERNAL_SERVER_ERROR, request.getPath());
+    }
+
+    /** Handle 400 Bad Request globally. */
+    @Error(status = HttpStatus.BAD_REQUEST, global = true)
+    @Produces(MediaType.TEXT_HTML)
+    public HttpResponse<String> badRequest(HttpRequest<?> request) {
+        return renderResponse(HttpStatus.BAD_REQUEST, request.getPath());
+    }
+
+    /** Handle 401 Unauthorized globally. */
+    @Error(status = HttpStatus.UNAUTHORIZED, global = true)
+    @Produces(MediaType.TEXT_HTML)
+    public HttpResponse<String> unauthorized(HttpRequest<?> request) {
+        return renderResponse(HttpStatus.UNAUTHORIZED, request.getPath());
+    }
+
+    /** Handle 403 Forbidden globally. */
+    @Error(status = HttpStatus.FORBIDDEN, global = true)
+    @Produces(MediaType.TEXT_HTML)
+    public HttpResponse<String> forbidden(HttpRequest<?> request) {
+        return renderResponse(HttpStatus.FORBIDDEN, request.getPath());
+    }
+
+    /** Catch-all exception handler. */
     @Error(global = true)
     @Produces(MediaType.TEXT_HTML)
-    public HttpResponse<String> onError(HttpRequest<?> request, Throwable throwable) {
-        HttpStatus status = resolveStatus(request, throwable);
-        String path = request.getPath();
+    public HttpResponse<String> onException(HttpRequest<?> request, Throwable throwable) {
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+        if (throwable instanceof HttpStatusException statusException) {
+            status = statusException.getStatus();
+        }
+        return renderResponse(status, request.getPath());
+    }
 
+    private HttpResponse<String> renderResponse(HttpStatus status, String path) {
         String body = renderHtml(status, path);
         return HttpResponse.status(status).contentType(MediaType.TEXT_HTML_TYPE).body(body);
     }
 
-    private HttpStatus resolveStatus(HttpRequest<?> request, Throwable throwable) {
-        if (throwable instanceof HttpStatusException statusException) {
-            return statusException.getStatus();
-        }
-
-        Optional<Integer> statusAttribute = request.getAttribute(HttpAttributes.STATUS, Integer.class);
-        if (statusAttribute.isPresent()) {
-            try {
-                return HttpStatus.valueOf(statusAttribute.get());
-            } catch (IllegalArgumentException ignored) {
-                // fall through to default
-            }
-        }
-
-        return HttpStatus.INTERNAL_SERVER_ERROR;
-    }
-
     private String renderHtml(HttpStatus status, String path) {
-        String statusMessage = switch (status) {
-            case NOT_FOUND -> "The page you were looking for doesn’t exist.";
-            case UNAUTHORIZED, FORBIDDEN -> "You may need to sign in or request access.";
-            case BAD_REQUEST -> "The request could not be processed.";
-            default -> "Something went wrong on our side.";
-        };
+        String statusMessage =
+                switch (status) {
+                    case NOT_FOUND -> "The page you were looking for doesn’t exist.";
+                    case UNAUTHORIZED, FORBIDDEN -> "You may need to sign in or request access.";
+                    case BAD_REQUEST -> "The request could not be processed.";
+                    default -> "Something went wrong on our side.";
+                };
 
         String timestamp = FORMATTER.format(OffsetDateTime.now());
 
@@ -195,6 +218,7 @@ public class ErrorPageController {
                     </div>
                 </body>
                 </html>
-                """.formatted(status.getCode(), status.getReason(), statusMessage, path, timestamp);
+                """
+                .formatted(status.getCode(), status.getReason(), statusMessage, path, timestamp);
     }
 }

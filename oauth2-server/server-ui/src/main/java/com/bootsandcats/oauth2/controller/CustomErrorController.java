@@ -98,7 +98,8 @@ public class CustomErrorController { // implements ErrorController {
                 };
 
         String path =
-                request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI) instanceof String requestUri
+                request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI)
+                                instanceof String requestUri
                         ? requestUri
                         : request.getRequestURI();
 
@@ -111,5 +112,4 @@ public class CustomErrorController { // implements ErrorController {
             String reasonPhrase,
             String message,
             String path) {}
-    }
 }
