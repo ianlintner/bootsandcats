@@ -1,7 +1,11 @@
 package com.bootsandcats.profileui.security;
 
-import io.micronaut.context.annotation.Value;
-import io.micronaut.core.async.publisher.Publishers;
+import java.util.Set;
+
+import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.micronaut.http.HttpRequest;
 import io.micronaut.http.MutableHttpResponse;
 import io.micronaut.http.annotation.Filter;
@@ -9,17 +13,11 @@ import io.micronaut.http.filter.HttpServerFilter;
 import io.micronaut.http.filter.ServerFilterChain;
 import io.micronaut.http.filter.ServerFilterPhase;
 import jakarta.inject.Singleton;
-import org.reactivestreams.Publisher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.List;
-import java.util.Set;
 
 /**
- * Filter that marks requests to anonymous endpoints so they bypass OAuth2 login redirect.
- * This filter runs with high priority (ORDER = -200) to set the attribute before
- * the OAuth2 login handler can redirect the request.
+ * Filter that marks requests to anonymous endpoints so they bypass OAuth2 login redirect. This
+ * filter runs with high priority (ORDER = -200) to set the attribute before the OAuth2 login
+ * handler can redirect the request.
  */
 @Filter("/**")
 @Singleton
@@ -27,28 +25,15 @@ public class AnonymousEndpointFilter implements HttpServerFilter {
 
     private static final Logger LOG = LoggerFactory.getLogger(AnonymousEndpointFilter.class);
 
-    /**
-     * Attribute key to mark anonymous requests.
-     */
+    /** Attribute key to mark anonymous requests. */
     public static final String ANONYMOUS_REQUEST_ATTR = "io.micronaut.security.ANONYMOUS_REQUEST";
 
-    /**
-     * List of anonymous endpoint paths (exact match or prefix).
-     */
-    private static final Set<String> ANONYMOUS_PATHS = Set.of(
-            "/api/status",
-            "/actuator/health",
-            "/actuator/prometheus",
-            "/health"
-    );
+    /** List of anonymous endpoint paths (exact match or prefix). */
+    private static final Set<String> ANONYMOUS_PATHS =
+            Set.of("/api/status", "/actuator/health", "/actuator/prometheus", "/health");
 
-    /**
-     * List of anonymous path prefixes.
-     */
-    private static final Set<String> ANONYMOUS_PATH_PREFIXES = Set.of(
-            "/public/",
-            "/actuator/"
-    );
+    /** List of anonymous path prefixes. */
+    private static final Set<String> ANONYMOUS_PATH_PREFIXES = Set.of("/public/", "/actuator/");
 
     @Override
     public int getOrder() {
@@ -57,7 +42,8 @@ public class AnonymousEndpointFilter implements HttpServerFilter {
     }
 
     @Override
-    public Publisher<MutableHttpResponse<?>> doFilter(HttpRequest<?> request, ServerFilterChain chain) {
+    public Publisher<MutableHttpResponse<?>> doFilter(
+            HttpRequest<?> request, ServerFilterChain chain) {
         String path = request.getPath();
 
         if (isAnonymousPath(path)) {

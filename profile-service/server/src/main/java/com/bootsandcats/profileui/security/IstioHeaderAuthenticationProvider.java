@@ -1,29 +1,29 @@
 package com.bootsandcats.profileui.security;
 
-import io.micronaut.core.annotation.Nullable;
-import io.micronaut.http.HttpRequest;
-import io.micronaut.security.authentication.Authentication;
-import io.micronaut.security.authentication.AuthenticationResponse;
-import io.micronaut.security.authentication.ServerAuthentication;
-import io.micronaut.security.filters.AuthenticationFetcher;
-import jakarta.inject.Singleton;
+import java.util.*;
+
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import reactor.core.publisher.Mono;
 
-import java.util.*;
+import io.micronaut.http.HttpRequest;
+import io.micronaut.security.authentication.Authentication;
+import io.micronaut.security.authentication.ServerAuthentication;
+import io.micronaut.security.filters.AuthenticationFetcher;
+import jakarta.inject.Singleton;
+import reactor.core.publisher.Mono;
 
 /**
  * Authentication provider that reads JWT claims from Istio-injected headers.
  *
  * <p>Istio's EnvoyFilter extracts JWT claims and adds them as headers:
+ *
  * <ul>
- *   <li>x-jwt-sub - Subject (user ID)</li>
- *   <li>x-jwt-username - Preferred username</li>
- *   <li>x-jwt-email - Email address</li>
- *   <li>x-jwt-name - Display name</li>
- *   <li>x-jwt-scope - Space-separated scopes</li>
+ *   <li>x-jwt-sub - Subject (user ID)
+ *   <li>x-jwt-username - Preferred username
+ *   <li>x-jwt-email - Email address
+ *   <li>x-jwt-name - Display name
+ *   <li>x-jwt-scope - Space-separated scopes
  * </ul>
  *
  * <p>JWT validation is handled by Istio, so this provider only reads the headers.
@@ -31,7 +31,8 @@ import java.util.*;
 @Singleton
 public class IstioHeaderAuthenticationProvider implements AuthenticationFetcher<HttpRequest<?>> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(IstioHeaderAuthenticationProvider.class);
+    private static final Logger LOG =
+            LoggerFactory.getLogger(IstioHeaderAuthenticationProvider.class);
 
     private static final String HEADER_SUB = "x-jwt-sub";
     private static final String HEADER_USERNAME = "x-jwt-username";
@@ -82,11 +83,7 @@ public class IstioHeaderAuthenticationProvider implements AuthenticationFetcher<
             attributes.put("scope", scopeHeader);
         }
 
-        Authentication authentication = new ServerAuthentication(
-                subject,
-                roles,
-                attributes
-        );
+        Authentication authentication = new ServerAuthentication(subject, roles, attributes);
 
         LOG.debug("Created authentication for {} with {} scopes", subject, roles.size());
         return Mono.just(authentication);
