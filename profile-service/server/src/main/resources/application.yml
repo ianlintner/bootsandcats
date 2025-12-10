@@ -22,6 +22,8 @@ micronaut:
     reject-not-found: false
     ip-patterns:
       - 127.0.0.1
+      - 0:0:0:0:0:0:0:1
+      - ::1
     # JWT validation disabled - Istio handles it and passes headers:
     # x-jwt-sub, x-jwt-username, x-jwt-email, x-jwt-name, x-jwt-scope
     # token:
@@ -108,7 +110,9 @@ micronaut:
       enabled: true
 
 redis:
-  uri: ${REDIS_URI:redis://redis:6379}
+  uri: ${REDIS_URI:redis://localhost:6379}
+  health:
+    enabled: false
 
 auth:
   events:

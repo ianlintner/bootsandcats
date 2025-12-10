@@ -11,6 +11,7 @@ import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Error;
 import io.micronaut.http.annotation.Produces;
 import io.micronaut.http.exceptions.HttpStatusException;
+import io.micronaut.security.authentication.AuthorizationException;
 
 /**
  * Serves a branded HTML error experience for browser users while preserving JSON responses for API
@@ -69,6 +70,8 @@ public class ErrorPageController {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         if (throwable instanceof HttpStatusException statusException) {
             status = statusException.getStatus();
+        } else if (throwable instanceof AuthorizationException) {
+            status = HttpStatus.UNAUTHORIZED;
         } else if (throwable == null) {
             // If throwable is null, it's likely a 404 (no route found)
             status = HttpStatus.NOT_FOUND;
