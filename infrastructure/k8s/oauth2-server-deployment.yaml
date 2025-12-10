@@ -47,10 +47,6 @@ spec:
         - name: flyway-migrations
           mountPath: /flyway/sql
           readOnly: true
-        resources:
-          limits:
-            memory: "256Mi"
-            cpu: "500m"
         securityContext:
           runAsNonRoot: true
           runAsUser: 1001
@@ -88,10 +84,6 @@ spec:
         - name: flyway-migrations
           mountPath: /flyway/sql
           readOnly: true
-        resources:
-          limits:
-            memory: "256Mi"
-            cpu: "500m"
         securityContext:
           runAsNonRoot: true
           runAsUser: 1001
@@ -244,10 +236,6 @@ spec:
         - name: keystore-volume
           mountPath: "/mnt/keystore"
           readOnly: true
-        resources:
-          limits:
-            memory: "1024Mi"
-            cpu: "500m"
         startupProbe:
           httpGet:
             path: /actuator/health/liveness
