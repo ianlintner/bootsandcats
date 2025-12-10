@@ -219,6 +219,22 @@ public class ErrorPageController {
                 </body>
                 </html>
                 """
-                .formatted(status.getCode(), status.getReason(), statusMessage, path, timestamp);
+                .formatted(
+                        status.getCode(),
+                        status.getReason(),
+                        statusMessage,
+                        escapeFormatSpecifiers(path),
+                        timestamp);
+    }
+
+    /**
+     * Escapes percent signs in strings to prevent IllegalFormatFlagsException when used with
+     * String.formatted(). Replaces % with %% so they are treated as literal percent signs.
+     */
+    private String escapeFormatSpecifiers(String input) {
+        if (input == null) {
+            return "";
+        }
+        return input.replace("%", "%%");
     }
 }
