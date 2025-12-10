@@ -33,6 +33,7 @@ import io.lettuce.core.StreamMessage;
 import io.lettuce.core.XGroupCreateArgs;
 import io.lettuce.core.XReadArgs;
 import io.lettuce.core.api.sync.RedisCommands;
+import io.micronaut.scheduling.TaskScheduler;
 
 @ExtendWith(MockitoExtension.class)
 class AuthEventStreamConsumerTest {
@@ -40,6 +41,7 @@ class AuthEventStreamConsumerTest {
     @Mock private RedisClient redisClient;
     @Mock private RedisCommands<String, String> redisCommands;
     @Mock private ProfileService profileService;
+    @Mock private TaskScheduler taskScheduler;
 
     private AuthEventConsumerConfiguration config;
     private AuthEventStreamConsumer consumer;
@@ -49,7 +51,7 @@ class AuthEventStreamConsumerTest {
         config = new AuthEventConsumerConfiguration();
         consumer =
                 new AuthEventStreamConsumer(
-                        redisClient, profileService, new ObjectMapper(), config);
+                        redisClient, profileService, new ObjectMapper(), config, taskScheduler);
     }
 
     @Test
