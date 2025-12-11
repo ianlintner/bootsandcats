@@ -25,7 +25,13 @@ public class AnonymousEndpointSecurityRule implements SecurityRule<HttpRequest<?
 
     /** Anonymous paths (exact match). */
     private static final Set<String> ANONYMOUS_PATHS =
-            Set.of("/api/status", "/actuator/health", "/actuator/prometheus", "/health", "/profile-app.js", "/favicon.ico");
+            Set.of(
+                    "/api/status",
+                    "/actuator/health",
+                    "/actuator/prometheus",
+                    "/health",
+                    "/profile-app.js",
+                    "/favicon.ico");
 
     /** Anonymous path prefixes. */
     private static final Set<String> ANONYMOUS_PATH_PREFIXES = Set.of("/public/", "/actuator/");
