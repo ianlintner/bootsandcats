@@ -137,7 +137,11 @@
       }
       
       if (!response.ok) {
-        throw new Error('Failed to check authentication');
+        // Server error - log but treat as unauthenticated
+        console.warn(`Authentication endpoint returned status ${response.status}. Treating as unauthenticated.`);
+        state.isAuthenticated = false;
+        showLoginSection();
+        return;
       }
       
       const data = await response.json();
@@ -153,6 +157,7 @@
       loadProfile();
     } catch (error) {
       console.error('Authentication check failed:', error);
+      state.isAuthenticated = false;
       showLoginSection();
     }
   }
