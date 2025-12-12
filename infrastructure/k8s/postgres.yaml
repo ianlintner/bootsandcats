@@ -79,7 +79,8 @@ spec:
 
   # Storage configuration
   storage:
-    size: 2Gi
+    # NOTE: PVCs cannot be shrunk; keep this >= the currently-provisioned size in the cluster.
+    size: 4Gi
     storageClass: managed-premium
 
   # Resource limits

@@ -80,3 +80,18 @@ spec:
     targetPort: 8000
     name: http
   type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gh-review
+  namespace: default
+spec:
+  selector:
+    app: github-review-service
+  ports:
+  - port: 80
+    targetPort: 8000
+    name: http
+  type: ClusterIP
