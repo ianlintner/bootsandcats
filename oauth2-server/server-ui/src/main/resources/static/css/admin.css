@@ -1,0 +1,132 @@
+/* Minimal admin page layout on top of profile.css theme */
+
+.shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2.25rem 1.5rem 4rem;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.brand {
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.subtitle {
+  color: #cbd5e1;
+  opacity: 0.9;
+}
+
+.actions {
+  display: inline-flex;
+  gap: 1rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.admin-grid-2 {
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: end;
+}
+
+.admin-grid-3 {
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  align-items: end;
+}
+
+.admin-grid-3wide {
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 12px;
+  align-items: end;
+}
+
+.admin-span-all {
+  grid-column: 1 / -1;
+}
+
+.admin-button-row {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 10px;
+}
+
+.admin-button-row > button {
+  width: auto;
+  min-width: 160px;
+}
+
+.admin-hidden {
+  display: none;
+}
+
+.card {
+  background: hsla(var(--glass) / 0.5);
+  border: 1px solid hsla(var(--glass-light) / 0.35);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  backdrop-filter: blur(24px);
+}
+
+.card h2 {
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.secondary-button {
+  width: 100%;
+  border-radius: 0.9rem;
+  padding: 0.95rem 1rem;
+  font-weight: 700;
+  border: 1px solid hsla(var(--glass-light) / 0.45);
+  background: hsla(var(--glass-dark) / 0.75);
+  color: hsl(var(--foreground));
+}
+
+.secondary-button:hover {
+  border-color: hsla(var(--glow-primary) / 0.55);
+}
+
+.table th,
+.table td {
+  padding: 0.6rem 0.5rem;
+  vertical-align: top;
+  border-bottom: 1px solid hsla(var(--glass-light) / 0.25);
+}
+
+.table thead th {
+  text-align: left;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.table tbody td {
+  color: #cbd5e1;
+}
+
+.table button {
+  border-radius: 0.65rem;
+  border: 1px solid hsla(var(--glass-light) / 0.35);
+  background: hsla(var(--glass-dark) / 0.7);
+  padding: 0.35rem 0.55rem;
+}
+
+.table button:hover {
+  border-color: hsla(var(--glow-primary) / 0.55);
+}
+
+.nowrap {
+  white-space: nowrap;
+}

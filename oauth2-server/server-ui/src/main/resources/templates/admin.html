@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin · OAuth2 Authorization Server</title>
+    <link rel="stylesheet" th:href="@{/css/profile.css}" />
+    <link rel="stylesheet" th:href="@{/css/admin.css}" />
+
+    <meta name="_csrf" th:content="${_csrf.token}" />
+    <meta name="_csrf_header" th:content="${_csrf.headerName}" />
+</head>
+<body class="home-page">
+<div class="shell">
+    <header class="topbar">
+        <div>
+            <div class="brand">OAuth2 Authorization Server</div>
+            <div class="subtitle">Admin console</div>
+        </div>
+        <nav class="actions">
+            <a class="secondary-link" href="/">Home</a>
+            <a class="secondary-link" href="/docs/index.html">Docs</a>
+        </nav>
+    </header>
+
+    <main class="grid">
+        <section class="card">
+            <h2>Clients</h2>
+            <p class="helper-text">Create and manage non-system OAuth2 clients. Disabled clients are blocked at runtime.</p>
+
+            <div class="form-grid admin-grid-2">
+                <div class="form-field">
+                    <label class="form-label" for="clientId">Client ID</label>
+                    <input class="form-input" id="clientId" placeholder="my-client" />
+                </div>
+                <div class="form-field">
+                    <label class="form-label" for="clientName">Client Name</label>
+                    <input class="form-input" id="clientName" placeholder="My Client" />
+                </div>
+                <div class="form-field">
+                    <label class="form-label" for="clientSecret">Client Secret (optional)</label>
+                    <input class="form-input" id="clientSecret" placeholder="leave blank to keep existing" />
+                </div>
+                <div class="form-field">
+                    <label class="form-label" for="clientScopes">Scopes (comma-separated)</label>
+                    <input class="form-input" id="clientScopes" placeholder="openid,profile,read" />
+                </div>
+                <div class="form-field">
+                    <label class="form-label" for="clientRedirectUris">Redirect URIs (comma-separated)</label>
+                    <input class="form-input" id="clientRedirectUris" placeholder="https://app/callback" />
+                </div>
+                <div class="form-field">
+                    <label class="form-label" for="clientGrantTypes">Grant Types (comma-separated)</label>
+                    <input class="form-input" id="clientGrantTypes" value="authorization_code,refresh_token" />
+                </div>
+                <div class="form-field">
+                    <label class="form-label" for="clientAuthMethods">Auth Methods (comma-separated)</label>
+                    <input class="form-input" id="clientAuthMethods" value="client_secret_basic" />
+                </div>
+                <div class="form-field">
+                    <label class="form-label" for="clientEnabled">Enabled</label>
+                    <select class="form-input" id="clientEnabled">
+                        <option value="true" selected>Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+                <div class="form-field admin-span-all">
+                    <label class="form-label" for="clientNotes">Notes</label>
+                    <input class="form-input" id="clientNotes" placeholder="optional" />
+                </div>
+                <div class="admin-button-row">
+                    <button class="primary-button" id="saveClientBtn" type="button">Save client</button>
+                    <button class="secondary-button" id="resetClientBtn" type="button">Reset</button>
+                </div>
+            </div>
+
+            <div id="clientsError" class="alert admin-hidden" role="alert"></div>
+            <div id="clientsTable"></div>
+        </section>
+
+        <section class="card">
+            <h2>Scope catalog</h2>
+            <p class="helper-text">Manage available scopes. System scopes cannot be disabled or deleted.</p>
+
+            <div class="form-grid admin-grid-3wide">
+                <div class="form-field">
+                    <label class="form-label" for="scopeName">Scope</label>
+                    <input class="form-input" id="scopeName" placeholder="read" />
+                </div>
+                <div class="form-field">
+                    <label class="form-label" for="scopeDesc">Description</label>
+                    <input class="form-input" id="scopeDesc" placeholder="What this scope allows" />
+                </div>
+                <div class="form-field">
+                    <label class="form-label" for="scopeEnabled">Enabled</label>
+                    <select class="form-input" id="scopeEnabled">
+                        <option value="true" selected>Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+                <div class="admin-button-row">
+                    <button class="primary-button" id="saveScopeBtn" type="button">Save scope</button>
+                    <button class="secondary-button" id="reloadScopesBtn" type="button">Reload</button>
+                </div>
+            </div>
+
+            <div id="scopesError" class="alert admin-hidden" role="alert"></div>
+            <div id="scopesTable"></div>
+        </section>
+
+        <section class="card">
+            <h2>Deny rules</h2>
+            <p class="helper-text">Block logins by email/username/provider id (exact or regex), globally or per provider.</p>
+
+            <div class="form-grid admin-grid-3">
+                <div class="form-field">
+                    <label class="form-label" for="denyProvider">Provider (blank = global)</label>
+                    <input class="form-input" id="denyProvider" placeholder="github / google / azure / local" />
+                </div>
+                <div class="form-field">
+                    <label class="form-label" for="denyField">Match field</label>
+                    <select class="form-input" id="denyField">
+                        <option value="EMAIL">EMAIL</option>
+                        <option value="USERNAME">USERNAME</option>
+                        <option value="PROVIDER_ID">PROVIDER_ID</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label class="form-label" for="denyType">Match type</label>
+                    <select class="form-input" id="denyType">
+                        <option value="EXACT">EXACT</option>
+                        <option value="REGEX">REGEX</option>
+                    </select>
+                </div>
+                <div class="form-field admin-span-all">
+                    <label class="form-label" for="denyPattern">Pattern</label>
+                    <input class="form-input" id="denyPattern" placeholder="bad@domain.com or .*@spam\.com" />
+                </div>
+                <div class="form-field admin-span-all">
+                    <label class="form-label" for="denyReason">Reason</label>
+                    <input class="form-input" id="denyReason" placeholder="optional" />
+                </div>
+                <div class="form-field">
+                    <label class="form-label" for="denyEnabled">Enabled</label>
+                    <select class="form-input" id="denyEnabled">
+                        <option value="true" selected>Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+                <div class="admin-button-row">
+                    <button class="primary-button" id="createDenyRuleBtn" type="button">Create deny rule</button>
+                    <button class="secondary-button" id="reloadDenyRulesBtn" type="button">Reload</button>
+                </div>
+            </div>
+
+            <div id="denyError" class="alert admin-hidden" role="alert"></div>
+            <div id="denyRulesTable"></div>
+        </section>
+
+        <section class="card">
+            <h2>Audit events</h2>
+            <p class="helper-text">Search and filter security audit events.</p>
+
+            <div class="form-grid admin-grid-3">
+                <div class="form-field">
+                    <label class="form-label" for="auditPrincipal">Principal</label>
+                    <input class="form-input" id="auditPrincipal" placeholder="user@example.com" />
+                </div>
+                <div class="form-field">
+                    <label class="form-label" for="auditClientId">Client ID</label>
+                    <input class="form-input" id="auditClientId" placeholder="client-id" />
+                </div>
+                <div class="form-field">
+                    <label class="form-label" for="auditResult">Result</label>
+                    <select class="form-input" id="auditResult">
+                        <option value="">(any)</option>
+                        <option value="SUCCESS">SUCCESS</option>
+                        <option value="FAILURE">FAILURE</option>
+                        <option value="DENIED">DENIED</option>
+                    </select>
+                </div>
+                <div class="admin-button-row">
+                    <button class="primary-button" id="searchAuditBtn" type="button">Search</button>
+                </div>
+            </div>
+
+            <div id="auditError" class="alert admin-hidden" role="alert"></div>
+            <div id="auditTable"></div>
+        </section>
+    </main>
+</div>
+
+<script th:src="@{/js/admin.js}"></script>
+</body>
+</html>

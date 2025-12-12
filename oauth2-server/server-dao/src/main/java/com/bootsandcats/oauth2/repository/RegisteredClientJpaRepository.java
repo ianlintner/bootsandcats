@@ -11,4 +11,6 @@ import com.bootsandcats.oauth2.model.RegisteredClientEntity;
 public interface RegisteredClientJpaRepository
         extends JpaRepository<RegisteredClientEntity, String> {
     Optional<RegisteredClientEntity> findByClientId(String clientId);
+
+    void deleteByClientId(String clientId);
 }

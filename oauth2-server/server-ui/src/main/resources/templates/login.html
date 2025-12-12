@@ -17,6 +17,10 @@
             <span>Authentication failed. Check your credentials and try again.</span>
         </div>
 
+        <div th:if="${param.denied}" class="alert" role="alert">
+            <span>Sign-in was blocked by policy. If you believe this is an error, contact an administrator.</span>
+        </div>
+
         <form th:action="@{/login}" method="post" class="form-grid">
             <div class="form-field">
                 <label class="form-label" for="username">Username</label>
