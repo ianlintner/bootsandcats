@@ -173,6 +173,52 @@ public class SecurityAuditService {
         recordEventAsync(event);
     }
 
+        /**
+         * Create and record a login denied event.
+         *
+         * <p>Use this when authentication succeeded but access is denied by a policy (e.g. deny list).
+         */
+        public void recordLoginDenied(
+            String principal,
+            HttpServletRequest request,
+            String reason,
+            Map<String, Object> additionalDetails) {
+        SecurityAuditEvent event =
+            createBaseEvent(AuditEventType.LOGIN_DENIED, AuditEventResult.DENIED, request);
+        event.setPrincipal(principal);
+        event.setPrincipalType("USER");
+        event.setErrorMessage(reason);
+        event.setDetails(toJson(additionalDetails));
+        recordEventAsync(event);
+        }
+
+        /**
+         * Create and record a federated login denied event.
+         *
+         * <p>Use this when federated authentication succeeded but access is denied by a policy.
+         */
+        public void recordFederatedLoginDenied(
+            String principal,
+            String provider,
+            HttpServletRequest request,
+            String reason,
+            Map<String, Object> additionalDetails) {
+        SecurityAuditEvent event =
+            createBaseEvent(
+                AuditEventType.FEDERATED_LOGIN_DENIED,
+                AuditEventResult.DENIED,
+                request);
+        event.setPrincipal(principal);
+        event.setPrincipalType("FEDERATED_USER");
+        event.setErrorMessage(reason);
+
+        Map<String, Object> details =
+            additionalDetails != null ? new HashMap<>(additionalDetails) : new HashMap<>();
+        details.put("provider", provider);
+        event.setDetails(toJson(details));
+        recordEventAsync(event);
+        }
+
     /**
      * Create and record an authorization request event.
      *

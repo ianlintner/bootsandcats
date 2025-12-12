@@ -11,9 +11,11 @@ public enum AuditEventType {
     // Authentication Events
     LOGIN_SUCCESS("AUTHENTICATION", "User login successful"),
     LOGIN_FAILURE("AUTHENTICATION", "User login failed"),
+    LOGIN_DENIED("AUTHENTICATION", "User login denied by policy"),
     LOGOUT("AUTHENTICATION", "User logged out"),
     FEDERATED_LOGIN_SUCCESS("AUTHENTICATION", "Federated identity login successful"),
     FEDERATED_LOGIN_FAILURE("AUTHENTICATION", "Federated identity login failed"),
+    FEDERATED_LOGIN_DENIED("AUTHENTICATION", "Federated identity login denied by policy"),
     SESSION_CREATED("AUTHENTICATION", "Session created"),
     SESSION_EXPIRED("AUTHENTICATION", "Session expired"),
     SESSION_INVALIDATED("AUTHENTICATION", "Session invalidated"),
