@@ -111,6 +111,4 @@ spec:
             - name: ":path"
               exact_match: "/favicon.ico"
             - name: ":path"
-                  ""
-                )
-              end
+              exact_match: "/profile-app.js"
