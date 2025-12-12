@@ -74,3 +74,8 @@ e2e-tests/jwk.json
 test_output*.txt
 node_modules
 profile-ui/.micronaut/test-resources/
+.venv
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
