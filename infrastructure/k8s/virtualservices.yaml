@@ -37,3 +37,24 @@ spec:
         host: profile-service
         port:
           number: 80
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: github-review-service
+  namespace: default
+spec:
+  hosts:
+  - gh-review.cat-herding.net
+  gateways:
+  - aks-istio-ingress/cat-herding-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: github-review-service
+        port:
+          number: 80

@@ -17,12 +17,17 @@ resources:
   - redis.yaml
   - pdb.yaml
   - profile-service-deployment.yaml
+  - github-review-service-deployment.yaml
   - virtualservices.yaml
   - flyway-migrations-configmap.yaml
   - istio-authz-policy.yaml
   - requestauthentication-profile.yaml
+  - requestauthentication-github-review.yaml
   - envoyfilter-profile-oauth2-exchange.yaml
+  - envoyfilter-github-review-oauth2-exchange.yaml
+  - envoyfilter-github-review-jwt-to-headers.yaml
   - secret-provider-class.yaml
+  - secret-provider-class-github-review.yaml
 
 
 # You can add configMapGenerator/secretGenerator later if you want kustomize to build these dynamically

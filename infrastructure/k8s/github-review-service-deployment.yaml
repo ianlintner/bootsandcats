@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: github-review-service
+  namespace: default
+  labels:
+    app: github-review-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: github-review-service
+  template:
+    metadata:
+      labels:
+        app: github-review-service
+    spec:
+      containers:
+      - name: github-review-service
+        image: gabby.azurecr.io/github-review-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: github-review-secrets
+              key: openai-api-key
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: github-review-secrets
+              key: github-token
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: github-review-secrets
+              key: redis-uri
+        - name: GH_REVIEW_ENVIRONMENT
+          value: "k8s"
+        - name: GH_REVIEW_ALLOW_ANONYMOUS
+          value: "false"
+        readinessProbe:
+          httpGet:
+            path: /api/status
+            port: http
+        livenessProbe:
+          httpGet:
+            path: /api/status
+            port: http
+        volumeMounts:
+        - name: secrets-store
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
+      volumes:
+      - name: secrets-store
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "github-review-secrets-provider"
+      tolerations:
+      - key: "kubernetes.azure.com/scalesetpriority"
+        operator: "Equal"
+        value: "spot"
+        effect: "NoSchedule"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: github-review-service
+  namespace: default
+spec:
+  selector:
+    app: github-review-service
+  ports:
+  - port: 80
+    targetPort: 8000
+    name: http
+  type: ClusterIP

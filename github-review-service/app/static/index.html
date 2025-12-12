@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GitHub Review</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 2rem;
+        color: #0f172a;
+      }
+      .card {
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 1rem;
+        max-width: 720px;
+      }
+      input,
+      button {
+        padding: 0.6rem;
+        margin: 0.2rem 0;
+        width: 100%;
+      }
+      button {
+        background: #2563eb;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      button:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+      }
+      pre {
+        white-space: pre-wrap;
+      }
+      .muted {
+        color: #475569;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>GitHub Assessment</h1>
+    <p class="muted">
+      Provide a GitHub username or email. We'll queue an assessment and
+      summarize public repos using OpenAI.
+    </p>
+    <div class="card">
+      <label for="username">GitHub Username</label>
+      <input id="username" placeholder="octocat" />
+      <label for="email">Email (fallback lookup)</label>
+      <input id="email" type="email" placeholder="user@example.com" />
+      <button id="submit">Start assessment</button>
+      <div id="status" class="muted"></div>
+      <h3>Result</h3>
+      <pre id="result">No assessment yet.</pre>
+    </div>
+    <script>
+      const statusEl = document.getElementById("status");
+      const resultEl = document.getElementById("result");
+      const button = document.getElementById("submit");
+
+      async function startAssessment() {
+        const github_username =
+          document.getElementById("username").value || null;
+        const email = document.getElementById("email").value || null;
+        statusEl.textContent = "Submitting job…";
+        button.disabled = true;
+
+        const resp = await fetch("/api/assessments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ github_username, email }),
+        });
+        if (!resp.ok) {
+          statusEl.textContent = "Submission failed: " + resp.status;
+          button.disabled = false;
+          return;
+        }
+        const data = await resp.json();
+        statusEl.textContent = "Job queued: " + data.job_id;
+        pollStatus(data.job_id);
+      }
+
+      async function pollStatus(jobId) {
+        const resp = await fetch("/api/assessments/" + jobId);
+        if (!resp.ok) {
+          statusEl.textContent = "Status failed: " + resp.status;
+          button.disabled = false;
+          return;
+        }
+        const data = await resp.json();
+        statusEl.textContent = "Status: " + data.status;
+        if (data.status === "finished" && data.result) {
+          resultEl.textContent = data.result.summary;
+          button.disabled = false;
+          return;
+        }
+        if (data.status === "failed") {
+          resultEl.textContent = data.error || "Job failed";
+          button.disabled = false;
+          return;
+        }
+        setTimeout(() => pollStatus(jobId), 2000);
+      }
+
+      document
+        .getElementById("submit")
+        .addEventListener("click", startAssessment);
+    </script>
+  </body>
+</html>

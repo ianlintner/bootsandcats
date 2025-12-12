@@ -1,0 +1,102 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: github-review-jwt-to-headers
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    project: bootsandcats
+spec:
+  workloadSelector:
+    labels:
+      app: github-review-service
+  configPatches:
+  - applyTo: HTTP_FILTER
+    match:
+      context: SIDECAR_INBOUND
+      listener:
+        filterChain:
+          filter:
+            name: envoy.filters.network.http_connection_manager
+            subFilter:
+              name: envoy.filters.http.router
+    patch:
+      operation: INSERT_BEFORE
+      value:
+        name: envoy.filters.http.lua
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+          inlineCode: |
+            local oauth_host = "oauth2.cat-herding.net"
+            local client_id = "github-review-service"
+
+            local function urlencode(str)
+              return (str:gsub("([^%w_.%-~])", function(c)
+                return string.format("%%%02X", string.byte(c))
+              end))
+            end
+
+            local function parse_claim(payload, key)
+              if payload == nil then return nil end
+              local compact = payload:gsub("%s+", "")
+              local value = compact:match('"' .. key .. '"%s*:%s*"(.-)"')
+              if value then return value end
+              local array_body = compact:match('"' .. key .. '"%s*:%s*%[(.-)%]')
+              if array_body then
+                local parts = {}
+                for v in array_body:gmatch('"(.-)"') do table.insert(parts, v) end
+                return parts
+              end
+              return nil
+            end
+
+            local function to_header_value(v)
+              if v == nil then return nil end
+              if type(v) == "table" then return table.concat(v, ",") end
+              return tostring(v)
+            end
+
+            function envoy_on_request(handle)
+              local payload_json = handle:headers():get("x-jwt-payload")
+              local path_with_query = handle:headers():get(":path") or "/"
+              local path_only = path_with_query:match("^[^?]+") or "/"
+
+              if path_only:find("^/login/oauth2/code/") == 1
+                  or path_only:find("^/actuator") == 1
+                  or path_only == "/favicon.ico"
+                  or path_only == "/api/status"
+                  or path_only:find("^/public/") == 1 then
+                return
+              end
+
+              if payload_json == nil then
+                local authority = handle:headers():get(":authority") or "gh-review.cat-herding.net"
+                local redirect_uri = "https://" .. authority .. path_with_query
+                local location = "https://" .. oauth_host .. "/oauth2/authorize" ..
+                  "?response_type=code" ..
+                  "&client_id=" .. client_id ..
+                  "&scope=" .. urlencode("openid profile email") ..
+                  "&redirect_uri=" .. urlencode(redirect_uri)
+
+                handle:respond({
+                  [":status"] = "302",
+                  ["Location"] = location,
+                  ["Cache-Control"] = "no-store",
+                  ["Pragma"] = "no-cache"
+                }, "")
+                return
+              end
+
+              local function add_claim(header, claim_key)
+                local v = to_header_value(parse_claim(payload_json, claim_key))
+                if v ~= nil then
+                  handle:headers():add(header, v)
+                end
+              end
+
+              add_claim("x-jwt-sub", "sub")
+              add_claim("x-jwt-username", "preferred_username")
+              add_claim("x-jwt-email", "email")
+              add_claim("x-jwt-name", "name")
+              add_claim("x-jwt-scope", "scope")
+            end
