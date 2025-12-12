@@ -6,7 +6,9 @@ from .config import Settings, get_settings
 from .github_client import fetch_user_and_samples
 
 
-async def _run_assessment(request: Dict[str, Any], settings: Settings) -> Dict[str, Any]:
+async def _run_assessment(
+    request: Dict[str, Any], settings: Settings
+) -> Dict[str, Any]:
     github_username = request.get("github_username")
     email = request.get("email")
     requested_by = request.get("requested_by")

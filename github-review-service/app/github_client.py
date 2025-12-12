@@ -34,7 +34,9 @@ class GitHubClient:
     async def find_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
         # GitHub search by email is limited and may require elevated scopes; best-effort only.
         query = f"{email} in:email"
-        resp = await self._client.get("/search/users", params={"q": query, "per_page": 1})
+        resp = await self._client.get(
+            "/search/users", params={"q": query, "per_page": 1}
+        )
         if resp.status_code in (403, 422):
             return None
         resp.raise_for_status()
@@ -52,11 +54,7 @@ class GitHubClient:
         resp = await self._client.get(f"/users/{username}/repos", params=params)
         resp.raise_for_status()
         repos = resp.json()
-        filtered = [
-            r
-            for r in repos
-            if not r.get("fork") and not r.get("archived")
-        ]
+        filtered = [r for r in repos if not r.get("fork") and not r.get("archived")]
         filtered.sort(key=lambda r: r.get("stargazers_count", 0), reverse=True)
         return filtered[: self.settings.max_repos]
 
