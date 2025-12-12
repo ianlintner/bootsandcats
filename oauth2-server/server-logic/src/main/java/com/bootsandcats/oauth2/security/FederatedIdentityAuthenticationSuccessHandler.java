@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
@@ -34,12 +35,16 @@ public class FederatedIdentityAuthenticationSuccessHandler
 
     private final UserRepository userRepository;
     private final SecurityAuditService securityAuditService;
+    private final DenyListService denyListService;
     private final RequestCache requestCache = new HttpSessionRequestCache();
 
     public FederatedIdentityAuthenticationSuccessHandler(
-            UserRepository userRepository, SecurityAuditService securityAuditService) {
+            UserRepository userRepository,
+            SecurityAuditService securityAuditService,
+            DenyListService denyListService) {
         this.userRepository = userRepository;
         this.securityAuditService = securityAuditService;
+        this.denyListService = denyListService;
         // Ensure we use the session-based request cache
         setRequestCache(requestCache);
     }
@@ -68,6 +73,41 @@ public class FederatedIdentityAuthenticationSuccessHandler
             String username = oauthUser.getAttribute("login"); // GitHub
             if (username == null) {
                 username = email; // Fallback
+            }
+
+            // Enforce deny-list policy before creating/updating local user record
+            try {
+                denyListService.assertNotDenied(provider, email, username, providerId);
+            } catch (LoginDeniedException denied) {
+                Map<String, Object> auditDetails = new HashMap<>();
+                auditDetails.put("email", email);
+                auditDetails.put("username", username);
+                auditDetails.put("providerId", providerId);
+                auditDetails.put("denyRuleId", denied.getDenyRule() != null ? denied.getDenyRule().getId() : null);
+                auditDetails.put(
+                        "denyRuleProvider",
+                        denied.getDenyRule() != null ? denied.getDenyRule().getProvider() : null);
+                auditDetails.put(
+                        "denyRuleMatchField",
+                        denied.getDenyRule() != null ? denied.getDenyRule().getMatchField() : null);
+                auditDetails.put(
+                        "denyRuleMatchType",
+                        denied.getDenyRule() != null ? denied.getDenyRule().getMatchType() : null);
+
+                securityAuditService.recordFederatedLoginDenied(
+                        username != null ? username : email,
+                        provider,
+                        request,
+                        denied.getMessage(),
+                        auditDetails);
+
+                SecurityContextHolder.clearContext();
+                var session = request.getSession(false);
+                if (session != null) {
+                    session.invalidate();
+                }
+                getRedirectStrategy().sendRedirect(request, response, "/login?denied=1");
+                return;
             }
 
             User user =
