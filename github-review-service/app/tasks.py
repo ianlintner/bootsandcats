@@ -1,5 +1,5 @@
 import asyncio
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from .analysis import summarize_github_profile
 from .config import Settings, get_settings

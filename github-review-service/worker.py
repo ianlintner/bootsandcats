@@ -1,8 +1,7 @@
 import redis
-from rq import Connection, Queue, Worker
+from rq import Connection, Worker
 
 from app.config import get_settings
-from app.tasks import run_assessment
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@ import os
 from typing import Optional
 
 import redis
-from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from rq import Queue
