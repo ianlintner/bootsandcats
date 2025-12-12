@@ -60,7 +60,6 @@ spec:
               path:
                 exact: /_oauth2/logout
             forward_bearer_token: true
-            cookie_domain: gh-review.cat-herding.net
             default_expires_in: 900s
             csrf_token_expires_in: 600s
             credentials:
