@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
@@ -57,7 +58,11 @@ public class FormLoginDenyListSuccessHandler extends SavedRequestAwareAuthentica
             securityAuditService.recordLoginDenied(username, request, denied.getMessage(), details);
 
             // Clear auth and session
-            request.getSession(false).invalidate();
+            SecurityContextHolder.clearContext();
+            var session = request.getSession(false);
+            if (session != null) {
+                session.invalidate();
+            }
             getRedirectStrategy().sendRedirect(request, response, "/login?denied=1");
             return;
         }
