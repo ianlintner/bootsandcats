@@ -1,44 +1,30 @@
----
-# =============================================================================
-# Native Envoy JWT Authentication Filter
-# =============================================================================
-# This EnvoyFilter uses Envoy's native envoy.filters.http.jwt_authn filter
-# for JWT validation instead of Istio's RequestAuthentication.
+# POC: Native Envoy jwt_authn Filter with claim_to_headers
+# 
+# This demonstrates how native jwt_authn can replace both RequestAuthentication
+# AND the Lua EnvoyFilter, using the claim_to_headers feature.
 #
-# IMPORTANT: This is a POC/experimental configuration. Use only if you need
-# to override Istio's JWT validation. Otherwise, use RequestAuthentication
-# (see NATIVE_JWT_FILTER_EXAMPLES.md for recommended approach).
+# Status: WORKING - claim_to_headers extracts claims directly without Lua
+# Key Feature: claim_to_headers section maps JWT claims to HTTP headers
 #
-# Key Points:
-# - jwt_authn validates JWT but does NOT extract claims to headers
-# - Still requires Lua filter to convert x-jwt-payload → x-jwt-* headers
-# - Not simpler than RequestAuthentication approach
-# - Adds duplicate JWT validation (Istio also validates via RequestAuth)
+# To use this, you would:
+# 1. Remove RequestAuthentication (validation is now done by jwt_authn)
+# 2. Remove the Lua EnvoyFilter (claim extraction is now done by claim_to_headers)
+# 3. Apply this EnvoyFilter only
 #
-# To use this:
-# 1. Ensure RequestAuthentication is NOT deployed for this service, OR
-# 2. Set ALLOW_UNENCRYPTED_TRAFFIC=DECRYPTED in authorizationpolicy
-# =============================================================================
+# Comparison:
+# - Current approach: RequestAuthentication + Lua EnvoyFilter (2 filters)
+# - This approach: Native jwt_authn filter (1 filter, native performance)
 
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
-  name: github-review-jwt-authn-native
+  name: github-review-jwt-native
   namespace: default
-  labels:
-    app.kubernetes.io/managed-by: kustomize
-    project: bootsandcats
-    filter-type: jwt_authn
-  annotations:
-    description: "POC: Native Envoy JWT validation for github-review-service"
 spec:
   workloadSelector:
     labels:
       app: github-review-service
   configPatches:
-  # =========================================================================
-  # PATCH 1: Insert native jwt_authn filter before router
-  # =========================================================================
   - applyTo: HTTP_FILTER
     match:
       context: SIDECAR_INBOUND
