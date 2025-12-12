@@ -40,80 +40,125 @@ spec:
         name: envoy.filters.http.jwt_authn
         typed_config:
           "@type": type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication
+          
+          # Define the OAuth2 provider
           providers:
-            # Provider for OAuth2 Server JWTs
-            github_oauth_provider:
+            github_oauth:
               issuer: "https://oauth2.cat-herding.net"
-              # Audience(s) this token is valid for
               audiences: "github-review-service,m2m-client"
-              # Remote JWKS endpoint configuration
               remote_jwks:
                 http_uri:
                   uri: "https://oauth2.cat-herding.net/oauth2/jwks"
-                  # Cluster name must match your Envoy cluster routing
                   cluster: "outbound|443||oauth2.cat-herding.net"
-                  # JWKS fetch timeout
                   timeout: 5s
-                # JWKS caching configuration
                 cache_config:
-                  cache_size_bytes: 10485760  # 10MB - stores JWKS in memory
-                  # No cache eviction time; cached for session duration
-              # ISSUE: This extracts JWT to metadata, not headers
-              # Metadata is not visible to downstream applications
-              # Lua filter (see PATCH 2) must expose as headers
-              payload_in_metadata: "jwt_payload_claims"
-              # Skip JWT requirement if JWKS endpoint unreachable
-              # WARNING: Set to false in production
-              allow_missing_or_expired: false
-              # Claim to metadata prefix for routing decisions
-              claim_to_headers:
-              - header_name: "x-jwt-sub"
-                claim_name: "sub"
-              - header_name: "x-jwt-email"
-                claim_name: "email"
-              - header_name: "x-jwt-username"
-                claim_name: "preferred_username"
-          # Rules: specify which paths require JWT validation
+                  cache_size_bytes: 10485760  # 10 MB cache
+                  cache_time_to_live: 3600s    # 1 hour TTL
+              
+              # OPTIONAL: Verify token hasn't expired
+              verify_exp_time: true
+              
+              # OPTIONAL: Store raw JWT payload in metadata for debugging
+              # This allows downstream filters to see the full JWT if needed
+              payload_in_metadata: "jwt_payload"
+          
+          # ============================================================
+          # CRITICAL FEATURE: Direct JWT claim to HTTP header mapping
+          # ============================================================
+          # This is what allows claim_to_headers to replace the Lua filter.
+          # Each entry maps a JWT claim to an HTTP header.
+          # 
+          # The header will be added to the request before it reaches
+          # the upstream application.
+          # ============================================================
+          claim_to_headers:
+          
+          # User identity claims
+          - header_name: "x-jwt-sub"
+            claim_name: "sub"
+            append: false  # Replace if header already exists
+          
+          - header_name: "x-jwt-email"
+            claim_name: "email"
+            append: false
+          
+          - header_name: "x-jwt-username"
+            claim_name: "preferred_username"
+            append: false
+          
+          - header_name: "x-jwt-name"
+            claim_name: "name"
+            append: false
+          
+          # OAuth2 scope (comma-separated list)
+          - header_name: "x-jwt-scope"
+            claim_name: "scope"
+            append: false
+          
+          # Roles - this is typically an array like ["admin", "user"]
+          # jwt_authn automatically handles array-to-string conversion
+          - header_name: "x-jwt-roles"
+            claim_name: "roles"
+            append: false
+          
+          # ============================================================
+          
+          # JWT validation rules
+          # Define which paths require JWT and which are public
           rules:
-          # Rule 1: Require JWT for all requests by default
+          
+          # Default: require JWT for all paths
           - match:
               prefix: "/"
             requires:
-              provider_name: "github_oauth_provider"
-          # Rule 2: Public endpoints - no JWT required
+              provider_name: "github_oauth"
+          
+          # Allow public endpoints without JWT
           - match:
               prefix: "/public/"
             allow_missing_or_expired: true
-          # Rule 3: Status/health endpoints - no JWT required
+          
           - match:
               prefix: "/api/status"
             allow_missing_or_expired: true
-          # Rule 4: OAuth callback endpoint - no JWT required
+          
+          # OAuth2 callback
           - match:
               prefix: "/login/oauth2/code/"
             allow_missing_or_expired: true
-          # Rule 5: Actuator endpoints - no JWT required
+          
+          # Spring Boot actuator
           - match:
               prefix: "/actuator"
             allow_missing_or_expired: true
-          # Rule 6: Favicon - no JWT required
+          
+          # Health check
+          - match:
+              path_separator: EXACT
+              path: "/health"
+            allow_missing_or_expired: true
+          
+          # Favicon
           - match:
               path_separator: EXACT
               path: "/favicon.ico"
             allow_missing_or_expired: true
 
-  # =========================================================================
-  # PATCH 2: Insert Lua filter AFTER jwt_authn to expose claims as headers
-  # =========================================================================
-  # This is the key limitation of native jwt_authn:
-  # - jwt_authn validates the JWT ✓
-  # - jwt_authn extracts claims to metadata ✓
-  # - But metadata is internal to Envoy; applications don't see it ✗
-  # - Solution: Use Lua to expose metadata as HTTP headers
-  #
-  # This chain jwt_authn → Lua defeats the purpose of using jwt_authn
-  # (you still need Lua anyway). Recommendation: Use RequestAuthentication.
-  # =========================================================================
+---
+
+# PROFILE SERVICE VERSION
+# Same pattern, but for the profile-service workload
+
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: profile-service-jwt-native
+  namespace: default
+spec:
+  workloadSelector:
+    labels:
+      app: profile-service
+  configPatches:
   - applyTo: HTTP_FILTER
     match:
       context: SIDECAR_INBOUND
@@ -122,250 +167,83 @@ spec:
           filter:
             name: envoy.filters.network.http_connection_manager
             subFilter:
-              name: envoy.filters.http.jwt_authn
+              name: envoy.filters.http.router
     patch:
-      operation: INSERT_AFTER
+      operation: INSERT_BEFORE
       value:
-        name: envoy.filters.http.lua
+        name: envoy.filters.http.jwt_authn
         typed_config:
-          "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
-          # Allow Lua to be reloaded in debug mode
-          source_codes:
-            jwt_claims_extractor: |
-              -- Extract JWT claims from x-jwt-payload header (set by jwt_authn)
-              -- and inject as x-jwt-* headers for downstream application
+          "@type": type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication
+          
+          providers:
+            github_oauth:
+              issuer: "https://oauth2.cat-herding.net"
+              audiences: "profile-service,m2m-client"
+              remote_jwks:
+                http_uri:
+                  uri: "https://oauth2.cat-herding.net/oauth2/jwks"
+                  cluster: "outbound|443||oauth2.cat-herding.net"
+                  timeout: 5s
+                cache_config:
+                  cache_size_bytes: 10485760
+                  cache_time_to_live: 3600s
               
-              local function parse_claim_from_json(payload_json, claim_key)
-                -- Parse JSON string to extract claim value
-                -- Handles: strings, arrays, nulls
-                if payload_json == nil or payload_json == "" then
-                  return nil
-                end
-                
-                -- Remove all whitespace for simpler pattern matching
-                local compact = payload_json:gsub("%s+", "")
-                
-                -- Pattern 1: Extract string claim: "key":"value"
-                local string_value = compact:match('"' .. claim_key .. '"%s*:%s*"(.-)"')
-                if string_value then
-                  return string_value
-                end
-                
-                -- Pattern 2: Extract array claim: "key":["v1","v2","v3"]
-                local array_value = compact:match('"' .. claim_key .. '"%s*:%s*%[(.-)%]')
-                if array_value then
-                  local parts = {}
-                  for v in array_value:gmatch('"(.-)"') do
-                    table.insert(parts, v)
-                  end
-                  if #parts > 0 then
-                    return parts
-                  end
-                end
-                
-                -- Pattern 3: Numeric claim: "key":123
-                local numeric_value = compact:match('"' .. claim_key .. '"%s*:%s*([0-9.-]+)')
-                if numeric_value then
-                  return numeric_value
-                end
-                
-                -- Pattern 4: Boolean claim: "key":true/false
-                local bool_value = compact:match('"' .. claim_key .. '"%s*:%s*(true|false)')
-                if bool_value then
-                  return bool_value
-                end
-                
-                return nil
-              end
-              
-              local function value_to_header_string(value)
-                -- Convert various types to header string format
-                if value == nil then
-                  return nil
-                end
-                if type(value) == "table" then
-                  -- Array: join with comma for header value
-                  return table.concat(value, ",")
-                end
-                -- Primitive types: convert to string
-                return tostring(value)
-              end
-              
-              function envoy_on_request(request_handle)
-                -- Get request path (without query params)
-                local full_path = request_handle:headers():get(":path") or "/"
-                local request_path = full_path:match("^[^?]+") or "/"
-                
-                -- Skip JWT processing for public/unprotected endpoints
-                -- These are the same paths configured in jwt_authn rules above
-                if request_path:find("^/login/oauth2/code/") == 1 then return end
-                if request_path:find("^/actuator") == 1 then return end
-                if request_path == "/favicon.ico" then return end
-                if request_path == "/api/status" then return end
-                if request_path:find("^/public/") == 1 then return end
-                
-                -- Get JWT payload from header
-                -- jwt_authn filter should have set this if JWT validation passed
-                local jwt_payload = request_handle:headers():get("x-jwt-payload")
-                if jwt_payload == nil or jwt_payload == "" then
-                  -- No JWT payload means:
-                  -- 1. JWT validation failed (jwt_authn rejected before this filter)
-                  -- 2. Or this is a public endpoint (allowed to skip JWT)
-                  return
-                end
-                
-                -- Extract claims and inject as headers
-                local function extract_and_add_claim(header_name, claim_key)
-                  local claim_value = parse_claim_from_json(jwt_payload, claim_key)
-                  local header_value = value_to_header_string(claim_value)
-                  if header_value ~= nil then
-                    request_handle:headers():add(header_name, header_value)
-                  end
-                end
-                
-                -- Standard OIDC claims mapping
-                extract_and_add_claim("x-jwt-sub", "sub")              -- Subject (user ID)
-                extract_and_add_claim("x-jwt-username", "preferred_username")  -- Preferred username
-                extract_and_add_claim("x-jwt-email", "email")          -- Email address
-                extract_and_add_claim("x-jwt-name", "name")            -- Full name
-                extract_and_add_claim("x-jwt-scope", "scope")          -- OAuth scopes
-                
-                -- Remove raw JWT payload before forwarding to application
-                -- Application should use x-jwt-* headers, not raw payload
-                request_handle:headers():remove("x-jwt-payload")
-              end
-          source_code: |
-            -- Inline Lua code for extracting JWT claims
-            --
-            -- This Lua filter is required because jwt_authn filter:
-            -- 1. Validates JWT signature ✓
-            -- 2. Extracts claims to Envoy metadata ✓
-            -- 3. Does NOT expose claims as HTTP headers ✗
-            --
-            -- Metadata is internal to Envoy and not visible to applications.
-            -- This filter exposes claims as HTTP headers (x-jwt-*) visible to apps.
-            
-            local function parse_claim_from_json(payload_json, claim_key)
-              if payload_json == nil or payload_json == "" then return nil end
-              
-              local compact = payload_json:gsub("%s+", "")
-              
-              -- Try to extract string claim: "key":"value"
-              local string_value = compact:match('"' .. claim_key .. '"%s*:%s*"(.-)"')
-              if string_value then return string_value end
-              
-              -- Try to extract array claim: "key":["v1","v2"]
-              local array_value = compact:match('"' .. claim_key .. '"%s*:%s*%[(.-)%]')
-              if array_value then
-                local parts = {}
-                for v in array_value:gmatch('"(.-)"') do
-                  table.insert(parts, v)
-                end
-                return (next(parts) ~= nil) and parts or nil
-              end
-              
-              -- Try numeric/boolean claims
-              local other_value = compact:match('"' .. claim_key .. '"%s*:%s*([^,}]+)')
-              if other_value then return other_value end
-              
-              return nil
-            end
-            
-            local function to_header_string(value)
-              if value == nil then return nil end
-              if type(value) == "table" then
-                return table.concat(value, ",")
-              end
-              return tostring(value)
-            end
-            
-            function envoy_on_request(handle)
-              local path = (handle:headers():get(":path") or "/"):match("^[^?]+") or "/"
-              
-              -- Skip public endpoints
-              local public_paths = {
-                ["/login/oauth2/code/"] = true,
-                ["/actuator"] = true,
-                ["/favicon.ico"] = true,
-                ["/api/status"] = true,
-                ["/public/"] = true
-              }
-              
-              for pattern, _ in pairs(public_paths) do
-                if path == pattern or path:find("^" .. pattern) == 1 then
-                  return
-                end
-              end
-              
-              -- Extract JWT payload
-              local payload = handle:headers():get("x-jwt-payload")
-              if payload == nil then return end
-              
-              -- Add claims as headers
-              local claims = {
-                ["x-jwt-sub"] = "sub",
-                ["x-jwt-username"] = "preferred_username",
-                ["x-jwt-email"] = "email",
-                ["x-jwt-name"] = "name",
-                ["x-jwt-scope"] = "scope"
-              }
-              
-              for header_name, claim_key in pairs(claims) do
-                local value = to_header_string(parse_claim_from_json(payload, claim_key))
-                if value then
-                  handle:headers():add(header_name, value)
-                end
-              end
-              
-              -- Remove raw payload
-              handle:headers():remove("x-jwt-payload")
-            end
-
----
-# =============================================================================
-# Alternative: AuthorizationPolicy to work with jwt_authn filter
-# =============================================================================
-# If using jwt_authn filter, you may need an AuthorizationPolicy to enforce
-# JWT validation at the policy level (in addition to jwt_authn HTTP filter).
-#
-# Note: If using RequestAuthentication + Istio, you get this for free.
-# =============================================================================
-
-apiVersion: security.istio.io/v1beta1
-kind: AuthorizationPolicy
-metadata:
-  name: github-review-jwt-authz-native
-  namespace: default
-  labels:
-    app.kubernetes.io/managed-by: kustomize
-    project: bootsandcats
-    filter-type: jwt_authn
-  annotations:
-    description: "POC: Authorization policy for native jwt_authn filter"
-spec:
-  selector:
-    matchLabels:
-      app: github-review-service
-  # Require auth for all requests
-  rules:
-  # Rule 1: Allow authenticated requests with valid JWT
-  - from:
-    - source:
-        principals:
-        - "cluster.local/ns/default/sa/github-review-service"
-    to:
-    - operation:
-        methods: ["GET", "POST", "PUT", "PATCH", "DELETE"]
-  # Rule 2: Allow unauthenticated requests to specific paths
-  - to:
-    - operation:
-        methods: ["GET"]
-        paths:
-        - "/public/*"
-        - "/api/status"
-        - "/actuator/*"
-        - "/login/oauth2/code/*"
-        - "/favicon.ico"
-  # Deny all other requests
-  - {}
-
+              verify_exp_time: true
+              payload_in_metadata: "jwt_payload"
+          
+          claim_to_headers:
+          - header_name: "x-jwt-sub"
+            claim_name: "sub"
+            append: false
+          
+          - header_name: "x-jwt-email"
+            claim_name: "email"
+            append: false
+          
+          - header_name: "x-jwt-username"
+            claim_name: "preferred_username"
+            append: false
+          
+          - header_name: "x-jwt-name"
+            claim_name: "name"
+            append: false
+          
+          - header_name: "x-jwt-scope"
+            claim_name: "scope"
+            append: false
+          
+          - header_name: "x-jwt-roles"
+            claim_name: "roles"
+            append: false
+          
+          rules:
+          - match:
+              prefix: "/"
+            requires:
+              provider_name: "github_oauth"
+          
+          - match:
+              prefix: "/public/"
+            allow_missing_or_expired: true
+          
+          - match:
+              prefix: "/api/status"
+            allow_missing_or_expired: true
+          
+          - match:
+              prefix: "/login/oauth2/code/"
+            allow_missing_or_expired: true
+          
+          - match:
+              prefix: "/actuator"
+            allow_missing_or_expired: true
+          
+          - match:
+              path_separator: EXACT
+              path: "/health"
+            allow_missing_or_expired: true
+          
+          - match:
+              path_separator: EXACT
+              path: "/favicon.ico"
+            allow_missing_or_expired: true
