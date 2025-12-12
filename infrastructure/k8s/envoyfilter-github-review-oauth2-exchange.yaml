@@ -79,13 +79,10 @@ spec:
                 oauth_expires: "_ghreview_oauth_expires"
             cookie_configs:
               bearer_token_cookie_config:
-                path: /
                 same_site: LAX
               oauth_hmac_cookie_config:
-                path: /
                 same_site: LAX
               oauth_expires_cookie_config:
-                path: /
                 same_site: LAX
             auth_scopes:
             - openid
