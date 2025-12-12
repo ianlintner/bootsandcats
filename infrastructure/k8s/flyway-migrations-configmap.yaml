@@ -264,7 +264,7 @@ data:
         'Profile Service',
         'client_secret_basic,client_secret_post',
         'authorization_code,refresh_token',
-        'https://profile.cat-herding.net/',
+        'https://profile.cat-herding.net/_oauth2/callback',
         'https://profile.cat-herding.net/',
         'openid,profile,email,profile:read,profile:write',
         '{}',
