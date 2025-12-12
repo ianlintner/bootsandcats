@@ -80,12 +80,15 @@ public class AdminClientService {
     @Transactional
     public AdminClientSummary upsertClient(
             AdminClientUpsertRequest request, String actor, HttpServletRequest httpRequest) {
-        RegisteredClient existing = jpaRegisteredClientRepository.findByClientId(request.clientId());
-        ClientMetadataEntity metadata = clientMetadataRepository.findById(request.clientId()).orElse(null);
+        RegisteredClient existing =
+                jpaRegisteredClientRepository.findByClientId(request.clientId());
+        ClientMetadataEntity metadata =
+                clientMetadataRepository.findById(request.clientId()).orElse(null);
 
         boolean creating = (existing == null);
         if (!creating && metadata != null && metadata.isSystem()) {
-            throw new AdminOperationNotAllowedException("System client cannot be modified: " + request.clientId());
+            throw new AdminOperationNotAllowedException(
+                    "System client cannot be modified: " + request.clientId());
         }
 
         ensureScopesExist(request.scopes(), actor);
@@ -93,9 +96,10 @@ public class AdminClientService {
 
         boolean rotateSecret = StringUtils.hasText(request.clientSecret());
 
-        RegisteredClient toSave = creating
-                ? buildNewRegisteredClient(request)
-                : buildUpdatedRegisteredClient(existing, request);
+        RegisteredClient toSave =
+                creating
+                        ? buildNewRegisteredClient(request)
+                        : buildUpdatedRegisteredClient(existing, request);
 
         jpaRegisteredClientRepository.save(toSave);
 
@@ -124,7 +128,8 @@ public class AdminClientService {
     public void deleteClient(String clientId, String actor, HttpServletRequest httpRequest) {
         ClientMetadataEntity metadata = clientMetadataRepository.findById(clientId).orElse(null);
         if (metadata != null && metadata.isSystem()) {
-            throw new AdminOperationNotAllowedException("System client cannot be deleted: " + clientId);
+            throw new AdminOperationNotAllowedException(
+                    "System client cannot be deleted: " + clientId);
         }
 
         if (!registeredClientJpaRepository.findByClientId(clientId).isPresent()) {
@@ -159,7 +164,8 @@ public class AdminClientService {
         }
 
         if (meta.isSystem()) {
-            throw new AdminOperationNotAllowedException("System client cannot be disabled/enabled: " + clientId);
+            throw new AdminOperationNotAllowedException(
+                    "System client cannot be disabled/enabled: " + clientId);
         }
 
         meta.setEnabled(enabled);
@@ -181,7 +187,8 @@ public class AdminClientService {
     }
 
     private AdminClientSummary toSummary(RegisteredClient rc) {
-        ClientMetadataEntity meta = clientMetadataRepository.findById(rc.getClientId()).orElse(null);
+        ClientMetadataEntity meta =
+                clientMetadataRepository.findById(rc.getClientId()).orElse(null);
         boolean enabled = meta == null || meta.isEnabled();
         boolean system = meta != null && meta.isSystem();
 
@@ -195,8 +202,12 @@ public class AdminClientService {
                 enabled,
                 system,
                 List.copyOf(rc.getScopes()),
-                rc.getAuthorizationGrantTypes().stream().map(AuthorizationGrantType::getValue).toList(),
-                rc.getClientAuthenticationMethods().stream().map(ClientAuthenticationMethod::getValue).toList(),
+                rc.getAuthorizationGrantTypes().stream()
+                        .map(AuthorizationGrantType::getValue)
+                        .toList(),
+                rc.getClientAuthenticationMethods().stream()
+                        .map(ClientAuthenticationMethod::getValue)
+                        .toList(),
                 List.copyOf(rc.getRedirectUris()),
                 List.copyOf(rc.getPostLogoutRedirectUris()),
                 requireProofKey,
@@ -209,23 +220,41 @@ public class AdminClientService {
                 RegisteredClient.withId(UUID.randomUUID().toString())
                         .clientId(request.clientId())
                         .clientIdIssuedAt(Instant.now())
-                        .clientName(StringUtils.hasText(request.clientName()) ? request.clientName().trim() : request.clientId());
+                        .clientName(
+                                StringUtils.hasText(request.clientName())
+                                        ? request.clientName().trim()
+                                        : request.clientId());
 
         if (StringUtils.hasText(request.clientSecret())) {
             builder.clientSecret(request.clientSecret());
         }
 
         builder.clientAuthenticationMethods(
-                methods -> request.clientAuthenticationMethods().forEach(v -> methods.add(resolveClientAuthenticationMethod(v))));
+                methods ->
+                        request.clientAuthenticationMethods()
+                                .forEach(v -> methods.add(resolveClientAuthenticationMethod(v))));
         builder.authorizationGrantTypes(
-                types -> request.authorizationGrantTypes().forEach(v -> types.add(resolveAuthorizationGrantType(v))));
+                types ->
+                        request.authorizationGrantTypes()
+                                .forEach(v -> types.add(resolveAuthorizationGrantType(v))));
 
         if (request.redirectUris() != null) {
-            builder.redirectUris(uris -> uris.addAll(request.redirectUris().stream().filter(StringUtils::hasText).map(String::trim).toList()));
+            builder.redirectUris(
+                    uris ->
+                            uris.addAll(
+                                    request.redirectUris().stream()
+                                            .filter(StringUtils::hasText)
+                                            .map(String::trim)
+                                            .toList()));
         }
         if (request.postLogoutRedirectUris() != null) {
             builder.postLogoutRedirectUris(
-                    uris -> uris.addAll(request.postLogoutRedirectUris().stream().filter(StringUtils::hasText).map(String::trim).toList()));
+                    uris ->
+                            uris.addAll(
+                                    request.postLogoutRedirectUris().stream()
+                                            .filter(StringUtils::hasText)
+                                            .map(String::trim)
+                                            .toList()));
         }
 
         builder.scopes(scopes -> scopes.addAll(new LinkedHashSet<>(request.scopes())));
@@ -242,12 +271,16 @@ public class AdminClientService {
 
     private RegisteredClient buildUpdatedRegisteredClient(
             RegisteredClient existing, AdminClientUpsertRequest request) {
-        RegisteredClient.Builder builder = RegisteredClient.withId(existing.getId())
-                .clientId(existing.getClientId())
-                .clientIdIssuedAt(existing.getClientIdIssuedAt())
-                .clientSecret(existing.getClientSecret())
-                .clientSecretExpiresAt(existing.getClientSecretExpiresAt())
-                .clientName(StringUtils.hasText(request.clientName()) ? request.clientName().trim() : existing.getClientName());
+        RegisteredClient.Builder builder =
+                RegisteredClient.withId(existing.getId())
+                        .clientId(existing.getClientId())
+                        .clientIdIssuedAt(existing.getClientIdIssuedAt())
+                        .clientSecret(existing.getClientSecret())
+                        .clientSecretExpiresAt(existing.getClientSecretExpiresAt())
+                        .clientName(
+                                StringUtils.hasText(request.clientName())
+                                        ? request.clientName().trim()
+                                        : existing.getClientName());
 
         if (StringUtils.hasText(request.clientSecret())) {
             builder.clientSecret(request.clientSecret());
@@ -255,7 +288,9 @@ public class AdminClientService {
 
         Set<String> authMethods = new LinkedHashSet<>(request.clientAuthenticationMethods());
         builder.clientAuthenticationMethods(
-                methods -> authMethods.forEach(v -> methods.add(resolveClientAuthenticationMethod(v))));
+                methods ->
+                        authMethods.forEach(
+                                v -> methods.add(resolveClientAuthenticationMethod(v))));
 
         Set<String> grantTypes = new LinkedHashSet<>(request.authorizationGrantTypes());
         builder.authorizationGrantTypes(
@@ -263,23 +298,29 @@ public class AdminClientService {
 
         List<String> redirectUris =
                 request.redirectUris() != null
-                        ? request.redirectUris().stream().filter(StringUtils::hasText).map(String::trim).toList()
+                        ? request.redirectUris().stream()
+                                .filter(StringUtils::hasText)
+                                .map(String::trim)
+                                .toList()
                         : List.copyOf(existing.getRedirectUris());
         builder.redirectUris(uris -> uris.addAll(redirectUris));
 
         List<String> postLogoutRedirectUris =
                 request.postLogoutRedirectUris() != null
-                        ? request.postLogoutRedirectUris().stream().filter(StringUtils::hasText).map(String::trim).toList()
+                        ? request.postLogoutRedirectUris().stream()
+                                .filter(StringUtils::hasText)
+                                .map(String::trim)
+                                .toList()
                         : List.copyOf(existing.getPostLogoutRedirectUris());
         builder.postLogoutRedirectUris(uris -> uris.addAll(postLogoutRedirectUris));
 
         builder.scopes(scopes -> scopes.addAll(new LinkedHashSet<>(request.scopes())));
 
         builder.clientSettings(
-            ClientSettings.builder()
-                .requireProofKey(request.requireProofKey())
-                .requireAuthorizationConsent(request.requireAuthorizationConsent())
-                .build());
+                ClientSettings.builder()
+                        .requireProofKey(request.requireProofKey())
+                        .requireAuthorizationConsent(request.requireAuthorizationConsent())
+                        .build());
         builder.tokenSettings(existing.getTokenSettings());
 
         return builder.build();

@@ -36,19 +36,13 @@ public class DenyListService {
 
         Optional<DenyRuleEntity> usernameMatch =
                 findMatchForField(
-                        resolvedProvider,
-                        DenyMatchField.USERNAME,
-                        normalize(username),
-                        username);
+                        resolvedProvider, DenyMatchField.USERNAME, normalize(username), username);
         if (usernameMatch.isPresent()) {
             return usernameMatch;
         }
 
         return findMatchForField(
-                resolvedProvider,
-                DenyMatchField.PROVIDER_ID,
-                normalize(providerId),
-                providerId);
+                resolvedProvider, DenyMatchField.PROVIDER_ID, normalize(providerId), providerId);
     }
 
     public void assertNotDenied(String provider, String email, String username, String providerId) {
@@ -72,14 +66,16 @@ public class DenyListService {
             return Optional.empty();
         }
 
-        List<DenyRuleEntity> activeRules = denyRuleRepository.findActiveRulesForProvider(provider, field);
+        List<DenyRuleEntity> activeRules =
+                denyRuleRepository.findActiveRulesForProvider(provider, field);
         for (DenyRuleEntity rule : activeRules) {
             if (matches(rule, normalizedCandidate, rawCandidate)) {
                 return Optional.of(rule);
             }
         }
 
-        // If provider-specific query already includes global rules, no need to separately query globals.
+        // If provider-specific query already includes global rules, no need to separately query
+        // globals.
         return Optional.empty();
     }
 

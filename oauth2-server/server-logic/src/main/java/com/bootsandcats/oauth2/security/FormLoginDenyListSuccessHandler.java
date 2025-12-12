@@ -44,7 +44,9 @@ public class FormLoginDenyListSuccessHandler extends SavedRequestAwareAuthentica
             Map<String, Object> details = new HashMap<>();
             details.put("provider", "local");
             details.put("username", username);
-            details.put("denyRuleId", denied.getDenyRule() != null ? denied.getDenyRule().getId() : null);
+            details.put(
+                    "denyRuleId",
+                    denied.getDenyRule() != null ? denied.getDenyRule().getId() : null);
             details.put(
                     "denyRuleProvider",
                     denied.getDenyRule() != null ? denied.getDenyRule().getProvider() : null);

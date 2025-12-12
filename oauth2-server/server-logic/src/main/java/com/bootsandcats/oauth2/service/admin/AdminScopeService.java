@@ -39,7 +39,13 @@ public class AdminScopeService {
     @Transactional(readOnly = true)
     public List<AdminScopeSummary> listScopes() {
         return scopeRepository.findAll().stream()
-                .map(e -> new AdminScopeSummary(e.getScope(), e.getDescription(), e.isEnabled(), e.isSystem()))
+                .map(
+                        e ->
+                                new AdminScopeSummary(
+                                        e.getScope(),
+                                        e.getDescription(),
+                                        e.isEnabled(),
+                                        e.isSystem()))
                 .toList();
     }
 
@@ -64,7 +70,8 @@ public class AdminScopeService {
             }
         }
 
-        entity.setDescription(StringUtils.hasText(request.description()) ? request.description().trim() : null);
+        entity.setDescription(
+                StringUtils.hasText(request.description()) ? request.description().trim() : null);
         entity.setEnabled(request.enabled());
         entity.setUpdatedAt(now);
 

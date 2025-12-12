@@ -11,10 +11,10 @@ import com.bootsandcats.oauth2.model.ClientScopeId;
 
 public interface ClientScopeRepository extends JpaRepository<ClientScopeEntity, ClientScopeId> {
 
-	List<ClientScopeEntity> findByIdClientId(String clientId);
+    List<ClientScopeEntity> findByIdClientId(String clientId);
 
-	long deleteByIdClientId(String clientId);
+    long deleteByIdClientId(String clientId);
 
-	@Query("select distinct cs.id.clientId from ClientScopeEntity cs where cs.id.scope = :scope")
-	List<String> findClientIdsByScope(@Param("scope") String scope);
+    @Query("select distinct cs.id.clientId from ClientScopeEntity cs where cs.id.scope = :scope")
+    List<String> findClientIdsByScope(@Param("scope") String scope);
 }

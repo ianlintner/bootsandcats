@@ -2,6 +2,7 @@ package com.bootsandcats.oauth2.dto.admin;
 
 import com.bootsandcats.oauth2.model.DenyMatchField;
 import com.bootsandcats.oauth2.model.DenyMatchType;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 

@@ -91,7 +91,7 @@ class DenyListServiceTest {
 
         DenyListService service = new DenyListService(denyRuleRepository);
 
-                assertThat(service.findMatchingRule("github", "x@example.com", "user", "id")).isEmpty();
+        assertThat(service.findMatchingRule("github", "x@example.com", "user", "id")).isEmpty();
     }
 
     @Test
@@ -108,7 +108,9 @@ class DenyListServiceTest {
 
         ArgumentCaptor<String> providerCaptor = ArgumentCaptor.forClass(String.class);
         verify(denyRuleRepository)
-                .findActiveRulesForProvider(providerCaptor.capture(), org.mockito.ArgumentMatchers.eq(DenyMatchField.EMAIL));
+                .findActiveRulesForProvider(
+                        providerCaptor.capture(),
+                        org.mockito.ArgumentMatchers.eq(DenyMatchField.EMAIL));
         assertThat(providerCaptor.getValue()).isEqualTo("local");
     }
 }

@@ -22,7 +22,8 @@ public class FilteringRegisteredClientRepository implements RegisteredClientRepo
     private final ClientMetadataRepository clientMetadataRepository;
 
     public FilteringRegisteredClientRepository(
-            JpaRegisteredClientRepository delegate, ClientMetadataRepository clientMetadataRepository) {
+            JpaRegisteredClientRepository delegate,
+            ClientMetadataRepository clientMetadataRepository) {
         this.delegate = delegate;
         this.clientMetadataRepository = clientMetadataRepository;
     }

@@ -83,7 +83,9 @@ public class FederatedIdentityAuthenticationSuccessHandler
                 auditDetails.put("email", email);
                 auditDetails.put("username", username);
                 auditDetails.put("providerId", providerId);
-                auditDetails.put("denyRuleId", denied.getDenyRule() != null ? denied.getDenyRule().getId() : null);
+                auditDetails.put(
+                        "denyRuleId",
+                        denied.getDenyRule() != null ? denied.getDenyRule().getId() : null);
                 auditDetails.put(
                         "denyRuleProvider",
                         denied.getDenyRule() != null ? denied.getDenyRule().getProvider() : null);

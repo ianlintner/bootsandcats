@@ -57,15 +57,14 @@ public class AdminDenyRuleAdminController {
             Authentication authentication,
             HttpServletRequest httpRequest) {
         return ResponseEntity.ok(
-                adminDenyRuleService.updateRule(id, request, authentication.getName(), httpRequest));
+                adminDenyRuleService.updateRule(
+                        id, request, authentication.getName(), httpRequest));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteRule(
-            @PathVariable long id,
-            Authentication authentication,
-            HttpServletRequest httpRequest) {
+            @PathVariable long id, Authentication authentication, HttpServletRequest httpRequest) {
         adminDenyRuleService.deleteRule(id, authentication.getName(), httpRequest);
         return ResponseEntity.noContent().build();
     }

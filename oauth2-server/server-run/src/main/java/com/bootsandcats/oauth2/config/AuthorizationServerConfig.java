@@ -45,8 +45,8 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.bootsandcats.oauth2.log.AuthorizationDiagnosticsFilter;
-import com.bootsandcats.oauth2.security.FormLoginDenyListSuccessHandler;
 import com.bootsandcats.oauth2.security.FederatedIdentityAuthenticationSuccessHandler;
+import com.bootsandcats.oauth2.security.FormLoginDenyListSuccessHandler;
 import com.bootsandcats.oauth2.service.JwkSetProvider;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;

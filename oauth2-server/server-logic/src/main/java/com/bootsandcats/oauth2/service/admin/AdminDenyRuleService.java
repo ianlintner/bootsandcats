@@ -62,11 +62,17 @@ public class AdminDenyRuleService {
 
     @Transactional
     public AdminDenyRuleSummary updateRule(
-            long id, AdminDenyRuleUpsertRequest request, String actor, HttpServletRequest httpRequest) {
+            long id,
+            AdminDenyRuleUpsertRequest request,
+            String actor,
+            HttpServletRequest httpRequest) {
         DenyRuleEntity entity =
                 denyRuleRepository
                         .findById(id)
-                        .orElseThrow(() -> new AdminResourceNotFoundException("Deny rule not found: " + id));
+                        .orElseThrow(
+                                () ->
+                                        new AdminResourceNotFoundException(
+                                                "Deny rule not found: " + id));
 
         entity.setUpdatedAt(Instant.now());
         apply(entity, request);
@@ -88,7 +94,10 @@ public class AdminDenyRuleService {
         DenyRuleEntity entity =
                 denyRuleRepository
                         .findById(id)
-                        .orElseThrow(() -> new AdminResourceNotFoundException("Deny rule not found: " + id));
+                        .orElseThrow(
+                                () ->
+                                        new AdminResourceNotFoundException(
+                                                "Deny rule not found: " + id));
         denyRuleRepository.delete(entity);
 
         Map<String, Object> details = new HashMap<>();
@@ -105,7 +114,8 @@ public class AdminDenyRuleService {
     private void apply(DenyRuleEntity entity, AdminDenyRuleUpsertRequest request) {
         entity.setEnabled(request.enabled());
 
-        String provider = StringUtils.hasText(request.provider()) ? request.provider().trim() : null;
+        String provider =
+                StringUtils.hasText(request.provider()) ? request.provider().trim() : null;
         entity.setProvider(provider);
 
         entity.setMatchField(request.matchField());

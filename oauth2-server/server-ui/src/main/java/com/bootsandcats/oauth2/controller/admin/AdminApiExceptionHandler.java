@@ -21,7 +21,8 @@ public class AdminApiExceptionHandler {
     }
 
     @ExceptionHandler(AdminOperationNotAllowedException.class)
-    public ResponseEntity<Map<String, Object>> handleNotAllowed(AdminOperationNotAllowedException ex) {
+    public ResponseEntity<Map<String, Object>> handleNotAllowed(
+            AdminOperationNotAllowedException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(Map.of("error", "NOT_ALLOWED", "message", ex.getMessage()));
     }
@@ -33,7 +34,8 @@ public class AdminApiExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
+    public ResponseEntity<Map<String, Object>> handleValidation(
+            MethodArgumentNotValidException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of("error", "VALIDATION", "message", "Validation failed"));
     }
