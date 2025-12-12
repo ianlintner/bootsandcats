@@ -45,6 +45,7 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.bootsandcats.oauth2.log.AuthorizationDiagnosticsFilter;
+import com.bootsandcats.oauth2.security.FormLoginDenyListSuccessHandler;
 import com.bootsandcats.oauth2.security.FederatedIdentityAuthenticationSuccessHandler;
 import com.bootsandcats.oauth2.service.JwkSetProvider;
 import com.nimbusds.jose.jwk.source.JWKSource;
@@ -176,8 +177,7 @@ public class AuthorizationServerConfig {
             HttpSecurity http,
             FederatedIdentityAuthenticationSuccessHandler
                     federatedIdentityAuthenticationSuccessHandler,
-            com.bootsandcats.oauth2.security.FormLoginDenyListSuccessHandler
-                    formLoginDenyListSuccessHandler,
+            FormLoginDenyListSuccessHandler formLoginDenyListSuccessHandler,
             SecurityHeadersConfig securityHeadersConfig)
             throws Exception {
         http.authorizeHttpRequests(
