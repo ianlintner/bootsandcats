@@ -36,10 +36,6 @@ class DenyListServiceTest {
 
         when(denyRuleRepository.findActiveRulesForProvider("github", DenyMatchField.EMAIL))
                 .thenReturn(List.of(rule));
-        when(denyRuleRepository.findActiveRulesForProvider("github", DenyMatchField.USERNAME))
-                .thenReturn(List.of());
-        when(denyRuleRepository.findActiveRulesForProvider("github", DenyMatchField.PROVIDER_ID))
-                .thenReturn(List.of());
 
         DenyListService service = new DenyListService(denyRuleRepository);
 
@@ -68,8 +64,6 @@ class DenyListServiceTest {
                 .thenReturn(List.of());
         when(denyRuleRepository.findActiveRulesForProvider("google", DenyMatchField.USERNAME))
                 .thenReturn(List.of(rule));
-        when(denyRuleRepository.findActiveRulesForProvider("google", DenyMatchField.PROVIDER_ID))
-                .thenReturn(List.of());
 
         DenyListService service = new DenyListService(denyRuleRepository);
 
@@ -90,6 +84,10 @@ class DenyListServiceTest {
 
         when(denyRuleRepository.findActiveRulesForProvider("github", DenyMatchField.EMAIL))
                 .thenReturn(List.of(rule));
+        when(denyRuleRepository.findActiveRulesForProvider("github", DenyMatchField.USERNAME))
+                .thenReturn(List.of());
+        when(denyRuleRepository.findActiveRulesForProvider("github", DenyMatchField.PROVIDER_ID))
+                .thenReturn(List.of());
 
         DenyListService service = new DenyListService(denyRuleRepository);
 
