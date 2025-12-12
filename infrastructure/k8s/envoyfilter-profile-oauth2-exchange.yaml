@@ -11,6 +11,119 @@ spec:
     labels:
       app: profile-service
   configPatches:
+  - applyTo: CLUSTER
+    match:
+      context: ANY
+    patch:
+      operation: ADD
+      value:
+        name: oauth2_token_cluster_profile
+        type: STRICT_DNS
+        connect_timeout: 5s
+        lb_policy: ROUND_ROBIN
+        load_assignment:
+          cluster_name: oauth2_token_cluster_profile
+          endpoints:
+          - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: oauth2-server.default.svc.cluster.local
+                    port_value: 9000
+  - applyTo: HTTP_FILTER
+    match:
+      context: SIDECAR_INBOUND
+      listener:
+        filterChain:
+          filter:
+            name: envoy.filters.network.http_connection_manager
+            subFilter:
+              name: envoy.filters.http.router
+    patch:
+      operation: INSERT_BEFORE
+      value:
+        name: envoy.filters.http.oauth2
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2
+          config:
+            stat_prefix: profile_oauth
+            authorization_endpoint: https://oauth2.cat-herding.net/oauth2/authorize
+            token_endpoint:
+              cluster: oauth2_token_cluster_profile
+              uri: http://oauth2-server.default.svc.cluster.local:9000/oauth2/token
+              timeout: 5s
+            redirect_uri: "%REQ(x-forwarded-proto)%://%REQ(:authority)%/_oauth2/callback"
+            redirect_path_matcher:
+              path:
+                exact: /_oauth2/callback
+            signout_path:
+              path:
+                exact: /_oauth2/logout
+            forward_bearer_token: true
+            cookie_domain: profile.cat-herding.net
+            default_expires_in: 900s
+            csrf_token_expires_in: 600s
+            use_refresh_token:
+              value: false
+            credentials:
+              client_id: profile-service
+              token_secret:
+                name: profile-oauth-token
+                sds_config:
+                  path: /etc/istio/oauth2/profile-oauth2-sds.yaml
+              hmac_secret:
+                name: profile-oauth-hmac
+                sds_config:
+                  path: /etc/istio/oauth2/profile-oauth2-sds.yaml
+              cookie_names:
+                bearer_token: "_profile_session"
+                oauth_hmac: "_profile_oauth_hmac"
+                oauth_expires: "_profile_oauth_expires"
+            cookie_configs:
+              bearer_token_cookie_config:
+                path: /
+                same_site: LAX
+              oauth_hmac_cookie_config:
+                path: /
+                same_site: LAX
+              oauth_expires_cookie_config:
+                path: /
+                same_site: LAX
+            auth_scopes:
+            - openid
+            - profile
+            - email
+            pass_through_matcher:
+            - name: ":path"
+              prefix_match: "/actuator"
+            - name: ":path"
+              prefix_match: "/api/status"
+            - name: ":path"
+              prefix_match: "/public/"
+            - name: ":path"
+              prefix_match: "/css/"
+            - name: ":path"
+              prefix_match: "/js/"
+            - name: ":path"
+              prefix_match: "/images/"
+            - name: ":path"
+              prefix_match: "/webjars/"
+            - name: ":path"
+              exact_match: "/favicon.ico"
+            - name: ":path"
+              exact_match: "/profile-app.js"apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: profile-oauth2-exchange
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    project: bootsandcats
+spec:
+  workloadSelector:
+    labels:
+      app: profile-service
+  configPatches:
   # Add cluster for OAuth2 token endpoint (using ANY context for Lua httpCall access)
   - applyTo: CLUSTER
     match:

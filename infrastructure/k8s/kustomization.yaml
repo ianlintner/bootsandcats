@@ -28,6 +28,7 @@ resources:
   - envoyfilter-github-review-jwt-to-headers.yaml
   - secret-provider-class.yaml
   - secret-provider-class-github-review.yaml
+  - envoy-oauth2-sds-configmap.yaml
 
 
 # You can add configMapGenerator/secretGenerator later if you want kustomize to build these dynamically

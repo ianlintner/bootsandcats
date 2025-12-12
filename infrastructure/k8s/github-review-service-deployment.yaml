@@ -14,6 +14,10 @@ spec:
     metadata:
       labels:
         app: github-review-service
+      annotations:
+        sidecar.istio.io/userVolumeMount: >-
+          [{"name":"secrets-store","mountPath":"/mnt/secrets-store","readonly":true},
+           {"name":"github-review-oauth2-sds","mountPath":"/etc/istio/oauth2","readonly":true}]
     spec:
       containers:
       - name: github-review-service
@@ -54,6 +58,9 @@ spec:
         - name: secrets-store
           mountPath: "/mnt/secrets-store"
           readOnly: true
+        - name: github-review-oauth2-sds
+          mountPath: "/etc/istio/oauth2"
+          readOnly: true
       volumes:
       - name: secrets-store
         csi:
@@ -61,6 +68,9 @@ spec:
           readOnly: true
           volumeAttributes:
             secretProviderClass: "github-review-secrets-provider"
+      - name: github-review-oauth2-sds
+        configMap:
+          name: github-review-oauth2-sds
       tolerations:
       - key: "kubernetes.azure.com/scalesetpriority"
         operator: "Equal"
