@@ -1,8 +1,6 @@
 package com.bootsandcats.oauth2.model;
 
-/** Fields that can be matched by deny rules. */
-public enum DenyMatchField {
-    EMAIL,
-    USERNAME,
-    PROVIDER_ID
-}
+// Intentionally empty.
+//
+// DenyMatchField was moved to the shared `oauth2-server:server-model` module so it can be
+// referenced by DTOs without introducing a dependency on the DAO module.

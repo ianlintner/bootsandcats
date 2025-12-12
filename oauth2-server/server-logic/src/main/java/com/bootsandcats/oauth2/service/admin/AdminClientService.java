@@ -186,10 +186,8 @@ public class AdminClientService {
         boolean system = meta != null && meta.isSystem();
 
         ClientSettings clientSettings = rc.getClientSettings();
-        boolean requireProofKey = Boolean.TRUE.equals(clientSettings.getSetting(ClientSettings.REQUIRE_PROOF_KEY));
-        boolean requireConsent =
-            Boolean.TRUE.equals(
-                clientSettings.getSetting(ClientSettings.REQUIRE_AUTHORIZATION_CONSENT));
+        boolean requireProofKey = clientSettings.isRequireProofKey();
+        boolean requireConsent = clientSettings.isRequireAuthorizationConsent();
 
         return new AdminClientSummary(
                 rc.getClientId(),

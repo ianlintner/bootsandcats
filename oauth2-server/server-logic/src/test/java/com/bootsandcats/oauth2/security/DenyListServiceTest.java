@@ -91,7 +91,7 @@ class DenyListServiceTest {
 
         DenyListService service = new DenyListService(denyRuleRepository);
 
-        assertThat(service.findMatchingRule("github", "x@example.com", null, null)).isEmpty();
+                assertThat(service.findMatchingRule("github", "x@example.com", "user", "id")).isEmpty();
     }
 
     @Test

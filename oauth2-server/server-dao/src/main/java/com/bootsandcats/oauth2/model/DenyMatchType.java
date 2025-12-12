@@ -1,7 +1,6 @@
 package com.bootsandcats.oauth2.model;
 
-/** How a deny rule matches a candidate value. */
-public enum DenyMatchType {
-    EXACT,
-    REGEX
-}
+// Intentionally empty.
+//
+// DenyMatchType was moved to the shared `oauth2-server:server-model` module so it can be
+// referenced by DTOs without introducing a dependency on the DAO module.
