@@ -52,6 +52,7 @@ spec:
               cluster: oauth2_token_cluster_profile
               uri: http://oauth2-server.default.svc.cluster.local:9000/oauth2/token
               timeout: 5s
+              auth_type: BASIC_AUTH
             redirect_uri: "%REQ(x-forwarded-proto)%://%REQ(:authority)%/_oauth2/callback"
             redirect_path_matcher:
               path:
