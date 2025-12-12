@@ -55,6 +55,6 @@ spec:
         prefix: /
     route:
     - destination:
-        host: github-review-service
+        host: gh-review
         port:
           number: 80
