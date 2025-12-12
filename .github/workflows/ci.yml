@@ -393,7 +393,7 @@ jobs:
             -f github-review-service/Dockerfile \
             -t $GH_REVIEW_IMAGE_TAG \
             -t $GH_REVIEW_IMAGE_LATEST \
-            .
+            github-review-service
 
           echo "GH_REVIEW_IMAGE_TAG=$GH_REVIEW_IMAGE_TAG" >> $GITHUB_ENV
           echo "GH_REVIEW_IMAGE_LATEST=$GH_REVIEW_IMAGE_LATEST" >> $GITHUB_ENV
