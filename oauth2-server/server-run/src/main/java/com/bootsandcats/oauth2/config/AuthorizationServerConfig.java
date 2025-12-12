@@ -196,7 +196,6 @@ public class AuthorizationServerConfig {
                                                 "/v3/api-docs/**",
                                                 "/swagger-ui/**",
                                                 "/swagger-ui.html",
-                                                "/admin/**",
                                                 "/assets/**",
                                                 "/login",
                                                 "/instances",
@@ -205,6 +204,10 @@ public class AuthorizationServerConfig {
                                                 "/applications/**",
                                                 "/.well-known/jwks.json")
                                         .permitAll()
+                                        .requestMatchers("/admin/**")
+                                        .hasRole("ADMIN")
+                                        .requestMatchers("/api/admin/**")
+                                        .hasRole("ADMIN")
                                         .requestMatchers("/api/audit/**")
                                         .hasRole("ADMIN")
                                         .anyRequest()

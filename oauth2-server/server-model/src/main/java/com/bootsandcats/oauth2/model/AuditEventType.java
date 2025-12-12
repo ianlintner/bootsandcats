@@ -81,6 +81,9 @@ public enum AuditEventType {
     JWK_ROTATED("ADMIN", "JWK rotated"),
     SCOPE_CREATED("ADMIN", "Scope created"),
     SCOPE_DELETED("ADMIN", "Scope deleted"),
+    DENY_RULE_CREATED("ADMIN", "Deny rule created"),
+    DENY_RULE_UPDATED("ADMIN", "Deny rule updated"),
+    DENY_RULE_DELETED("ADMIN", "Deny rule deleted"),
 
     // Security Events
     SUSPICIOUS_ACTIVITY("SECURITY", "Suspicious activity detected"),
