@@ -176,6 +176,8 @@ public class AuthorizationServerConfig {
             HttpSecurity http,
             FederatedIdentityAuthenticationSuccessHandler
                     federatedIdentityAuthenticationSuccessHandler,
+            com.bootsandcats.oauth2.security.FormLoginDenyListSuccessHandler
+                    formLoginDenyListSuccessHandler,
             SecurityHeadersConfig securityHeadersConfig)
             throws Exception {
         http.authorizeHttpRequests(
@@ -207,7 +209,11 @@ public class AuthorizationServerConfig {
                                         .hasRole("ADMIN")
                                         .anyRequest()
                                         .authenticated())
-                .formLogin(form -> form.loginPage("/login").permitAll())
+                .formLogin(
+                        form ->
+                                form.loginPage("/login")
+                                        .permitAll()
+                                        .successHandler(formLoginDenyListSuccessHandler))
                 .oauth2Login(
                         oauth2 ->
                                 oauth2.loginPage("/login")
