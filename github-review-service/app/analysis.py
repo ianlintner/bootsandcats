@@ -18,6 +18,10 @@ Keep it concise (under 300 words). Avoid fabricating details. Prefer evidence fr
 def summarize_github_profile(
     settings: Settings, user: Dict[str, Any], repos: List[Dict[str, Any]]
 ) -> str:
+    if not settings.openai_api_key:
+        raise ValueError(
+            "OpenAI is not configured. Set OPENAI_API_KEY (or GH_REVIEW_OPENAI_API_KEY) to run assessments."
+        )
     model = ChatOpenAI(
         model=settings.openai_model,
         api_key=settings.openai_api_key,
