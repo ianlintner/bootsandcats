@@ -25,7 +25,6 @@ resources:
   - requestauthentication-github-review.yaml
   - envoyfilter-profile-oauth2-exchange.yaml
   - envoyfilter-github-review-oauth2-exchange.yaml
-  - envoyfilter-github-review-jwt-to-headers.yaml
   - secret-provider-class.yaml
   - secret-provider-class-github-review.yaml
   - envoy-oauth2-sds-configmap.yaml
