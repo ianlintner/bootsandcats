@@ -27,14 +27,13 @@ spec:
         typed_config:
           "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
           inlineCode: |
-            local oauth_host = "oauth2.cat-herding.net"
-            local client_id = "github-review-service"
-
-            local function urlencode(str)
-              return (str:gsub("([^%w_.%-~])", function(c)
-                return string.format("%%%02X", string.byte(c))
-              end))
-            end
+            -- Maps RequestAuthentication-provided x-jwt-payload (JSON) into
+            -- lightweight x-jwt-* headers.
+            --
+            -- IMPORTANT:
+            -- - This filter must NOT perform OAuth redirects.
+            -- - OAuth redirect + authorization-code exchange is handled by
+            --   `github-review-oauth2-exchange`.
 
             local function parse_claim(payload, key)
               if payload == nil then return nil end
@@ -70,20 +69,6 @@ spec:
               end
 
               if payload_json == nil then
-                local authority = handle:headers():get(":authority") or "gh-review.cat-herding.net"
-                local redirect_uri = "https://" .. authority .. path_with_query
-                local location = "https://" .. oauth_host .. "/oauth2/authorize" ..
-                  "?response_type=code" ..
-                  "&client_id=" .. client_id ..
-                  "&scope=" .. urlencode("openid profile email") ..
-                  "&redirect_uri=" .. urlencode(redirect_uri)
-
-                handle:respond({
-                  [":status"] = "302",
-                  ["Location"] = location,
-                  ["Cache-Control"] = "no-store",
-                  ["Pragma"] = "no-cache"
-                }, "")
                 return
               end
 
@@ -99,4 +84,7 @@ spec:
               add_claim("x-jwt-email", "email")
               add_claim("x-jwt-name", "name")
               add_claim("x-jwt-scope", "scope")
+
+              -- Do not forward the raw JWT payload to the application.
+              handle:headers():remove("x-jwt-payload")
             end

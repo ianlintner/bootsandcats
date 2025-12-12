@@ -52,8 +52,9 @@ spec:
               local CLIENT_ID = "github-review-service"
               local COOKIE_NAME = "_ghreview_session"
               local COOKIE_MAX_AGE = 900
-              -- Configure this with the client secret provisioned in Key Vault.
-              local CLIENT_SECRET = "REPLACE_WITH_GITHUB_REVIEW_CLIENT_SECRET"
+              -- Demo secret used by the sidecar during code exchange.
+              -- Keep this in sync with the DB migration that seeds/updates the registered client.
+              local CLIENT_SECRET = "demo-gh-review-client-secret"
 
               local function urlencode(str)
                 if str == nil then return "" end
