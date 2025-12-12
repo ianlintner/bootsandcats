@@ -63,8 +63,6 @@ spec:
             cookie_domain: profile.cat-herding.net
             default_expires_in: 900s
             csrf_token_expires_in: 600s
-            use_refresh_token:
-              value: false
             credentials:
               client_id: profile-service
               token_secret:
@@ -112,3 +110,9 @@ spec:
               exact_match: "/favicon.ico"
             - name: ":path"
               exact_match: "/profile-app.js"
+            - name: ":path"
+              exact_match: "/index.html"
+            - name: ":path"
+              prefix_match: "/swagger"
+            - name: ":path"
+              prefix_match: "/openapi"
