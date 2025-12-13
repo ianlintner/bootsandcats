@@ -1,66 +1,34 @@
 # Kubernetes manifests: logical structure
 
-This repo’s Kubernetes manifests live under `infrastructure/k8s/`.
+This repo’s Kubernetes manifests live under `infrastructure/k8s/` with a single entry point (`kustomization.yaml`) that composes the `base/` module.
 
-The goal of this structure is to keep **blast radius small**, make **ownership obvious**, and keep `kustomize` composition easy.
+We follow a modular layout so that each team understands ownership, kustomize can enforce file containment, and upgrades stay localized.
 
-## Current structure (incremental)
-
-We keep `infrastructure/k8s/kustomization.yaml` as the main entry point.
-
-- `secrets/`
-  - All `SecretProviderClass` manifests (Key Vault → CSI / synced Kubernetes Secrets)
-  - These are security-sensitive and usually change less often than app rollouts.
-
-Everything else currently remains at the top level for minimal churn.
-
-## Recommended target structure (modules)
-
-As the manifest set grows, consider migrating to this layout:
+## Module layout
 
 - `base/`
-  - Shared primitives used in all environments
-  - `kustomization.yaml`
-
+  - Shared helpers (namespace, labels, generator options) used by every environment
+  - Points at `apps/`, `data/`, `istio/`, and `secrets/`
 - `apps/`
-  - `oauth2-server/` (Deployment/Service/ConfigMaps specific to oauth2-server)
-  - `profile-service/`
-  - `github-review-service/`
-
+  - One per workload (`oauth2-server`, `profile-service`, `github-review-service`)
+  - Shared resources (`configs/`) such as `flyway-migrations-configmap.yaml` and `pdb.yaml`
 - `data/`
-  - `postgres/` (CNPG operator, clusters)
-  - `redis/`
-
+  - CNPG/PostgreSQL + Redis manifests are grouped here (`cnpg-operator.yaml`, `postgres.yaml`, `redis.yaml`)
 - `istio/`
-  - `requestauthentication/`
-  - `authorizationpolicy/`
-  - `envoyfilter/`
-  - `virtualservices/`
-
+  - Istio policy, RequestAuthentication, EnvoyFilter, ServiceEntry, and SDS ConfigMap artifacts live here
 - `secrets/`
-  - `SecretProviderClass` manifests (Key Vault provider)
-  - Optional: any non-KV secrets generation templates
-
+  - Least-privileged `SecretProviderClass` manifests (one per workload, plus templates)
 - `overlays/`
-  - `dev/`, `staging/`, `prod/`
-  - Each overlay imports `../base` and applies environment-specific patches
+  - Environment-specific patches (dev, staging, prod) compose `base/`
 
-## Kustomize pattern
+## Kustomize best practices
 
-Use:
+- Keep each module’s `resources` array pointing to files within the module directory (no `../` escapes). This lets `kubectl kustomize` render anywhere under the module tree.
+- Use `apps/configs/` for shared operational resources so workloads can consume them via a single `apps` kustomization.
+- Prefer per-workload `SecretProviderClass` manifests in `secrets/` rather than a monolithic bundle.
 
-- `base/` for common resources
-- `overlays/<env>/` for:
-  - image tags
-  - replica counts
-  - issuer URLs
-  - feature flags
-  - environment-specific Istio policy
+## Naming reminders
 
-This keeps PRs smaller and avoids per-env drift.
-
-## Naming guidance
-
-- SecretProviderClass names: `<workload>-secrets-provider` (or similar)
-- Kubernetes Secret names: `<workload>-secrets` when possible
-- Avoid shared “mega” secrets; prefer workload-scoped secrets.
+- SecretProviderClass names: `<workload>-secrets-provider`
+- Kubernetes Secret names: `<workload>-secrets`
+- Avoid sharing secrets across unrelated workloads; keep blast radius small.
