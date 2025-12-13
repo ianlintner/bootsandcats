@@ -31,8 +31,8 @@ spec:
               issuer: "https://oauth2.cat-herding.net"
               remote_jwks:
                 http_uri:
-                  uri: "https://oauth2.cat-herding.net/oauth2/jwks"
-                  cluster: outbound|443||oauth2.cat-herding.net
+                  uri: "http://oauth2-server.default.svc.cluster.local:9000/oauth2/jwks"
+                  cluster: outbound|9000||oauth2-server.default.svc.cluster.local
                   timeout: 5s
                 cache_duration: 300s
               from_headers:
