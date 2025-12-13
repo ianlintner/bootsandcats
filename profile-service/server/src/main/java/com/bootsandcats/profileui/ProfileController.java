@@ -13,17 +13,17 @@ import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Delete;
 import io.micronaut.http.annotation.Get;
+import io.micronaut.http.annotation.Header;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.http.annotation.Put;
-import io.micronaut.http.annotation.Header;
 import io.micronaut.validation.Validated;
 import jakarta.validation.Valid;
 
 /**
  * Controller for current user profile operations.
  *
- * <p>Provides endpoints for users to view and manage their own profile.
- * Envoy OAuth2 filter handles authentication and extracts JWT claims to headers.
+ * <p>Provides endpoints for users to view and manage their own profile. Envoy OAuth2 filter handles
+ * authentication and extracts JWT claims to headers.
  */
 @Controller("/api")
 @Validated
@@ -41,8 +41,10 @@ public class ProfileController {
         // Envoy handles authentication - if request reaches here, user is authenticated
         return HttpResponse.ok(
                 Map.of(
-                        "authenticated", true,
-                        "message", "User authenticated via Envoy OAuth2 filter"));
+                        "authenticated",
+                        true,
+                        "message",
+                        "User authenticated via Envoy OAuth2 filter"));
     }
 
     /**
@@ -96,7 +98,8 @@ public class ProfileController {
 
         // Pre-populate email from JWT if not provided in request
         if ((request.getEmail() == null || request.getEmail().isBlank())
-                && email != null && !email.isBlank()) {
+                && email != null
+                && !email.isBlank()) {
             request.setEmail(email);
         }
 
@@ -113,8 +116,7 @@ public class ProfileController {
      */
     @Put(value = "/profile", produces = MediaType.APPLICATION_JSON)
     HttpResponse<?> updateProfile(
-            @Header("x-jwt-sub") String subject,
-            @Body @Valid ProfileRequest request) {
+            @Header("x-jwt-sub") String subject, @Body @Valid ProfileRequest request) {
         if (subject == null || subject.isBlank()) {
             return HttpResponse.unauthorized();
         }
