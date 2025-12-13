@@ -90,7 +90,7 @@ spec:
         - name: GH_REVIEW_ENVIRONMENT
           value: "k8s"
         - name: GH_REVIEW_ALLOW_ANONYMOUS
-          value: "false"
+          value: "true"
         readinessProbe:
           httpGet:
             path: /api/status
