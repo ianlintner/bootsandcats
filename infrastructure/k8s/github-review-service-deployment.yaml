@@ -103,6 +103,9 @@ spec:
         - name: secrets-store
           mountPath: "/mnt/secrets-store"
           readOnly: true
+        - name: rendered-sds
+          mountPath: "/etc/istio/oauth2"
+          readOnly: true
       volumes:
       - name: secrets-store
         csi:
