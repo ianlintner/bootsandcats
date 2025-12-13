@@ -16,9 +16,44 @@ spec:
         app: profile-service
       annotations:
         sidecar.istio.io/userVolumeMount: >-
-          [{"name":"secrets-store","mountPath":"/mnt/secrets-store","readonly":true},
-           {"name":"profile-oauth2-sds","mountPath":"/etc/istio/oauth2","readonly":true}]
+          [{"name":"rendered-sds","mountPath":"/etc/istio/oauth2","readonly":true}]
     spec:
+      initContainers:
+      - name: render-sds-config
+        image: busybox:latest
+        command: ['/bin/sh', '-c']
+        args:
+        - |
+          export PROFILE_CLIENT_SECRET=$(cat /mnt/secrets-store/profile-service-client-secret)
+          export PROFILE_OAUTH_HMAC_SECRET=$(cat /mnt/secrets-store/profile-service-oauth-hmac-secret)
+          
+          cat > /etc/istio/oauth2-rendered/profile-oauth2-sds.yaml <<'EOFCONFIG'
+          resources:
+          - "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret
+            name: profile-oauth-token
+            generic_secret:
+              secret:
+                inline_string: "REPLACE_CLIENT_SECRET"
+          - "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret
+            name: profile-oauth-hmac
+            generic_secret:
+              secret:
+                inline_string: "REPLACE_HMAC_SECRET"
+          EOFCONFIG
+          
+          sed -i "s|REPLACE_CLIENT_SECRET|$PROFILE_CLIENT_SECRET|g" /etc/istio/oauth2-rendered/profile-oauth2-sds.yaml
+          sed -i "s|REPLACE_HMAC_SECRET|$PROFILE_OAUTH_HMAC_SECRET|g" /etc/istio/oauth2-rendered/profile-oauth2-sds.yaml
+          
+          echo "SDS config rendered successfully"
+        volumeMounts:
+        - name: secrets-store
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
+        - name: profile-oauth2-sds-template
+          mountPath: "/etc/istio/oauth2-template"
+          readOnly: true
+        - name: rendered-sds
+          mountPath: "/etc/istio/oauth2-rendered"
       containers:
       - name: profile-service
         image: gabby.azurecr.io/profile-service:latest
@@ -73,9 +108,6 @@ spec:
         - name: secrets-store
           mountPath: "/mnt/secrets-store"
           readOnly: true
-        - name: profile-oauth2-sds
-          mountPath: "/etc/istio/oauth2"
-          readOnly: true
       volumes:
       - name: secrets-store
         csi:
@@ -83,9 +115,11 @@ spec:
           readOnly: true
           volumeAttributes:
             secretProviderClass: "oauth2-secrets-provider"
-      - name: profile-oauth2-sds
+      - name: profile-oauth2-sds-template
         configMap:
           name: profile-oauth2-sds
+      - name: rendered-sds
+        emptyDir: {}
       tolerations:
       - key: "kubernetes.azure.com/scalesetpriority"
         operator: "Equal"

@@ -10,12 +10,12 @@ data:
       name: profile-oauth-token
       generic_secret:
         secret:
-          filename: /mnt/secrets-store/profile-service-client-secret
+          inline_string: "${PROFILE_CLIENT_SECRET}"
     - "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret
       name: profile-oauth-hmac
       generic_secret:
         secret:
-          filename: /mnt/secrets-store/profile-service-oauth-hmac-secret
+          inline_string: "${PROFILE_OAUTH_HMAC_SECRET}"
 ---
 apiVersion: v1
 kind: ConfigMap
