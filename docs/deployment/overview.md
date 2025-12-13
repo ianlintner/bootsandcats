@@ -319,7 +319,7 @@ spec:
 #### PodDisruptionBudget
 
 ```yaml
-# pdb.yaml
+# infrastructure/k8s/apps/configs/pdb.yaml
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
@@ -436,7 +436,7 @@ kubectl apply -f deployment.yaml
 kubectl apply -f service.yaml
 kubectl apply -f ingress.yaml
 kubectl apply -f hpa.yaml
-kubectl apply -f pdb.yaml
+kubectl apply -f infrastructure/k8s/apps/configs/pdb.yaml
 kubectl apply -f networkpolicy.yaml
 
 # Verify deployment

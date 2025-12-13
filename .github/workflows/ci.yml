@@ -421,7 +421,7 @@ jobs:
 
       - name: Apply Flyway migrations ConfigMap
         run: |
-          kubectl apply -f infrastructure/k8s/flyway-migrations-configmap.yaml -n default
+          kubectl apply -f infrastructure/k8s/apps/configs/flyway-migrations-configmap.yaml -n default
 
       - name: Ensure oauth2-server deployment exists
         run: |

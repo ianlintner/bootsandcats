@@ -11,7 +11,7 @@ The chat application itself lives in a different repository, but **it reuses the
 
 The OAuth2 Authorization Server must have a confidential client registered.
 
-In this repo, it’s seeded via Flyway migrations in `infrastructure/k8s/flyway-migrations-configmap.yaml`:
+In this repo, it’s seeded via Flyway migrations in `infrastructure/k8s/apps/configs/flyway-migrations-configmap.yaml`:
 
 - `V13__add_chat_service_client.sql` seeds client `chat-service`
 - `V14__update_chat_service_client_secret.sql` sets a dev/test secret (`demo-chat-service-client-secret`)
@@ -45,13 +45,13 @@ This repo provides the manifest templates you can apply (or copy into the chat r
   - SecretProviderClass name: `azure-keyvault-chat-secrets`
   - Reads Key Vault secrets: `chat-client-secret`, `chat-oauth-hmac-secret`
 
-- `infrastructure/k8s/envoyfilter-chat-oauth2-exchange.yaml`
+- `infrastructure/k8s/istio/envoyfilter-chat-oauth2-exchange.yaml`
   - Envoy OAuth2 filter (authorization_code exchange)
 
-- `infrastructure/k8s/requestauthentication-chat.yaml`
+- `infrastructure/k8s/istio/requestauthentication-chat.yaml`
   - Istio JWT validation (JWKS from the auth server)
 
-- `infrastructure/k8s/envoyfilter-chat-jwt-to-headers.yaml`
+- `infrastructure/k8s/istio/envoyfilter-chat-jwt-to-headers.yaml`
   - Envoy JWT authn filter that forwards and maps claims to headers
 
 > IMPORTANT: In the chat repo, update the `workloadSelector` / `selector.matchLabels` to match the chat deployment labels.

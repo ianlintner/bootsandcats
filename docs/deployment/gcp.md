@@ -642,7 +642,7 @@ echo "Applying HPA..."
 kubectl apply -f hpa.yaml
 
 echo "Applying PDB..."
-kubectl apply -f pdb.yaml
+kubectl apply -f infrastructure/k8s/apps/configs/pdb.yaml
 
 echo "Waiting for deployment..."
 kubectl rollout status deployment/oauth2-server -n $NAMESPACE

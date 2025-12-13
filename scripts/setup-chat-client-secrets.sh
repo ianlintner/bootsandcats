@@ -5,7 +5,7 @@
 # - chat-client-secret       (OAuth2 confidential client secret; used by Envoy oauth2 filter token exchange)
 # - chat-oauth-hmac-secret   (HMAC key used by Envoy oauth2 filter cookie signing)
 #
-# Defaults are aligned with Flyway migration V14 in infrastructure/k8s/flyway-migrations-configmap.yaml
+# Defaults are aligned with Flyway migration V14 in infrastructure/k8s/apps/configs/flyway-migrations-configmap.yaml
 # so dev/test environments "just work" without needing to update the DB row.
 #
 # Prereqs:

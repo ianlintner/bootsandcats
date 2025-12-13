@@ -7,5 +7,5 @@ resources:
   - github-review-service
 
   # Shared operational resources
-  - ../flyway-migrations-configmap.yaml
-  - ../pdb.yaml
+  - configs/flyway-migrations-configmap.yaml
+  - configs/pdb.yaml

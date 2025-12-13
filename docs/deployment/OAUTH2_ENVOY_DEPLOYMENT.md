@@ -71,9 +71,9 @@ kubectl apply -k infrastructure/k8s
 ## Key Files Modified
 
 ### Infrastructure
-- `infrastructure/k8s/envoyfilter-profile-oauth2-exchange.yaml` ← NEW native filter
-- `infrastructure/k8s/envoyfilter-github-review-oauth2-exchange.yaml` ← NEW native filter
-- `infrastructure/k8s/envoy-oauth2-sds-configmap.yaml` ← NEW SDS config
+- `infrastructure/k8s/istio/envoyfilter-profile-oauth2-exchange.yaml` ← NEW native filter
+- `infrastructure/k8s/istio/envoyfilter-github-review-oauth2-exchange.yaml` ← NEW native filter
+- `infrastructure/k8s/istio/envoy-oauth2-sds-configmap.yaml` ← NEW SDS config
 - `infrastructure/k8s/secret-provider-class.yaml` ← Updated with new secrets
 - `infrastructure/k8s/secret-provider-class-github-review.yaml` ← Updated with HMAC secret
 - `infrastructure/k8s/apps/profile-service/profile-service-deployment.yaml` ← SDS volume mounts
