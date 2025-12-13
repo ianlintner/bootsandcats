@@ -28,6 +28,13 @@ spec:
           "@type": type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.JwtAuthentication
           providers:
             oauth2_jwt:
+              issuer: "https://oauth2.cat-herding.net"
+              remote_jwks:
+                http_uri:
+                  uri: "https://oauth2.cat-herding.net/oauth2/jwks"
+                  cluster: outbound|443||oauth2.cat-herding.net
+                  timeout: 5s
+                cache_duration: 300s
               from_headers:
               - name: Authorization
                 value_prefix: "Bearer "
@@ -43,9 +50,6 @@ spec:
                 claim_name: name
               - header_name: x-jwt-scope
                 claim_name: scope
-              # Skip JWT verification - OAuth2 server already validated it
-              local_jwks:
-                inline_string: '{"keys":[]}'
           rules:
           - match:
               prefix: "/"
