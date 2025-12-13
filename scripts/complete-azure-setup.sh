@@ -295,7 +295,7 @@ update_manifests() {
         log_warning "SecretProviderClass may need manual review"
     fi
 
-    if grep -q "AZURE_KEYVAULT_STATIC_JWK" "$PROJECT_ROOT/infrastructure/k8s/oauth2-server-deployment.yaml"; then
+    if grep -q "AZURE_KEYVAULT_STATIC_JWK" "$PROJECT_ROOT/infrastructure/k8s/apps/oauth2-server/oauth2-server-deployment.yaml"; then
         log_success "Deployment manifest includes JWK env var configuration"
     else
         log_warning "Deployment manifest may need manual review"

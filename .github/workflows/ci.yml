@@ -425,15 +425,15 @@ jobs:
 
       - name: Ensure oauth2-server deployment exists
         run: |
-          kubectl apply -f infrastructure/k8s/oauth2-server-deployment.yaml -n default
+          kubectl apply -f infrastructure/k8s/apps/oauth2-server/oauth2-server-deployment.yaml -n default
 
       - name: Ensure profile-service deployment exists
         run: |
-          kubectl apply -f infrastructure/k8s/profile-service-deployment.yaml -n default
+          kubectl apply -f infrastructure/k8s/apps/profile-service/profile-service-deployment.yaml -n default
 
       - name: Ensure github-review-service deployment exists
         run: |
-          kubectl apply -f infrastructure/k8s/github-review-service-deployment.yaml -n default
+          kubectl apply -f infrastructure/k8s/apps/github-review-service/github-review-service-deployment.yaml -n default
 
       - name: Deploy to AKS
         run: |
