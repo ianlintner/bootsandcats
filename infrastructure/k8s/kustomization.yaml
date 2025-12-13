@@ -22,7 +22,6 @@ resources:
   - flyway-migrations-configmap.yaml
   - istio-authz-policy.yaml
   - requestauthentication-profile.yaml
-  - requestauthentication-github-review.yaml
   - envoyfilter-profile-oauth2-exchange.yaml
   - envoyfilter-profile-jwt-to-headers.yaml
   - envoyfilter-github-review-oauth2-exchange.yaml
