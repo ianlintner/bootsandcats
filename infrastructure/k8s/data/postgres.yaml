@@ -83,15 +83,6 @@ spec:
     size: 4Gi
     storageClass: managed-premium
 
-  # Resource limits
-  resources:
-    requests:
-      memory: "128Mi"
-      cpu: "100m"
-    limits:
-      memory: "512Mi"
-      cpu: "250m"
-
   # Tolerate spot instances
   affinity:
     tolerations:

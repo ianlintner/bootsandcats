@@ -14,7 +14,7 @@ data:
       # Set default sidecar resource requests and limits
       resources:
         requests:
-          cpu: 10m
+          cpu: 5m
           memory: 32Mi
         limits:
           cpu: 100m
