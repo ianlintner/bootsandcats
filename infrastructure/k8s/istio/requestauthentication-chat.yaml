@@ -10,11 +10,11 @@ spec:
   # IMPORTANT: update this selector to match the chat app's workload labels in the other repo
   selector:
     matchLabels:
-      app: chat-backent
+      app: chat-backend
   jwtRules:
   - issuer: "https://oauth2.cat-herding.net"
     jwksUri: "http://oauth2-server.default.svc.cluster.local:9000/oauth2/jwks"
     audiences:
-    - "chat-backent"
+    - "chat-backend"
     - "m2m-client"
     outputPayloadToHeader: "x-jwt-payload"
