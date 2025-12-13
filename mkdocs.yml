@@ -91,7 +91,6 @@ nav:
   - Deployment:
     - Overview: deployment/overview.md
     - Azure (AKS): deployment/azure.md
-    - Google Cloud (GKE): deployment/gcp.md
     - AWS (EKS): deployment/aws.md
   - API Reference:
     - OpenAPI Documentation: api/openapi.md

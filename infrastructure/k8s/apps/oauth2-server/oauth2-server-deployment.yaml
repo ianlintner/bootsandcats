@@ -229,10 +229,6 @@ spec:
               key: redis-password
         - name: REDIS_SSL_ENABLED
           value: "false"
-        volumeMounts:
-        - name: keystore-volume
-          mountPath: "/mnt/keystore"
-          readOnly: true
         startupProbe:
           httpGet:
             path: /actuator/health/liveness
@@ -266,12 +262,6 @@ spec:
             drop:
             - ALL
       volumes:
-      - name: keystore-volume
-        csi:
-          driver: secrets-store.csi.k8s.io
-          readOnly: true
-          volumeAttributes:
-            secretProviderClass: oauth2-server-secrets-provider
       - name: flyway-migrations
         configMap:
           name: flyway-migrations
