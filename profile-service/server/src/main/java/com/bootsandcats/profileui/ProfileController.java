@@ -15,6 +15,7 @@ import io.micronaut.http.annotation.Delete;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.http.annotation.Put;
+import io.micronaut.http.annotation.Header;
 import io.micronaut.validation.Validated;
 import jakarta.validation.Valid;
 
@@ -22,7 +23,7 @@ import jakarta.validation.Valid;
  * Controller for current user profile operations.
  *
  * <p>Provides endpoints for users to view and manage their own profile.
- * Envoy OAuth2 filter handles authentication.
+ * Envoy OAuth2 filter handles authentication and extracts JWT claims to headers.
  */
 @Controller("/api")
 @Validated
@@ -47,16 +48,15 @@ public class ProfileController {
     /**
      * Get the current user's profile.
      *
-     * @param authentication the authenticated user
+     * @param subject the user subject from JWT (x-jwt-sub header)
      * @return the profile or 404 if not found
      */
     @Get(value = "/profile", produces = MediaType.APPLICATION_JSON)
-    HttpResponse<?> getProfile(Authentication authentication) {
-        if (authentication == null) {
+    HttpResponse<?> getProfile(@Header("x-jwt-sub") String subject) {
+        if (subject == null || subject.isBlank()) {
             return HttpResponse.unauthorized();
         }
 
-        String subject = AuthenticationHelper.getSubject(authentication);
         Optional<ProfileResponse> profile = profileService.getProfileBySubject(subject);
 
         if (profile.isPresent()) {
@@ -74,19 +74,19 @@ public class ProfileController {
     /**
      * Create a new profile for the current user.
      *
-     * @param authentication the authenticated user
+     * @param subject the user subject from JWT (x-jwt-sub header)
+     * @param email the user email from JWT (x-jwt-email header)
      * @param request the profile data
      * @return the created profile
      */
     @Post(value = "/profile", produces = MediaType.APPLICATION_JSON)
     HttpResponse<?> createProfile(
-            Authentication authentication, @Body @Valid ProfileRequest request) {
-        if (authentication == null) {
+            @Header("x-jwt-sub") String subject,
+            @Header(value = "x-jwt-email", defaultValue = "") String email,
+            @Body @Valid ProfileRequest request) {
+        if (subject == null || subject.isBlank()) {
             return HttpResponse.unauthorized();
         }
-
-        String subject = AuthenticationHelper.getSubject(authentication);
-        Long userId = AuthenticationHelper.getUserId(authentication).orElse(null);
 
         // Check if profile already exists
         if (profileService.profileExists(subject)) {
@@ -94,30 +94,30 @@ public class ProfileController {
                     Map.of("error", "conflict", "message", "Profile already exists"));
         }
 
-        // Pre-populate email from token if not provided
-        if (request.getEmail() == null || request.getEmail().isBlank()) {
-            AuthenticationHelper.getEmail(authentication).ifPresent(request::setEmail);
+        // Pre-populate email from JWT if not provided in request
+        if ((request.getEmail() == null || request.getEmail().isBlank())
+                && email != null && !email.isBlank()) {
+            request.setEmail(email);
         }
 
-        ProfileResponse profile = profileService.createProfile(subject, userId, request);
+        ProfileResponse profile = profileService.createProfile(subject, null, request);
         return HttpResponse.created(profile);
     }
 
     /**
      * Update the current user's profile.
      *
-     * @param authentication the authenticated user
+     * @param subject the user subject from JWT (x-jwt-sub header)
      * @param request the profile data
      * @return the updated profile
      */
     @Put(value = "/profile", produces = MediaType.APPLICATION_JSON)
     HttpResponse<?> updateProfile(
-            Authentication authentication, @Body @Valid ProfileRequest request) {
-        if (authentication == null) {
+            @Header("x-jwt-sub") String subject,
+            @Body @Valid ProfileRequest request) {
+        if (subject == null || subject.isBlank()) {
             return HttpResponse.unauthorized();
         }
-
-        String subject = AuthenticationHelper.getSubject(authentication);
 
         // Check if profile exists
         if (!profileService.profileExists(subject)) {
@@ -136,16 +136,14 @@ public class ProfileController {
     /**
      * Delete the current user's profile.
      *
-     * @param authentication the authenticated user
+     * @param subject the user subject from JWT (x-jwt-sub header)
      * @return success or not found
      */
     @Delete(value = "/profile", produces = MediaType.APPLICATION_JSON)
-    HttpResponse<?> deleteProfile(Authentication authentication) {
-        if (authentication == null) {
+    HttpResponse<?> deleteProfile(@Header("x-jwt-sub") String subject) {
+        if (subject == null || subject.isBlank()) {
             return HttpResponse.unauthorized();
         }
-
-        String subject = AuthenticationHelper.getSubject(authentication);
 
         if (profileService.deleteProfile(subject)) {
             return HttpResponse.ok(Map.of("deleted", true));

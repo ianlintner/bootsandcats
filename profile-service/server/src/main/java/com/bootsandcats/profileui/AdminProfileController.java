@@ -14,6 +14,7 @@ import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Delete;
 import io.micronaut.http.annotation.Get;
+import io.micronaut.http.annotation.Header;
 import io.micronaut.http.annotation.PathVariable;
 import io.micronaut.http.annotation.Put;
 import io.micronaut.http.annotation.QueryValue;
@@ -39,6 +40,7 @@ public class AdminProfileController {
     /**
      * List all profiles with pagination.
      *
+     * @param scopes the JWT scopes from x-jwt-scope header
      * @param page page number (0-based)
      * @param pageSize number of profiles per page
      * @param search optional search query
@@ -46,10 +48,15 @@ public class AdminProfileController {
      */
     @Get(produces = MediaType.APPLICATION_JSON)
     HttpResponse<?> listProfiles(
+            @Header(value = "x-jwt-scope", defaultValue = "") String scopes,
             @QueryValue(defaultValue = "0") int page,
             @QueryValue(defaultValue = "20") int pageSize,
             @QueryValue Optional<String> search) {
-        // Envoy handles authentication - if request reaches here, user is authenticated
+        // Check for admin scope
+        if (!scopes.contains("profile:admin")) {
+            return HttpResponse.status(io.micronaut.http.HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "forbidden", "message", "Admin access required"));
+        }
         }
 
         if (!AuthenticationHelper.isAdmin(authentication)) {
@@ -83,17 +90,16 @@ public class AdminProfileController {
     /**
      * Get a specific profile by ID.
      *
-     * @param authentication the authenticated admin
+     * @param scopes the JWT scopes from x-jwt-scope header
      * @param id the profile MongoDB ID
      * @return the profile or 404
      */
     @Get(value = "/{id}", produces = MediaType.APPLICATION_JSON)
-    HttpResponse<?> getProfile(Authentication authentication, @PathVariable String id) {
-        if (authentication == null) {
-            return HttpResponse.unauthorized();
-        }
-
-        if (!AuthenticationHelper.isAdmin(authentication)) {
+    HttpResponse<?> getProfile(
+            @Header(value = "x-jwt-scope", defaultValue = "") String scopes,
+            @PathVariable String id) {
+        // Check for admin scope
+        if (!scopes.contains("profile:admin")) {
             return HttpResponse.status(io.micronaut.http.HttpStatus.FORBIDDEN)
                     .body(
                             Map.of(
@@ -116,21 +122,18 @@ public class AdminProfileController {
     /**
      * Update a profile by ID.
      *
-     * @param authentication the authenticated admin
+     * @param scopes the JWT scopes from x-jwt-scope header
      * @param id the profile MongoDB ID
      * @param request the updated profile data
      * @return the updated profile
      */
     @Put(value = "/{id}", produces = MediaType.APPLICATION_JSON)
     HttpResponse<?> updateProfile(
-            Authentication authentication,
+            @Header(value = "x-jwt-scope", defaultValue = "") String scopes,
             @PathVariable String id,
             @Body @Valid ProfileRequest request) {
-        if (authentication == null) {
-            return HttpResponse.unauthorized();
-        }
-
-        if (!AuthenticationHelper.isAdmin(authentication)) {
+        // Check for admin scope
+        if (!scopes.contains("profile:admin")) {
             return HttpResponse.status(io.micronaut.http.HttpStatus.FORBIDDEN)
                     .body(
                             Map.of(
@@ -151,17 +154,16 @@ public class AdminProfileController {
     /**
      * Delete a profile by ID.
      *
-     * @param authentication the authenticated admin
+     * @param scopes the JWT scopes from x-jwt-scope header
      * @param id the profile MongoDB ID
      * @return success or not found
      */
     @Delete(value = "/{id}", produces = MediaType.APPLICATION_JSON)
-    HttpResponse<?> deleteProfile(Authentication authentication, @PathVariable String id) {
-        if (authentication == null) {
-            return HttpResponse.unauthorized();
-        }
-
-        if (!AuthenticationHelper.isAdmin(authentication)) {
+    HttpResponse<?> deleteProfile(
+            @Header(value = "x-jwt-scope", defaultValue = "") String scopes,
+            @PathVariable String id) {
+        // Check for admin scope
+        if (!scopes.contains("profile:admin")) {
             return HttpResponse.status(io.micronaut.http.HttpStatus.FORBIDDEN)
                     .body(
                             Map.of(
