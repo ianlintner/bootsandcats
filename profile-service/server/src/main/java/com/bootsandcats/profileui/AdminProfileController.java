@@ -57,17 +57,6 @@ public class AdminProfileController {
             return HttpResponse.status(io.micronaut.http.HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "forbidden", "message", "Admin access required"));
         }
-        }
-
-        if (!AuthenticationHelper.isAdmin(authentication)) {
-            return HttpResponse.status(io.micronaut.http.HttpStatus.FORBIDDEN)
-                    .body(
-                            Map.of(
-                                    "error",
-                                    "forbidden",
-                                    "message",
-                                    "Admin access required to list all profiles"));
-        }
 
         // Validate pagination params
         if (page < 0) {
