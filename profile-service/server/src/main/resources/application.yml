@@ -14,21 +14,9 @@ micronaut:
         paths: classpath:public
         mapping: /profile-app.js
   security:
-    enabled: true
-    # Authentication is fully handled by Envoy OAuth2 filter
-    # Application trusts that any request reaching it has been authenticated by Envoy
-    redirect:
-      enabled: false
-    reject-not-found: false
-    ip-patterns:
-      - 127.0.0.1
-      - ::1
-      - 0:0:0:0:0:0:0:1
-    # All routes allow anonymous since Envoy enforces authentication
-    intercept-url-map:
-      - pattern: /**
-        access:
-          - isAnonymous()
+    # Security completely disabled - Envoy OAuth2 filter handles all authentication
+    # Envoy validates the OAuth2 flow and only forwards authenticated requests
+    enabled: false
     # OAuth2 client disabled - using bearer token auth only
     # oauth2:
     #   clients:
