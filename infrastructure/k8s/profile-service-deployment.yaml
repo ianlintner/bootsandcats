@@ -20,31 +20,34 @@ spec:
     spec:
       initContainers:
       - name: render-sds-config
-        image: busybox:latest
+        image: python:3.11-alpine
         command: ['/bin/sh', '-c']
         args:
         - |
-          export PROFILE_CLIENT_SECRET=$(cat /mnt/secrets-store/profile-service-client-secret)
-          export PROFILE_OAUTH_HMAC_SECRET=$(cat /mnt/secrets-store/profile-service-oauth-hmac-secret)
+          python3 <<'EOFPYTHON'
+          import os
           
-          cat > /etc/istio/oauth2-rendered/profile-oauth2-sds.yaml <<'EOFCONFIG'
-          resources:
+          client_secret = open('/mnt/secrets-store/profile-service-client-secret').read().strip()
+          hmac_secret = open('/mnt/secrets-store/profile-service-oauth-hmac-secret').read().strip()
+          
+          config = f'''resources:
           - "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret
             name: profile-oauth-token
             generic_secret:
               secret:
-                inline_string: "REPLACE_CLIENT_SECRET"
+                inline_string: "{client_secret}"
           - "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret
             name: profile-oauth-hmac
             generic_secret:
               secret:
-                inline_string: "REPLACE_HMAC_SECRET"
-          EOFCONFIG
+                inline_string: "{hmac_secret}"
+          '''
           
-          sed -i "s|REPLACE_CLIENT_SECRET|$PROFILE_CLIENT_SECRET|g" /etc/istio/oauth2-rendered/profile-oauth2-sds.yaml
-          sed -i "s|REPLACE_HMAC_SECRET|$PROFILE_OAUTH_HMAC_SECRET|g" /etc/istio/oauth2-rendered/profile-oauth2-sds.yaml
+          with open('/etc/istio/oauth2-rendered/profile-oauth2-sds.yaml', 'w') as f:
+              f.write(config)
           
-          echo "SDS config rendered successfully"
+          print("SDS config rendered successfully")
+          EOFPYTHON
         volumeMounts:
         - name: secrets-store
           mountPath: "/mnt/secrets-store"
