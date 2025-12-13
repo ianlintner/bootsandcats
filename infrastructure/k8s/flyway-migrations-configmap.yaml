@@ -472,7 +472,7 @@ data:
         --   store it encoded (e.g., {bcrypt}...).
 
         UPDATE oauth2_registered_client
-        SET client_secret = '{noop}demo-gh-review-client-secret'
+        SET client_secret = '{noop}demo-github-review-client-secret'
         WHERE client_id = 'github-review-service';
 
     V12__update_profile_service_client_secret.sql: |
