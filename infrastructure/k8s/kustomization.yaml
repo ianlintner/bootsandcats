@@ -26,8 +26,14 @@ resources:
   - envoyfilter-profile-jwt-to-headers.yaml
   - envoyfilter-github-review-oauth2-exchange.yaml
   - envoyfilter-github-review-jwt-to-headers.yaml
-  - secret-provider-class.yaml
-  - secret-provider-class-github-review.yaml
+  - requestauthentication-chat.yaml
+  - envoyfilter-chat-oauth2-exchange.yaml
+  - envoyfilter-chat-jwt-to-headers.yaml
+  - secrets/secret-provider-class-oauth2-server.yaml
+  - secrets/secret-provider-class-profile-service.yaml
+  - secrets/secret-provider-class-redis.yaml
+  - secrets/secret-provider-class-github-review.yaml
+  - secrets/secret-provider-class-chat.yaml
   - envoy-oauth2-sds-configmap.yaml
 
 

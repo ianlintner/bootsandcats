@@ -79,7 +79,7 @@ spec:
         - name: REDIS_URI
           valueFrom:
             secretKeyRef:
-              name: redis-auth
+              name: profile-service-secrets
               key: redis-uri
         - name: AUTH_EVENTS_CONSUMER_ENABLED
           value: "true"
@@ -96,7 +96,7 @@ spec:
         - name: OAUTH2_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
-              name: oauth2-app-secrets
+              name: profile-service-secrets
               key: profile-service-client-secret
         # OpenTelemetry
         - name: OTEL_EXPORTER_OTLP_ENDPOINT
@@ -107,12 +107,12 @@ spec:
         - name: MONGODB_URI
           valueFrom:
             secretKeyRef:
-              name: oauth2-app-secrets
+              name: profile-service-secrets
               key: mongodb-uri
         - name: MONGODB_DATABASE
           valueFrom:
             secretKeyRef:
-              name: oauth2-app-secrets
+              name: profile-service-secrets
               key: mongodb-database
         volumeMounts:
         - name: secrets-store
@@ -124,7 +124,7 @@ spec:
           driver: secrets-store.csi.k8s.io
           readOnly: true
           volumeAttributes:
-            secretProviderClass: "oauth2-secrets-provider"
+            secretProviderClass: "profile-service-secrets-provider"
       - name: profile-oauth2-sds-template
         configMap:
           name: profile-oauth2-sds

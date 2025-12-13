@@ -219,16 +219,13 @@ spec:
         - name: SESSION_STORE_TYPE
           value: "redis"
         - name: REDIS_HOST
-          valueFrom:
-            secretKeyRef:
-              name: redis-auth
-              key: redis-host
+          value: "redis"
         - name: REDIS_PORT
           value: "6379"
         - name: REDIS_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: redis-auth
+              name: oauth2-app-secrets
               key: redis-password
         - name: REDIS_SSL_ENABLED
           value: "false"
@@ -274,7 +271,7 @@ spec:
           driver: secrets-store.csi.k8s.io
           readOnly: true
           volumeAttributes:
-            secretProviderClass: oauth2-secrets-provider
+            secretProviderClass: oauth2-server-secrets-provider
       - name: flyway-migrations
         configMap:
           name: flyway-migrations

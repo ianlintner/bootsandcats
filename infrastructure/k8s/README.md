@@ -8,27 +8,57 @@ This directory contains Kubernetes manifests for deploying the OAuth2 Authorizat
 - Azure Container Registry "gabby" with push permissions
 - kubectl configured with AKS context
 - **Secrets Store CSI Driver** and **Azure Key Vault Provider** installed (for keystore mounting)
-- **Managed Identity** with access to Azure Key Vault `oauth2-kv`
+- **Managed Identity / Workload Identity** with access to Azure Key Vault `inker-kv`
 
 ## Manifests
 
-### deployment.yaml
+This repo deploys via `kustomization.yaml` (see `infrastructure/k8s/kustomization.yaml`). The key manifests to know about:
 
-Contains:
-- **Deployment**: 2 replicas with liveness/readiness probes
-- **Service**: ClusterIP service on port 9000
-- **ConfigMap**: oauth2-config with issuer URL
-- **Secret**: oauth2-secrets with database credentials and OAuth2 secrets
-- **Volume Mount**: CSI driver for mounting TLS keystore from Azure Key Vault
+- `oauth2-server-deployment.yaml`: the Spring Authorization Server.
+- `secrets/secret-provider-class-oauth2-server.yaml`: Key Vault-backed secrets for the OAuth2 server.
+- `secrets/secret-provider-class-profile-service.yaml`: Key Vault-backed secrets for profile-service.
+- `secrets/secret-provider-class-redis.yaml`: Key Vault-backed secrets for Redis (password).
+- `secrets/secret-provider-class-chat.yaml`: Key Vault-backed secrets for the chat OAuth2 exchange filter.
+- `secrets/secret-provider-class-github-review.yaml`: Key Vault-backed secrets for the GitHub review service.
 
-### secret-provider-class.yaml
+### SecretProviderClass (Azure Key Vault)
 
-Defines how to fetch TLS keystore and password from Azure Key Vault `oauth2-kv`:
-- Mounts `oauth2-tls-keystore` (base64-encoded PKCS12)
-- Mounts `oauth2-tls-keystore-password`
-- Creates Kubernetes secret `oauth2-keystore-secret`
+We use the Secrets Store CSI driver + Azure Key Vault provider.
 
-For detailed keystore setup, see [Keystore Setup Guide](../docs/deployment/keystore-setup.md).
+- A `SecretProviderClass` defines which Key Vault objects to project.
+- Pods reference the class via a CSI volume (`secrets-store.csi.k8s.io`).
+- Optionally, a `SecretProviderClass` can also **sync** secrets into a namespace-scoped Kubernetes `Secret` via `secretObjects`, which is convenient for `env.valueFrom.secretKeyRef`.
+
+In this repo, the Key Vault is typically `inker-kv`.
+
+## Central Key Vault for OAuth2 client secrets (recommended)
+
+Yes — the best pattern is:
+
+1. **One central Azure Key Vault** as the source of truth for *all* OAuth2 client secrets.
+2. **Per-workload SecretProviderClass** that only references the specific secret(s) that workload needs.
+
+This gives you “central management” *without* handing every pod every client secret.
+
+### Why not one giant shared SecretProviderClass?
+
+You *can* create a single `SecretProviderClass` that syncs all client secrets into one Kubernetes `Secret`, and then have clients read only their key.
+
+Tradeoffs:
+
+- Pros: simplest wiring (one provider, one K8s Secret).
+- Cons: it collapses least-privilege boundaries; any pod that mounts the CSI volume would see all projected secret files, and operationally it encourages “everyone depends on the same mega-secret”.
+
+If you want clients to “grab their particular secret”, per-client/per-service SecretProviderClasses are the cleanest way to do that.
+
+### Naming convention
+
+Key Vault secret names should be predictable and unique. For example:
+
+- `oauth2-client-profile-service-secret`
+- `oauth2-client-chat-service-secret`
+
+This repo currently uses names like `profile-service-client-secret`, `chat-client-secret`, etc. That’s fine too—just keep them consistent.
 
 ## Initial Setup
 
@@ -40,21 +70,10 @@ kubectl create namespace oauth2
 
 ### 2. Update secrets
 
-Before deploying, update the secrets in `deployment.yaml`:
+In production, secrets should come from Azure Key Vault.
 
-```bash
-# Create/update secrets from a secure source
-kubectl create secret generic oauth2-secrets \
-  --from-literal=database-url='jdbc:postgresql://postgres:5432/oauth2db' \
-  --from-literal=database-username='oauth2user' \
-  --from-literal=database-password='YOUR_SECURE_PASSWORD' \
-  --from-literal=demo-client-secret='YOUR_SECURE_SECRET' \
-  --from-literal=m2m-client-secret='YOUR_SECURE_SECRET' \
-  --from-literal=demo-user-password='YOUR_SECURE_PASSWORD' \
-  --from-literal=admin-user-password='YOUR_SECURE_PASSWORD' \
-  -n default \
-  --dry-run=client -o yaml | kubectl apply -f -
-```
+- Upload/update secrets in Key Vault (see scripts under `scripts/` like `setup-chat-client-secrets.sh`).
+- Apply/refresh the relevant `SecretProviderClass` manifest(s).
 
 ### 3. Update ConfigMap
 
@@ -69,18 +88,10 @@ kubectl create configmap oauth2-config \
 
 ### 4. Deploy
 
+Deploy with kustomize:
+
 ```bash
-# Deploy all resources
-kubectl apply -f k8s/deployment.yaml
-
-# Check deployment status
-kubectl rollout status deployment/oauth2-server -n default
-
-# Check pods
-kubectl get pods -n default -l app=oauth2-server
-
-# Check service
-kubectl get service oauth2-server -n default
+kubectl apply -k infrastructure/k8s
 ```
 
 ## CI/CD Deployment
