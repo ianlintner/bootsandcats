@@ -24,13 +24,6 @@ def get_queue(settings: Settings = Depends(get_settings)) -> Queue:
     return Queue(settings.redis_queue_name, connection=connection)
 
 
-def _ensure_authenticated(settings: Settings, subject: Optional[str]):
-    if settings.allow_anonymous:
-        return
-    if not subject:
-        raise HTTPException(status_code=401, detail="Authentication required")
-
-
 @app.get("/api/status", response_model=Health)
 async def status() -> Health:
     return Health()
@@ -46,7 +39,6 @@ async def create_assessment(
     x_jwt_email: Optional[str] = Header(None),
 ):
     subject = x_jwt_username or x_jwt_email or x_jwt_sub
-    _ensure_authenticated(settings, subject)
 
     request_data = payload.model_dump()
     request_data["requested_by"] = subject
