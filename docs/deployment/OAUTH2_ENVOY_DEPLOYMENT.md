@@ -76,8 +76,8 @@ kubectl apply -k infrastructure/k8s
 - `infrastructure/k8s/envoy-oauth2-sds-configmap.yaml` ← NEW SDS config
 - `infrastructure/k8s/secret-provider-class.yaml` ← Updated with new secrets
 - `infrastructure/k8s/secret-provider-class-github-review.yaml` ← Updated with HMAC secret
-- `infrastructure/k8s/profile-service-deployment.yaml` ← SDS volume mounts
-- `infrastructure/k8s/github-review-service-deployment.yaml` ← SDS volume mounts
+- `infrastructure/k8s/apps/profile-service/profile-service-deployment.yaml` ← SDS volume mounts
+- `infrastructure/k8s/apps/github-review-service/github-review-service-deployment.yaml` ← SDS volume mounts
 - `infrastructure/k8s/kustomization.yaml` ← Registered new ConfigMap
 
 ### Database
