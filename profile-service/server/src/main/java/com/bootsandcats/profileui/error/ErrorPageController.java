@@ -11,11 +11,10 @@ import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Error;
 import io.micronaut.http.annotation.Produces;
 import io.micronaut.http.exceptions.HttpStatusException;
-import io.micronaut.security.authentication.AuthorizationException;
 
 /**
  * Serves a branded HTML error experience for browser users while preserving JSON responses for API
- * clients.
+ * clients. Envoy OAuth2 filter handles authentication.
  */
 @Controller
 public class ErrorPageController {
