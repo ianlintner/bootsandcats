@@ -15,8 +15,8 @@ micronaut:
         mapping: /profile-app.js
   security:
     enabled: true
-    # JWT validation is handled by Istio - we only read headers
-    # authentication: bearer (disabled - using IstioHeaderAuthenticationProvider)
+    # Authentication is fully handled by Envoy OAuth2 filter
+    # Application trusts that any request reaching it has been authenticated by Envoy
     redirect:
       enabled: false
     reject-not-found: false
@@ -24,81 +24,11 @@ micronaut:
       - 127.0.0.1
       - ::1
       - 0:0:0:0:0:0:0:1
-    # JWT validation disabled - Istio handles it and passes headers:
-    # x-jwt-sub, x-jwt-username, x-jwt-email, x-jwt-name, x-jwt-scope
-    # token:
-    #   jwt:
-    #     signatures:
-    #       jwks:
-    #         oauth2server:
-    #           url: ${OAUTH2_JWKS_URI:https://oauth2.cat-herding.net/oauth2/jwks}
+    # All routes allow anonymous since Envoy enforces authentication
     intercept-url-map:
-      - pattern: /api/status
-        http-method: GET
-        access:
-          - isAnonymous()
-      - pattern: /profile-app.js
-        http-method: GET
-        access:
-          - isAnonymous()
-      - pattern: /profile-app.js
-        http-method: HEAD
-        access:
-          - isAnonymous()
-      - pattern: /favicon.ico
-        http-method: GET
-        access:
-          - isAnonymous()
-      - pattern: /favicon.ico
-        http-method: HEAD
-        access:
-          - isAnonymous()
-      - pattern: /index.html
-        http-method: GET
-        access:
-          - isAnonymous()
-      - pattern: /index.html
-        http-method: HEAD
-        access:
-          - isAnonymous()
-      - pattern: /public/**
-        http-method: GET
-        access:
-          - isAnonymous()
-      - pattern: /actuator/health
-        http-method: GET
-        access:
-          - isAnonymous()
-      - pattern: /actuator/prometheus
-        http-method: GET
-        access:
-          - isAnonymous()
-      - pattern: /api/me
-        http-method: GET
-        access:
-          - isAuthenticated()
-      - pattern: /api/profile
-        http-method: GET
-        access:
-          - isAuthenticated()
-      - pattern: /api/profile
-        http-method: POST
-        access:
-          - isAuthenticated()
-      - pattern: /api/profile
-        http-method: PUT
-        access:
-          - isAuthenticated()
-      - pattern: /api/profile
-        http-method: DELETE
-        access:
-          - isAuthenticated()
-      - pattern: /api/admin/**
-        access:
-          - isAuthenticated()
       - pattern: /**
         access:
-          - isAuthenticated()
+          - isAnonymous()
     # OAuth2 client disabled - using bearer token auth only
     # oauth2:
     #   clients:
