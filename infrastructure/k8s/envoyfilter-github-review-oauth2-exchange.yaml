@@ -67,11 +67,11 @@ spec:
               token_secret:
                 name: github-review-oauth-token
                 sds_config:
-                  path: /etc/istio/oauth2/github-review-oauth2-sds.yaml
+                  path: /etc/istio/oauth2/github-review-oauth-token.yaml
               hmac_secret:
                 name: github-review-oauth-hmac
                 sds_config:
-                  path: /etc/istio/oauth2/github-review-oauth2-sds.yaml
+                  path: /etc/istio/oauth2/github-review-oauth-hmac.yaml
               cookie_names:
                 bearer_token: "_ghreview_session"
                 oauth_hmac: "_ghreview_oauth_hmac"

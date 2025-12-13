@@ -30,12 +30,16 @@ spec:
           client_secret = open('/mnt/secrets-store/profile-service-client-secret').read().strip()
           hmac_secret = open('/mnt/secrets-store/profile-service-oauth-hmac-secret').read().strip()
           
-          config = f'''resources:
+          # Create separate SDS files for token and hmac secrets
+          token_config = f'''resources:
           - "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret
             name: profile-oauth-token
             generic_secret:
               secret:
                 inline_string: "{client_secret}"
+          '''
+          
+          hmac_config = f'''resources:
           - "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret
             name: profile-oauth-hmac
             generic_secret:
@@ -43,10 +47,13 @@ spec:
                 inline_string: "{hmac_secret}"
           '''
           
-          with open('/etc/istio/oauth2-rendered/profile-oauth2-sds.yaml', 'w') as f:
-              f.write(config)
+          with open('/etc/istio/oauth2-rendered/profile-oauth-token.yaml', 'w') as f:
+              f.write(token_config)
           
-          print("SDS config rendered successfully")
+          with open('/etc/istio/oauth2-rendered/profile-oauth-hmac.yaml', 'w') as f:
+              f.write(hmac_config)
+          
+          print("SDS configs rendered successfully")
           EOFPYTHON
         volumeMounts:
         - name: secrets-store

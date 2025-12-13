@@ -67,11 +67,11 @@ spec:
               token_secret:
                 name: profile-oauth-token
                 sds_config:
-                  path: /etc/istio/oauth2/profile-oauth2-sds.yaml
+                  path: /etc/istio/oauth2/profile-oauth-token.yaml
               hmac_secret:
                 name: profile-oauth-hmac
                 sds_config:
-                  path: /etc/istio/oauth2/profile-oauth2-sds.yaml
+                  path: /etc/istio/oauth2/profile-oauth-hmac.yaml
               cookie_names:
                 bearer_token: "_profile_session"
                 oauth_hmac: "_profile_oauth_hmac"
