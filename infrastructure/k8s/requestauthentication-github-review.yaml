@@ -12,8 +12,7 @@ spec:
       app: github-review-service
   jwtRules:
   - issuer: "https://oauth2.cat-herding.net"
-    jwksUri: "https://oauth2.cat-herding.net/oauth2/jwks"
+    jwksUri: "http://oauth2-server.default.svc.cluster.local:9000/oauth2/jwks"
     audiences:
     - "github-review-service"
     - "m2m-client"
-    outputPayloadToHeader: "x-jwt-payload"

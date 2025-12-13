@@ -12,7 +12,7 @@ spec:
       app: profile-service
   jwtRules:
   - issuer: "https://oauth2.cat-herding.net"
-    jwksUri: "https://oauth2.cat-herding.net/oauth2/jwks"
+    jwksUri: "http://oauth2-server.default.svc.cluster.local:9000/oauth2/jwks"
     audiences:
     - "profile-service"
     - "m2m-client"
