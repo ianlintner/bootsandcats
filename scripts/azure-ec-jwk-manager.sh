@@ -30,7 +30,12 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 # Configuration
 VAULT_NAME="${AZURE_VAULT_NAME:-inker-kv}"
 SECRET_NAME="${AZURE_JWK_SECRET_NAME:-oauth2-jwk}"
-K8S_SECRET_NAME="oauth2-app-secrets"
+# NOTE:
+# - The canonical path is to store the JWK in Key Vault and let the CSI driver
+#   sync it into this Kubernetes Secret (see infrastructure/k8s/secrets/).
+# - The update-k8s command below is retained for emergencies/offline testing,
+#   but it bypasses Key Vault and can be overwritten by CSI sync.
+K8S_SECRET_NAME="oauth2-jwk-secret"
 K8S_NAMESPACE="${K8S_NAMESPACE:-default}"
 TEMP_DIR=$(mktemp -d)
 
@@ -222,11 +227,12 @@ update_k8s_secret() {
         return 1
     fi
 
-    log_info "Updating Kubernetes secret in namespace: $K8S_NAMESPACE"
+    log_warning "Updating Kubernetes secret directly (bypasses Key Vault): $K8S_SECRET_NAME"
+    log_info "Namespace: $K8S_NAMESPACE"
 
-    # Create or update the secret
+    # Create or update the secret (key name matches oauth2-server Deployment env var ref)
     if kubectl create secret generic "$K8S_SECRET_NAME" \
-        --from-file=jwk.json="$jwk_file" \
+        --from-file=static-jwk="$jwk_file" \
         --namespace="$K8S_NAMESPACE" \
         --dry-run=client -o yaml | kubectl apply -f - 2>/dev/null; then
         log_success "Kubernetes secret updated"
@@ -240,21 +246,12 @@ update_k8s_secret() {
 deploy_to_aks() {
     log_info "Deploying to AKS..."
 
-    # Update SecretProviderClass
-    log_info "Applying SecretProviderClass..."
-    if kubectl apply -f "$PROJECT_ROOT/k8s/secret-provider-class.yaml" &> /dev/null; then
-        log_success "SecretProviderClass applied"
+    # Apply the canonical kustomize entrypoint (includes secrets + deployments)
+    log_info "Applying Kubernetes manifests via kustomize..."
+    if kubectl apply -k "$PROJECT_ROOT/infrastructure/k8s" &> /dev/null; then
+        log_success "Manifests applied"
     else
-        log_error "Failed to apply SecretProviderClass"
-        return 1
-    fi
-
-    # Update Deployment
-    log_info "Applying Deployment..."
-    if kubectl apply -f "$PROJECT_ROOT/k8s/deployment.yaml" &> /dev/null; then
-        log_success "Deployment applied"
-    else
-        log_error "Failed to apply Deployment"
+        log_error "Failed to apply manifests (kustomize)"
         return 1
     fi
 

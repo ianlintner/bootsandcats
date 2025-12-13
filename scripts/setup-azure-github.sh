@@ -14,6 +14,9 @@ ACR_NAME="gabby"
 AKS_CLUSTER="bigboy"
 APP_NAME="oauth2-server-gh-actions"
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
 echo -e "${GREEN}=== OAuth2 Server Azure & GitHub Setup ===${NC}\n"
 
 # Check prerequisites
@@ -264,8 +267,8 @@ kubectl create configmap oauth2-config \
 echo -e "${GREEN}✓ Created oauth2-config${NC}"
 
 # Deploy the application
-echo -e "\n${YELLOW}Step 10: Deploying application to AKS...${NC}"
-kubectl apply -f k8s/deployment.yaml >/dev/null 2>&1 && echo -e "${GREEN}✓ Applied deployment.yaml${NC}" || echo -e "${YELLOW}Note: Deployment may not exist yet (will be created on first CI run)${NC}"
+echo -e "\n${YELLOW}Step 10: Deploying application to AKS (kustomize)...${NC}"
+kubectl apply -k "$PROJECT_ROOT/infrastructure/k8s" >/dev/null 2>&1 && echo -e "${GREEN}✓ Applied kustomize entrypoint${NC}" || echo -e "${YELLOW}Note: Apply failed (check cluster connectivity / kustomize output)${NC}"
 
 # Summary
 echo -e "\n${GREEN}=== Setup Complete! ===${NC}\n"
@@ -279,7 +282,7 @@ echo "  ✓ Repository: $REPO_OWNER/$REPO_NAME"
 echo "  ✓ Secrets configured (AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID, AZURE_RESOURCE_GROUP)"
 echo ""
 echo "Kubernetes Configuration:"
-echo "  ✓ Secret: oauth2-secrets"
+echo "  ✓ Secrets: sourced from Azure Key Vault via CSI driver"
 echo "  ✓ ConfigMap: oauth2-config"
 echo "  ✓ Issuer URL: $ISSUER_URL"
 echo ""

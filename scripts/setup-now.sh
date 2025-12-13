@@ -6,6 +6,9 @@ set -e
 echo "Starting OAuth2 Server Azure & GitHub Setup..."
 echo ""
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
 # Get Azure info
 echo "Getting Azure account info..."
 SUBSCRIPTION_ID=$(az account show --query id -o tsv 2>&1)
@@ -122,19 +125,8 @@ DEMO_USER_PASSWORD=$(openssl rand -base64 16 | tr -d /=+ | cut -c -16)
 ADMIN_USER_PASSWORD=$(openssl rand -base64 16 | tr -d /=+ | cut -c -16)
 echo ""
 
-# Create K8s secret
-echo "Creating Kubernetes secret..."
-kubectl create secret generic oauth2-secrets \
-    --from-literal=database-url='jdbc:postgresql://postgres.default.svc.cluster.local:5432/oauth2db' \
-    --from-literal=database-username='oauth2user' \
-    --from-literal=database-password="$DB_PASSWORD" \
-    --from-literal=demo-client-secret="$DEMO_CLIENT_SECRET" \
-    --from-literal=m2m-client-secret="$M2M_CLIENT_SECRET" \
-    --from-literal=demo-user-password="$DEMO_USER_PASSWORD" \
-    --from-literal=admin-user-password="$ADMIN_USER_PASSWORD" \
-    -n default \
-    --dry-run=client -o yaml | kubectl apply -f - 2>&1 >/dev/null
-echo "Kubernetes secret created"
+echo "NOTE: This repo now sources runtime secrets from Azure Key Vault via the Secrets Store CSI Driver."
+echo "      This script does not write application secrets to Kubernetes anymore."
 echo ""
 
 # Create K8s configmap
@@ -147,9 +139,9 @@ kubectl create configmap oauth2-config \
 echo "Kubernetes ConfigMap created"
 echo ""
 
-# Apply deployment
-echo "Applying Kubernetes deployment..."
-kubectl apply -f k8s/deployment.yaml 2>&1 || echo "Deployment will be created on first CI run"
+# Apply manifests via kustomize
+echo "Applying Kubernetes manifests (kustomize)..."
+kubectl apply -k "$PROJECT_ROOT/infrastructure/k8s" 2>&1 || echo "Apply failed (check cluster connectivity / kustomize output)"
 echo ""
 
 # Save credentials

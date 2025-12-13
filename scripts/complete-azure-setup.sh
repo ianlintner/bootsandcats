@@ -288,17 +288,17 @@ update_manifests() {
 
     log_info "Verifying Kubernetes manifests are up to date..."
 
-    # Check if manifests have JWK references
-    if grep -q "oauth2-jwk" "$PROJECT_ROOT/k8s/deployment.yaml"; then
-        log_success "Deployment manifest already includes JWK configuration"
-    else
-        log_warning "Deployment manifest may need manual review"
-    fi
-
-    if grep -q "oauth2-jwk" "$PROJECT_ROOT/k8s/secret-provider-class.yaml"; then
+    # Check if manifests have JWK references (new canonical paths)
+    if grep -q "oauth2-jwk" "$PROJECT_ROOT/infrastructure/k8s/secrets/secret-provider-class-oauth2-server.yaml"; then
         log_success "SecretProviderClass includes JWK configuration"
     else
         log_warning "SecretProviderClass may need manual review"
+    fi
+
+    if grep -q "AZURE_KEYVAULT_STATIC_JWK" "$PROJECT_ROOT/infrastructure/k8s/oauth2-server-deployment.yaml"; then
+        log_success "Deployment manifest includes JWK env var configuration"
+    else
+        log_warning "Deployment manifest may need manual review"
     fi
 
     echo
@@ -309,21 +309,12 @@ deploy_to_aks() {
 
     log_info "Applying Kubernetes manifests..."
 
-    # Apply SecretProviderClass
-    log_info "Applying SecretProviderClass..."
-    if kubectl apply -f "$PROJECT_ROOT/k8s/secret-provider-class.yaml" &> /dev/null; then
-        log_success "SecretProviderClass applied"
+    # Apply the canonical kustomize entrypoint (includes secrets + deployments)
+    log_info "Applying manifests via kustomize..."
+    if kubectl apply -k "$PROJECT_ROOT/infrastructure/k8s" &> /dev/null; then
+        log_success "Manifests applied"
     else
-        log_error "Failed to apply SecretProviderClass"
-        return 1
-    fi
-
-    # Apply Deployment
-    log_info "Applying Deployment..."
-    if kubectl apply -f "$PROJECT_ROOT/k8s/deployment.yaml" &> /dev/null; then
-        log_success "Deployment applied"
-    else
-        log_error "Failed to apply Deployment"
+        log_error "Failed to apply manifests"
         return 1
     fi
 
