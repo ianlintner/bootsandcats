@@ -47,10 +47,10 @@ spec:
                 inline_string: "{hmac_secret}"
           '''
           
-          with open('/etc/istio/oauth2-rendered/github-review-oauth-token.yaml', 'w') as f:
+          with open('/etc/istio/oauth2/github-review-oauth-token.yaml', 'w') as f:
               f.write(token_config)
           
-          with open('/etc/istio/oauth2-rendered/github-review-oauth-hmac.yaml', 'w') as f:
+          with open('/etc/istio/oauth2/github-review-oauth-hmac.yaml', 'w') as f:
               f.write(hmac_config)
           
           print("SDS configs rendered successfully")
@@ -63,7 +63,7 @@ spec:
           mountPath: "/etc/istio/oauth2-template"
           readOnly: true
         - name: rendered-sds
-          mountPath: "/etc/istio/oauth2-rendered"
+          mountPath: "/etc/istio/oauth2"
       containers:
       - name: github-review-service
         image: gabby.azurecr.io/github-review-service:latest
