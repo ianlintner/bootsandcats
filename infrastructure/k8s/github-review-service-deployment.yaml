@@ -16,9 +16,47 @@ spec:
         app: github-review-service
       annotations:
         sidecar.istio.io/userVolumeMount: >-
-          [{"name":"secrets-store","mountPath":"/mnt/secrets-store","readonly":true},
-           {"name":"github-review-oauth2-sds","mountPath":"/etc/istio/oauth2","readonly":true}]
+          [{"name":"rendered-sds","mountPath":"/etc/istio/oauth2","readonly":true}]
     spec:
+      initContainers:
+      - name: render-sds-config
+        image: python:3.11-alpine
+        command: ['/bin/sh', '-c']
+        args:
+        - |
+          python3 <<'EOFPYTHON'
+          import os
+          
+          client_secret = open('/mnt/secrets-store/github-review-client-secret').read().strip()
+          hmac_secret = open('/mnt/secrets-store/github-review-oauth-hmac-secret').read().strip()
+          
+          config = f'''resources:
+          - "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret
+            name: github-review-oauth-token
+            generic_secret:
+              secret:
+                inline_string: "{client_secret}"
+          - "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret
+            name: github-review-oauth-hmac
+            generic_secret:
+              secret:
+                inline_string: "{hmac_secret}"
+          '''
+          
+          with open('/etc/istio/oauth2-rendered/github-review-oauth2-sds.yaml', 'w') as f:
+              f.write(config)
+          
+          print("SDS config rendered successfully")
+          EOFPYTHON
+        volumeMounts:
+        - name: secrets-store
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
+        - name: github-review-oauth2-sds-template
+          mountPath: "/etc/istio/oauth2-template"
+          readOnly: true
+        - name: rendered-sds
+          mountPath: "/etc/istio/oauth2-rendered"
       containers:
       - name: github-review-service
         image: gabby.azurecr.io/github-review-service:latest
@@ -58,9 +96,6 @@ spec:
         - name: secrets-store
           mountPath: "/mnt/secrets-store"
           readOnly: true
-        - name: github-review-oauth2-sds
-          mountPath: "/etc/istio/oauth2"
-          readOnly: true
       volumes:
       - name: secrets-store
         csi:
@@ -68,9 +103,11 @@ spec:
           readOnly: true
           volumeAttributes:
             secretProviderClass: "github-review-secrets-provider"
-      - name: github-review-oauth2-sds
+      - name: github-review-oauth2-sds-template
         configMap:
           name: github-review-oauth2-sds
+      - name: rendered-sds
+        emptyDir: {}
       tolerations:
       - key: "kubernetes.azure.com/scalesetpriority"
         operator: "Equal"
