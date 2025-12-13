@@ -1,57 +1,6 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: default
-
-labels:
-  - pairs:
-      app.kubernetes.io/managed-by: kustomize
-      project: bootsandcats
-    includeSelectors: false
-    includeTemplates: true
-
+# Stable entrypoint: keep `kubectl apply -k infrastructure/k8s` working.
 resources:
-  - oauth2-server-deployment.yaml
-  - cnpg-operator.yaml
-  - postgres.yaml
-  - redis.yaml
-  - pdb.yaml
-  - profile-service-deployment.yaml
-  - github-review-service-deployment.yaml
-  - virtualservices.yaml
-  - flyway-migrations-configmap.yaml
-  - istio-authz-policy.yaml
-  - requestauthentication-profile.yaml
-  - envoyfilter-profile-oauth2-exchange.yaml
-  - envoyfilter-profile-jwt-to-headers.yaml
-  - envoyfilter-github-review-oauth2-exchange.yaml
-  - envoyfilter-github-review-jwt-to-headers.yaml
-  - requestauthentication-chat.yaml
-  - envoyfilter-chat-oauth2-exchange.yaml
-  - envoyfilter-chat-jwt-to-headers.yaml
-  - secrets/secret-provider-class-oauth2-server.yaml
-  - secrets/secret-provider-class-profile-service.yaml
-  - secrets/secret-provider-class-redis.yaml
-  - secrets/secret-provider-class-github-review.yaml
-  - secrets/secret-provider-class-chat.yaml
-  - envoy-oauth2-sds-configmap.yaml
-
-
-# You can add configMapGenerator/secretGenerator later if you want kustomize to build these dynamically
-# configMapGenerator:
-#   - name: oauth2-config
-#     literals:
-#       - issuer-url=https://oauth.bigboy.example.com
-# secretGenerator:
-#   - name: oauth2-secrets
-#     literals:
-#       - database-url=jdbc:postgresql://postgres:5432/oauth2db
-#       - database-username=oauth2user
-#       - database-password=CHANGEME
-#       - demo-client-secret=CHANGEME
-#       - m2m-client-secret=CHANGEME
-#       - demo-user-password=CHANGEME
-#       - admin-user-password=CHANGEME
-
-generatorOptions:
-  disableNameSuffixHash: true
+  - base
