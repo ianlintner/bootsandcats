@@ -6,7 +6,6 @@ import java.util.Optional;
 import com.bootsandcats.profileui.dto.ProfileListResponse;
 import com.bootsandcats.profileui.dto.ProfileRequest;
 import com.bootsandcats.profileui.dto.ProfileResponse;
-import com.bootsandcats.profileui.security.AuthenticationHelper;
 import com.bootsandcats.profileui.service.ProfileService;
 
 import io.micronaut.http.HttpResponse;
@@ -18,9 +17,6 @@ import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.PathVariable;
 import io.micronaut.http.annotation.Put;
 import io.micronaut.http.annotation.QueryValue;
-import io.micronaut.security.annotation.Secured;
-import io.micronaut.security.authentication.Authentication;
-import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.validation.Validated;
 import jakarta.validation.Valid;
 
@@ -28,11 +24,10 @@ import jakarta.validation.Valid;
  * Admin controller for managing all user profiles.
  *
  * <p>Provides endpoints for administrators to list, view, edit, and delete any user's profile.
- * Requires the profile:admin scope or admin role.
+ * Envoy OAuth2 filter handles authentication.
  */
 @Controller("/api/admin/profiles")
 @Validated
-@Secured(SecurityRule.IS_AUTHENTICATED)
 public class AdminProfileController {
 
     private final ProfileService profileService;
@@ -44,7 +39,6 @@ public class AdminProfileController {
     /**
      * List all profiles with pagination.
      *
-     * @param authentication the authenticated admin
      * @param page page number (0-based)
      * @param pageSize number of profiles per page
      * @param search optional search query
@@ -52,12 +46,10 @@ public class AdminProfileController {
      */
     @Get(produces = MediaType.APPLICATION_JSON)
     HttpResponse<?> listProfiles(
-            Authentication authentication,
             @QueryValue(defaultValue = "0") int page,
             @QueryValue(defaultValue = "20") int pageSize,
             @QueryValue Optional<String> search) {
-        if (authentication == null) {
-            return HttpResponse.unauthorized();
+        // Envoy handles authentication - if request reaches here, user is authenticated
         }
 
         if (!AuthenticationHelper.isAdmin(authentication)) {

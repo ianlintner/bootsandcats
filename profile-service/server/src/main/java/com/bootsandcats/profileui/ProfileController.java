@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import com.bootsandcats.profileui.dto.ProfileRequest;
 import com.bootsandcats.profileui.dto.ProfileResponse;
-import com.bootsandcats.profileui.security.AuthenticationHelper;
 import com.bootsandcats.profileui.service.ProfileService;
 
 import io.micronaut.http.HttpResponse;
@@ -16,21 +15,17 @@ import io.micronaut.http.annotation.Delete;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.http.annotation.Put;
-import io.micronaut.security.annotation.Secured;
-import io.micronaut.security.authentication.Authentication;
-import io.micronaut.security.rules.SecurityRule;
 import io.micronaut.validation.Validated;
 import jakarta.validation.Valid;
 
 /**
  * Controller for current user profile operations.
  *
- * <p>Provides endpoints for users to view and manage their own profile. Users must have the
- * profile:read scope to view and profile:write scope to modify their profile.
+ * <p>Provides endpoints for users to view and manage their own profile.
+ * Envoy OAuth2 filter handles authentication.
  */
 @Controller("/api")
 @Validated
-@Secured(SecurityRule.IS_AUTHENTICATED)
 public class ProfileController {
 
     private final ProfileService profileService;
@@ -39,19 +34,14 @@ public class ProfileController {
         this.profileService = profileService;
     }
 
-    /** Returns the authenticated user's OAuth2 token attributes. */
+    /** Returns a simple response indicating the service is authenticated. */
     @Get(value = "/me", produces = MediaType.APPLICATION_JSON)
-    HttpResponse<Map<String, Object>> me(Authentication authentication) {
-        if (authentication == null) {
-            return HttpResponse.unauthorized();
-        }
-
+    HttpResponse<Map<String, Object>> me() {
+        // Envoy handles authentication - if request reaches here, user is authenticated
         return HttpResponse.ok(
                 Map.of(
-                        "name", authentication.getName(),
-                        "attributes", authentication.getAttributes(),
-                        "scopes", AuthenticationHelper.getScopes(authentication),
-                        "hasProfile", profileService.profileExists(authentication.getName())));
+                        "authenticated", true,
+                        "message", "User authenticated via Envoy OAuth2 filter"));
     }
 
     /**

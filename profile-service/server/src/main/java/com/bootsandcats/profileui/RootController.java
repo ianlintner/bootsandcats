@@ -9,14 +9,11 @@ import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.Produces;
-import io.micronaut.security.annotation.Secured;
-import io.micronaut.security.rules.SecurityRule;
 
 /**
  * Root controller for the profile service.
  *
- * <p>Serves the static index.html for the root path. This controller ensures the root path is
- * handled consistently, whether requested by authenticated or unauthenticated users.
+ * <p>Serves the static index.html for the root path. Envoy OAuth2 filter handles authentication.
  */
 @Controller
 public class RootController {
@@ -43,7 +40,6 @@ public class RootController {
      */
     @Get("/")
     @Produces(MediaType.TEXT_HTML)
-    @Secured(SecurityRule.IS_AUTHENTICATED)
     HttpResponse<String> index() {
         if (INDEX_HTML != null) {
             return HttpResponse.ok(INDEX_HTML);
