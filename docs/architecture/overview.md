@@ -13,16 +13,20 @@ graph TB
         Partner[Partner APIs]
     end
     
-    subgraph "Load Balancer / Ingress"
-        LB[Cloud Load Balancer]
-        Ingress[Kubernetes Ingress]
+    subgraph "Ingress"
+        LB[Azure Front Door / App Gateway]
+        Ingress[Istio IngressGateway]
     end
     
-    subgraph "Kubernetes Cluster"
+    subgraph "AKS + Istio"
         subgraph "OAuth2 Namespace"
             Pod1[OAuth2 Server Pod 1]
             Pod2[OAuth2 Server Pod 2]
             Pod3[OAuth2 Server Pod N]
+        end
+        
+        subgraph "Istio Service Mesh"
+            Sidecars[Envoy Sidecars (OAuth2 + JWT filters)]
         end
         
         subgraph "Observability"
@@ -33,11 +37,11 @@ graph TB
         end
     end
     
-    subgraph "Managed Services"
-        DB[(PostgreSQL)]
-        Cache[(Redis)]
-        Secrets[Secret Manager]
-        KMS[Key Management]
+    subgraph "Azure Managed Services"
+        DB[(Azure Database for PostgreSQL)]
+        Cache[(Azure Cache for Redis)]
+        Secrets[Azure Key Vault]
+        KMS[Managed Identity]
     end
     
     SPA --> LB
@@ -122,6 +126,14 @@ graph LR
 > local development, tests, and demos, but **not** for production. For production deployments,
 > plan to replace the in-memory user store and token storage with persistent implementations
 > backed by your identity store and database.
+
+    ## Service Mesh + Envoy Filters
+
+    - **Istio sidecars on AKS** enforce ingress and egress policy while keeping TLS and mTLS consistent.
+    - **Envoy OAuth2 filter** (native `envoy.filters.http.oauth2`) handles browser login for downstream services (profile, chat, GitHub review) using the authorization server.
+    - **Envoy JWT authn filter** validates tokens via JWKS from the authorization server; headers are propagated to apps via header-to-metadata patches.
+    - **Secrets delivery** uses Azure Key Vault + Secrets Store CSI Driver; SDS configmaps expose OAuth2 client secrets and HMAC keys to Envoy.
+    - **RequestAuthentication** resources validate JWTs; EnvoyFilters map selected claims to headers to keep apps stateless.
 
 ## Request Flow Architecture
 

@@ -858,7 +858,6 @@ echo "ALB URL: $(kubectl get ingress oauth2-server -n $NAMESPACE -o jsonpath='{.
 
 ## Next Steps
 
-- [Azure Deployment](azure.md) - Alternative deployment on Azure
-- [GCP Deployment](gcp.md) - Alternative deployment on GCP
+- [Azure Deployment](azure.md) - Canonical deployment on AKS
 - [Observability](../observability/overview.md) - Configure monitoring
 - [Operations](../operations/slos.md) - SLOs and runbooks

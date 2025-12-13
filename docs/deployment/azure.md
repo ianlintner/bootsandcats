@@ -761,7 +761,6 @@ curl https://auth.example.com/.well-known/openid-configuration
 
 ## Next Steps
 
-- [GCP Deployment](gcp.md) - Alternative deployment on Google Cloud
-- [AWS Deployment](aws.md) - Alternative deployment on AWS
 - [Observability](../observability/overview.md) - Configure monitoring
 - [Operations](../operations/slos.md) - SLOs and runbooks
+- [AWS Deployment](aws.md) - Legacy reference if needed

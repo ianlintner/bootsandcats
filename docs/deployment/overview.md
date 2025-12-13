@@ -383,13 +383,13 @@ spec:
 
 ## Pre-Deployment Checklist
 
-### Infrastructure
+### Infrastructure (Azure AKS)
 
-- [ ] Kubernetes cluster provisioned
-- [ ] Ingress controller installed (nginx, istio, etc.)
+- [ ] AKS cluster provisioned with Istio service mesh
+- [ ] Istio ingress gateway deployed (Envoy-based)
 - [ ] cert-manager installed for TLS certificates
-- [ ] DNS configured for auth domain
-- [ ] Network policies supported by CNI
+- [ ] DNS configured for auth domain (Front Door/App Gateway → Istio IngressGateway)
+- [ ] Network policies supported by CNI (Azure CNI + network policy)
 
 ### Database
 
@@ -401,12 +401,14 @@ spec:
 
 ### Secrets Management
 
-- [ ] Secret Manager configured (AWS Secrets Manager, GCP Secret Manager, Azure Key Vault)
+- [ ] Azure Key Vault configured with managed identity access from AKS node pool
 - [ ] Secrets created for:
-    - [ ] `DATABASE_PASSWORD`
-    - [ ] `OAUTH2_DEMO_CLIENT_SECRET`
-    - [ ] `OAUTH2_M2M_CLIENT_SECRET`
-- [ ] External Secrets Operator installed (optional)
+  - [ ] `DATABASE_PASSWORD`
+  - [ ] `OAUTH2_DEMO_CLIENT_SECRET`
+  - [ ] `OAUTH2_M2M_CLIENT_SECRET`
+  - [ ] Envoy OAuth2 client secret + cookie HMAC
+- [ ] Secrets Store CSI Driver + Azure provider installed
+- [ ] SDS configmaps for Envoy filters rendered from Key Vault secrets
 
 ### Observability
 
@@ -456,9 +458,8 @@ curl http://localhost:9000/actuator/health
 
 For detailed cloud-specific deployment instructions, see:
 
-- [Azure AKS Deployment](azure.md) - Azure Kubernetes Service with Azure Database for PostgreSQL and Azure Cache for Redis
-- [Google Cloud GKE Deployment](gcp.md) - Google Kubernetes Engine with Cloud SQL and Memorystore
-- [AWS EKS Deployment](aws.md) - Elastic Kubernetes Service with RDS and ElastiCache
+- [Azure AKS Deployment](azure.md) - Azure Kubernetes Service with Azure Database for PostgreSQL, Azure Cache for Redis, Key Vault CSI, and Istio/Envoy filters
+- [AWS EKS Deployment](aws.md) - Elastic Kubernetes Service with RDS and ElastiCache (legacy reference)
 
 ## Production Recommendations
 
@@ -491,8 +492,7 @@ For detailed cloud-specific deployment instructions, see:
 
 ## Next Steps
 
-- [Azure Deployment](azure.md) - Deploy to Azure AKS
-- [GCP Deployment](gcp.md) - Deploy to Google Cloud GKE
-- [AWS Deployment](aws.md) - Deploy to Amazon EKS
+- [Azure Deployment](azure.md) - Deploy to Azure AKS with Istio/Envoy filters
+- [AWS Deployment](aws.md) - Deploy to Amazon EKS (legacy)
 - [Observability Setup](../observability/overview.md) - Configure monitoring
 - [Operations Guide](../operations/slos.md) - SLOs and runbooks

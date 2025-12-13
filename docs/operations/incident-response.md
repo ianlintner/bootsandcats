@@ -415,7 +415,7 @@ Key takeaways from this incident.
 | Grafana | Dashboards | Viewer |
 | PagerDuty | Alerting | Responder |
 | Slack | Communication | Member |
-| AWS/GCP/Azure | Infrastructure | Power User |
+| Azure | Infrastructure | Power User |
 
 ### Incident Tools
 

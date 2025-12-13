@@ -80,20 +80,6 @@ az postgres flexible-server backup create \
   --backup-name manual-$(date +%Y%m%d-%H%M%S)
 ```
 
-**Google Cloud SQL:**
-
-```bash
-# Check backup configuration
-gcloud sql instances describe oauth2-postgres \
-  --format='value(settings.backupConfiguration)'
-
-# List backups
-gcloud sql backups list --instance=oauth2-postgres
-
-# Create on-demand backup
-gcloud sql backups create --instance=oauth2-postgres
-```
-
 ### Manual Database Backup
 
 ```bash
@@ -179,15 +165,6 @@ az postgres flexible-server restore \
   --name oauth2-postgres-restored \
   --source-server oauth2-postgres \
   --restore-time "2024-01-15T10:00:00Z"
-```
-
-**Google Cloud SQL:**
-
-```bash
-# Restore from backup
-gcloud sql backups restore <BACKUP_ID> \
-  --restore-instance=oauth2-postgres-restored \
-  --backup-instance=oauth2-postgres
 ```
 
 ### Restore from pg_dump

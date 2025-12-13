@@ -191,14 +191,6 @@ az postgres flexible-server update \
   --sku-name Standard_D4s_v3
 ```
 
-**Google Cloud SQL:**
-
-```bash
-# Scale Cloud SQL
-gcloud sql instances patch oauth2-postgres \
-  --tier db-custom-4-16384
-```
-
 ---
 
 ## Node Pool Scaling
@@ -238,16 +230,6 @@ az aks nodepool update \
   --name default \
   --min-count 5 \
   --max-count 15
-```
-
-**Google GKE:**
-
-```bash
-# Scale GKE node pool
-gcloud container clusters resize oauth2-gke-cluster \
-  --node-pool default-pool \
-  --num-nodes 8 \
-  --region us-central1
 ```
 
 ---

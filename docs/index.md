@@ -46,11 +46,12 @@ graph TB
 | **OAuth2 2.1 Compliant** | Full compliance with OAuth2 2.1 specification |
 | **OpenID Connect (OIDC)** | OIDC 1.0 support with discovery endpoint |
 | **PKCE Support** | Proof Key for Code Exchange for public clients |
-| **JWT Tokens** | RSA-signed JWT access tokens |
+| **JWT Tokens** | ES256/RS256-signed JWT access tokens |
 | **Multiple Grant Types** | Authorization Code, Client Credentials, Refresh Token |
+| **Envoy Native Filters** | Istio/Envoy OAuth2 + JWT filters for downstream services |
 | **OpenTelemetry** | Distributed tracing and metrics |
 | **Prometheus Metrics** | Ready for Grafana dashboards |
-| **Kubernetes Ready** | Health probes, graceful shutdown, container-optimized |
+| **AKS + Istio Ready** | Health probes, graceful shutdown, Azure-first Kubernetes setup |
 
 ## Quick Links
 
@@ -76,7 +77,7 @@ graph TB
 
     ---
 
-    Deploy to Azure, GCP, or AWS Kubernetes clusters
+    Deploy to Azure Kubernetes Service (AKS) with Istio + Envoy filters
 
     [:octicons-arrow-right-24: Deployment Guide](deployment/overview.md)
 
