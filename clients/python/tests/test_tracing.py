@@ -23,13 +23,13 @@ class TestTracedApiCallDecorator:
 
     def test_noop_decorator_when_tracing_unavailable(self):
         """When tracing is unavailable, decorator should be a no-op."""
-        
+
         def sample_function(x: int) -> int:
             return x * 2
-        
+
         # Create a mock tracer (will be ignored if tracing unavailable)
         mock_tracer = None
-        
+
         if not TRACING_AVAILABLE:
             decorated = traced_api_call(mock_tracer, "test-operation")(sample_function)
             assert decorated(5) == 10
@@ -41,13 +41,13 @@ class TestTracedApiClient:
 
     def test_attribute_delegation(self):
         """TracedApiClient should delegate attribute access to wrapped API."""
-        
+
         class MockApi:
             value = 42
-            
+
             def get_value(self) -> int:
                 return self.value
-        
+
         mock_api = MockApi()
         # Using None as tracer since we're testing delegation, not tracing
         if not TRACING_AVAILABLE:

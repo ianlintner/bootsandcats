@@ -110,8 +110,10 @@ def traced_api_call(tracer: Any, operation_name: str) -> Callable[[F], F]:
             return api.get_user_info()
     """
     if not TRACING_AVAILABLE:
+
         def noop_decorator(func: F) -> F:
             return func
+
         return noop_decorator
 
     def decorator(func: F) -> F:

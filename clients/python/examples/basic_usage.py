@@ -22,28 +22,28 @@ def basic_usage():
     """Basic usage example without tracing."""
     print("Basic OAuth2 Client Usage")
     print("=" * 40)
-    
+
     # Create configuration
     config = Configuration(
         base_url=os.environ.get("OAUTH2_SERVER_URL", "http://localhost:9000"),
         access_token="your-access-token",  # Replace with actual token
     )
-    
+
     # Create API client
     client = ApiClient(config)
-    
+
     # Create API instances
     discovery_api = DiscoveryApi(client)
     token_api = TokenApi(client)
     userinfo_api = UserInfoApi(client)
-    
+
     print(f"API client created for: {config.base_url}")
-    
+
     # Example: Get OpenID Configuration (discovery)
     # openid_config = discovery_api.get_openid_configuration()
     # print(f"Issuer: {openid_config.issuer}")
     # print(f"Authorization endpoint: {openid_config.authorization_endpoint}")
-    
+
     # Example: Exchange authorization code for tokens
     # tokens = token_api.exchange_code(
     #     code="authorization-code",
@@ -51,7 +51,7 @@ def basic_usage():
     #     client_id="your-client-id",
     # )
     # print(f"Access token: {tokens.access_token}")
-    
+
     # Example: Get user info
     # user_info = userinfo_api.get_user_info()
     # print(f"User: {user_info.name}")
@@ -61,41 +61,40 @@ def usage_with_tracing():
     """Example with OpenTelemetry tracing."""
     print("\nOAuth2 Client with Tracing")
     print("=" * 40)
-    
+
     # Initialize tracing
     tracer, shutdown = setup_tracing(
         service_name="oauth2-client-example",
         service_version="1.0.0",
         exporter_url=os.environ.get(
-            "OTEL_EXPORTER_OTLP_ENDPOINT",
-            "http://localhost:4318/v1/traces"
+            "OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318/v1/traces"
         ),
     )
-    
+
     print("Tracing initialized successfully")
-    
+
     # Create configuration
     config = Configuration(
         base_url=os.environ.get("OAUTH2_SERVER_URL", "http://localhost:9000"),
     )
-    
+
     # Create traced API client
     client = ApiClient(config)
     discovery_api = DiscoveryApi(client)
-    
+
     # Use traced API call decorator
     @traced_api_call("get_openid_configuration")
     def get_openid_config():
         # return discovery_api.get_openid_configuration()
         pass  # Uncomment above when API is implemented
-    
+
     print("Traced API client created")
-    
+
     # Example of manual tracing
     with tracer.start_as_current_span("example-operation") as span:
         span.set_attribute("example.key", "example.value")
         print("Span created successfully")
-    
+
     # Cleanup
     shutdown()
     print("Tracing shutdown complete")
@@ -103,7 +102,7 @@ def usage_with_tracing():
 
 if __name__ == "__main__":
     basic_usage()
-    
+
     try:
         usage_with_tracing()
     except ImportError as e:

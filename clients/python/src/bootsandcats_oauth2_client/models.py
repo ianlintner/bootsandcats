@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 
 class TokenResponse(BaseModel):
     """OAuth2 Token Response."""
-    
+
     access_token: str
     token_type: str
     expires_in: Optional[int] = None
@@ -26,7 +26,7 @@ class TokenResponse(BaseModel):
 
 class TokenRequest(BaseModel):
     """OAuth2 Token Request."""
-    
+
     grant_type: str
     code: Optional[str] = None
     redirect_uri: Optional[str] = None
@@ -39,7 +39,7 @@ class TokenRequest(BaseModel):
 
 class OpenIDConfiguration(BaseModel):
     """OpenID Connect Discovery Document."""
-    
+
     issuer: str
     authorization_endpoint: str
     token_endpoint: str
@@ -59,7 +59,7 @@ class OpenIDConfiguration(BaseModel):
 
 class UserInfo(BaseModel):
     """User Info Response."""
-    
+
     sub: str
     name: Optional[str] = None
     given_name: Optional[str] = None
@@ -74,7 +74,7 @@ class UserInfo(BaseModel):
 
 class OAuth2Error(BaseModel):
     """OAuth2 Error Response."""
-    
+
     error: str
     error_description: Optional[str] = None
     error_uri: Optional[str] = None
@@ -83,7 +83,7 @@ class OAuth2Error(BaseModel):
 
 class ClientRegistrationRequest(BaseModel):
     """Client Registration Request."""
-    
+
     redirect_uris: List[str]
     client_name: Optional[str] = None
     client_uri: Optional[str] = None
@@ -103,7 +103,7 @@ class ClientRegistrationRequest(BaseModel):
 
 class ClientRegistrationResponse(BaseModel):
     """Client Registration Response."""
-    
+
     client_id: str
     client_secret: Optional[str] = None
     client_id_issued_at: Optional[int] = None
@@ -127,7 +127,7 @@ class ClientRegistrationResponse(BaseModel):
 
 class JWK(BaseModel):
     """JSON Web Key."""
-    
+
     kty: str
     use: Optional[str] = None
     key_ops: Optional[List[str]] = None
@@ -148,20 +148,20 @@ class JWK(BaseModel):
 
 class JWKS(BaseModel):
     """JSON Web Key Set."""
-    
+
     keys: List[JWK]
 
 
 class IntrospectionRequest(BaseModel):
     """Introspection Request."""
-    
+
     token: str
     token_type_hint: Optional[str] = None
 
 
 class IntrospectionResponse(BaseModel):
     """Introspection Response."""
-    
+
     active: bool
     scope: Optional[str] = None
     client_id: Optional[str] = None
@@ -178,7 +178,7 @@ class IntrospectionResponse(BaseModel):
 
 class RevocationRequest(BaseModel):
     """Revocation Request."""
-    
+
     token: str
     token_type_hint: Optional[str] = None
 
