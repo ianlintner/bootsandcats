@@ -10,7 +10,7 @@ spec:
   # IMPORTANT: update this selector to match the chat app's workload labels in the other repo
   workloadSelector:
     labels:
-      app: chat-service
+      app: chat-backent
   configPatches:
   - applyTo: HTTP_FILTER
     match:

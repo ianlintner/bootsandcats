@@ -56,7 +56,7 @@ If you want clients to “grab their particular secret”, per-client/per-servic
 Key Vault secret names should be predictable and unique. For example:
 
 - `oauth2-client-profile-service-secret`
-- `oauth2-client-chat-service-secret`
+- `oauth2-client-chat-backent-secret`
 
 This repo currently uses names like `profile-service-client-secret`, `chat-client-secret`, etc. That’s fine too—just keep them consistent.
 

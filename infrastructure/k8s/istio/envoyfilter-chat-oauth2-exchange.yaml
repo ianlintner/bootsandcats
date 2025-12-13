@@ -10,7 +10,7 @@ spec:
   # IMPORTANT: update this selector to match the chat app's workload labels in the other repo
   workloadSelector:
     labels:
-      app: chat-service
+      app: chat-backent
   configPatches:
   - applyTo: CLUSTER
     match:
@@ -64,7 +64,7 @@ spec:
             default_expires_in: 900s
             csrf_token_expires_in: 600s
             credentials:
-              client_id: chat-service
+              client_id: chat-backent
               token_secret:
                 name: chat-oauth-token
                 sds_config:
