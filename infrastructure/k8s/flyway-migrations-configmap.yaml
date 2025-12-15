@@ -490,7 +490,7 @@ data:
         WHERE client_id = 'profile-service';
 
     V13__add_chat_service_client.sql: |
-        -- Seed chat-backent confidential client for Envoy authorization-code token exchange
+        -- Seed chat-backend confidential client for Envoy authorization-code token exchange
         --
         -- The chat application will run at:
         --   https://chat.cat-herding.net
@@ -520,8 +520,8 @@ data:
                 client_settings,
                 token_settings
         ) VALUES (
-                'chat-backent-client-001',
-                'chat-backent',
+                'chat-backend-client-001',
+                'chat-backend',
                 CURRENT_TIMESTAMP,
                 '{noop}REPLACE_WITH_CHAT_SERVICE_CLIENT_SECRET',
                 NULL,
@@ -544,7 +544,7 @@ data:
                 token_settings = EXCLUDED.token_settings;
 
     V14__update_chat_service_client_secret.sql: |
-        -- Update chat-backent confidential client secret to a known demo value.
+        -- Update chat-backend confidential client secret to a known demo value.
         --
         -- NOTE:
         -- - V13 initially inserted a placeholder secret.
@@ -555,5 +555,5 @@ data:
         -- - In production, replace with a strong secret from Azure Key Vault and store it encoded (e.g., {bcrypt}...).
 
         UPDATE oauth2_registered_client
-        SET client_secret = '{noop}demo-chat-backent-client-secret'
-        WHERE client_id = 'chat-backent';
+        SET client_secret = '{noop}demo-chat-backend-client-secret'
+        WHERE client_id = 'chat-backend';

@@ -3,3 +3,6 @@ kind: Kustomization
 
 resources:
   - profile-service-deployment.yaml
+
+patchesStrategicMerge:
+  - profile-service-oauth2-patch.yaml

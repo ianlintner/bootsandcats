@@ -5,8 +5,6 @@ resources:
   - istio-proxy-config.yaml
   - istio-authz-policy.yaml
   - requestauthentication-profile.yaml
-  - envoyfilter-profile-oauth2-exchange.yaml
-  - envoyfilter-profile-jwt-to-headers.yaml
   - requestauthentication-github-review.yaml
   - envoyfilter-github-review-oauth2-exchange.yaml
   - envoyfilter-github-review-jwt-to-headers.yaml
@@ -16,3 +14,5 @@ resources:
   - envoy-oauth2-sds-configmap.yaml
   - serviceentry-oauth2.yaml
   - virtualservices.yaml
+  - envoyfilter-profile-service-oauth2-exchange.yaml
+  - envoyfilter-profile-service-jwt-to-headers.yaml

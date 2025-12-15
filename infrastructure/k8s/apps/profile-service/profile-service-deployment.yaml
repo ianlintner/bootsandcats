@@ -14,56 +14,7 @@ spec:
     metadata:
       labels:
         app: profile-service
-      annotations:
-        sidecar.istio.io/userVolumeMount: >-
-          [{"name":"rendered-sds","mountPath":"/etc/istio/oauth2","readonly":true}]
     spec:
-      initContainers:
-      - name: render-sds-config
-        image: python:3.11-alpine
-        command: ['/bin/sh', '-c']
-        args:
-        - |
-          python3 <<'EOFPYTHON'
-          import os
-          
-          client_secret = open('/mnt/secrets-store/profile-service-client-secret').read().strip()
-          hmac_secret = open('/mnt/secrets-store/profile-service-oauth-hmac-secret').read().strip()
-          
-          # Create separate SDS files for token and hmac secrets
-          token_config = f'''resources:
-          - "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret
-            name: profile-oauth-token
-            generic_secret:
-              secret:
-                inline_string: "{client_secret}"
-          '''
-          
-          hmac_config = f'''resources:
-          - "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret
-            name: profile-oauth-hmac
-            generic_secret:
-              secret:
-                inline_string: "{hmac_secret}"
-          '''
-          
-          with open('/etc/istio/oauth2/profile-oauth-token.yaml', 'w') as f:
-              f.write(token_config)
-          
-          with open('/etc/istio/oauth2/profile-oauth-hmac.yaml', 'w') as f:
-              f.write(hmac_config)
-          
-          print("SDS configs rendered successfully")
-          EOFPYTHON
-        volumeMounts:
-        - name: secrets-store
-          mountPath: "/mnt/secrets-store"
-          readOnly: true
-        - name: profile-oauth2-sds-template
-          mountPath: "/etc/istio/oauth2-template"
-          readOnly: true
-        - name: rendered-sds
-          mountPath: "/etc/istio/oauth2"
       containers:
       - name: profile-service
         image: gabby.azurecr.io/profile-service:latest
@@ -125,11 +76,6 @@ spec:
           readOnly: true
           volumeAttributes:
             secretProviderClass: "profile-service-secrets-provider"
-      - name: profile-oauth2-sds-template
-        configMap:
-          name: profile-oauth2-sds
-      - name: rendered-sds
-        emptyDir: {}
       tolerations:
       - key: "kubernetes.azure.com/scalesetpriority"
         operator: "Equal"

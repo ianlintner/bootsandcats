@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: profile-service
+  namespace: default
+spec:
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/userVolumeMount: >-
+          [{"name":"rendered-sds","mountPath":"/etc/istio/oauth2","readonly":true}]
+    spec:
+      initContainers:
+      - name: render-sds-config
+        image: busybox:1.37
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          set -euo pipefail
+          CLIENT_SECRET=$(cat /mnt/secrets-store/profile-service-client-secret)
+          HMAC_SECRET=$(cat /mnt/secrets-store/profile-service-oauth-hmac-secret)
+
+          cat > /etc/istio/oauth2/profile-service-oauth-token.yaml <<EOF
+          resources:
+          - "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret
+            name: profile-service-oauth-token
+            generic_secret:
+              secret:
+                inline_string: "${CLIENT_SECRET}"
+          EOF
+
+          cat > /etc/istio/oauth2/profile-service-oauth-hmac.yaml <<EOF
+          resources:
+          - "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret
+            name: profile-service-oauth-hmac
+            generic_secret:
+              secret:
+                inline_string: "${HMAC_SECRET}"
+          EOF
+
+          ls -la /etc/istio/oauth2
+        volumeMounts:
+        - name: secrets-store
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
+        - name: rendered-sds
+          mountPath: "/etc/istio/oauth2"
+      volumes:
+      - name: rendered-sds
+        emptyDir: {}

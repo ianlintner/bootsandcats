@@ -1,7 +1,7 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
-  name: profile-oauth2-exchange
+  name: ${APP}-oauth2-exchange
   namespace: default
   labels:
     app.kubernetes.io/managed-by: kustomize
@@ -9,7 +9,7 @@ metadata:
 spec:
   workloadSelector:
     labels:
-      app: profile-service
+      app: ${APP}
   configPatches:
   - applyTo: CLUSTER
     match:
@@ -17,19 +17,19 @@ spec:
     patch:
       operation: ADD
       value:
-        name: oauth2_token_cluster_profile
+        name: oauth2_token_cluster_${APP}
         type: STRICT_DNS
         connect_timeout: 5s
         lb_policy: ROUND_ROBIN
         load_assignment:
-          cluster_name: oauth2_token_cluster_profile
+          cluster_name: oauth2_token_cluster_${APP}
           endpoints:
           - lb_endpoints:
             - endpoint:
                 address:
                   socket_address:
-                    address: oauth2-server.default.svc.cluster.local
-                    port_value: 9000
+                    address: ${TOKEN_ENDPOINT_HOST}
+                    port_value: ${TOKEN_ENDPOINT_PORT}
   - applyTo: HTTP_FILTER
     match:
       context: SIDECAR_INBOUND
@@ -46,11 +46,11 @@ spec:
         typed_config:
           "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2
           config:
-            stat_prefix: profile_oauth
-            authorization_endpoint: https://oauth2.cat-herding.net/oauth2/authorize
+            stat_prefix: ${STAT_PREFIX}
+            authorization_endpoint: ${AUTHORIZATION_ENDPOINT}
             token_endpoint:
-              cluster: oauth2_token_cluster_profile
-              uri: http://oauth2-server.default.svc.cluster.local:9000/oauth2/token
+              cluster: oauth2_token_cluster_${APP}
+              uri: ${TOKEN_ENDPOINT_URI}
               timeout: 5s
             redirect_uri: "%REQ(x-forwarded-proto)%://%REQ(:authority)%/_oauth2/callback"
             redirect_path_matcher:
@@ -63,19 +63,19 @@ spec:
             default_expires_in: 900s
             csrf_token_expires_in: 600s
             credentials:
-              client_id: profile-service
+              client_id: ${CLIENT_ID}
               token_secret:
-                name: profile-oauth-token
+                name: ${APP}-oauth-token
                 sds_config:
-                  path: /etc/istio/oauth2/profile-oauth-token.yaml
+                  path: /etc/istio/oauth2/${APP}-oauth-token.yaml
               hmac_secret:
-                name: profile-oauth-hmac
+                name: ${APP}-oauth-hmac
                 sds_config:
-                  path: /etc/istio/oauth2/profile-oauth-hmac.yaml
+                  path: /etc/istio/oauth2/${APP}-oauth-hmac.yaml
               cookie_names:
-                bearer_token: "_profile_session"
-                oauth_hmac: "_profile_oauth_hmac"
-                oauth_expires: "_profile_oauth_expires"
+                bearer_token: "_${COOKIE_PREFIX}_session"
+                oauth_hmac: "_${COOKIE_PREFIX}_oauth_hmac"
+                oauth_expires: "_${COOKIE_PREFIX}_oauth_expires"
             cookie_configs:
               bearer_token_cookie_config:
                 same_site: LAX
