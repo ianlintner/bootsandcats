@@ -41,15 +41,15 @@ INSERT INTO oauth2_registered_client (
     'chat-backend-client-001', 
     'chat-backend', 
     CURRENT_TIMESTAMP, 
-    '{bcrypt}$2a$12$demo-chat-service-client-secret-placeholder',
+    '{noop}demo-chat-backend-client-secret',
     NULL, 
     'Chat Backend Application', 
-    'client_secret_basic,client_secret_post',
+    'client_secret_post',
     'authorization_code,refresh_token', 
     'https://chat.cat-herding.net/_oauth2/callback,http://localhost:5001/_oauth2/callback', 
     'https://chat.cat-herding.net/_oauth2/logout,http://localhost:5001/_oauth2/logout', 
     'openid,profile,email', 
-    '{"@class":"java.util.Collections\$UnmodifiableMap","settings.client.require-proof-key":true,"settings.client.require-authorization-consent":false}',
+    '{"@class":"java.util.Collections\$UnmodifiableMap","settings.client.require-proof-key":false,"settings.client.require-authorization-consent":false}',
     '{"@class":"java.util.Collections\$UnmodifiableMap","settings.token.reuse-refresh-tokens":true,"settings.token.id-token-signature-algorithm":["org.springframework.security.oauth2.jose.jws.SignatureAlgorithm","ES256"],"settings.token.access-token-time-to-live":["java.time.Duration",3600.000000000],"settings.token.access-token-format":{"@class":"org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat","value":"self-contained"},"settings.token.refresh-token-time-to-live":["java.time.Duration",86400.000000000],"settings.token.authorization-code-time-to-live":["java.time.Duration",300.000000000]}'
 ) ON CONFLICT (id) DO UPDATE SET 
     scopes = EXCLUDED.scopes,
@@ -68,7 +68,7 @@ echo "Client details:"
 echo "  - client_id: chat-backend"
 echo "  - Scopes: openid, profile, email"
 echo "  - Redirect URIs: https://chat.cat-herding.net/_oauth2/callback"
-echo "  - PKCE: Required"
+echo "  - PKCE: Not required (can be enabled server-side)"
 echo "  - Authorization consent: Not required"
 echo ""
-echo "Note: Make sure the client_secret in inker-kv Key Vault matches the bcrypt hash."
+echo "Note: Make sure the client_secret in Key Vault (chat-client-secret) matches the value stored for client_id 'chat-backend'."
