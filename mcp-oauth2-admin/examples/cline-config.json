@@ -1,0 +1,16 @@
+# Example configuration for Cline VSCode Extension
+
+{
+  "oauth2-admin": {
+    "command": "node",
+    "args": [
+      "/absolute/path/to/bootsandcats/mcp-oauth2-admin/dist/index.js"
+    ],
+    "env": {
+      "OAUTH2_SERVER_URL": "https://oauth2.cat-herding.net",
+      "OAUTH2_CLIENT_ID": "mcp-admin-client",
+      "OAUTH2_CLIENT_SECRET": "your-secret-here",
+      "OAUTH2_SCOPES": "admin:read admin:write"
+    }
+  }
+}
