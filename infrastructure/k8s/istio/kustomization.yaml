@@ -12,7 +12,6 @@ resources:
   - envoyfilter-chat-oauth2-exchange.yaml
   - envoyfilter-chat-jwt-to-headers.yaml
   - envoy-oauth2-sds-configmap.yaml
-  - serviceentry-oauth2.yaml
   - virtualservices.yaml
   - envoyfilter-profile-service-oauth2-exchange.yaml
   - envoyfilter-profile-service-jwt-to-headers.yaml

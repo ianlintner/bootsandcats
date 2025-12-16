@@ -261,6 +261,29 @@ kubectl exec -n default $POD -c chat-backend -- cat /etc/istio/oauth2/chat-oauth
 
 ## Common Issues
 
+### Issue: 404 at https://oauth2.cat-herding.net/oauth2/authorize from istio-envoy
+**Symptoms**: Browser is redirected from `https://chat.cat-herding.net/` to the authorization endpoint, but the response is `404` with `server: istio-envoy` in headers. OAuth2 server logs show no request reaching `/oauth2/authorize`.
+
+**Likely Causes**:
+- Ingress gateway does not have a route for `oauth2.cat-herding.net` due to export scoping or config not propagated to all gateway pods.
+- A conflicting Istio object for the same host (e.g., `ServiceEntry` for `oauth2.cat-herding.net`) causes an unintended virtual host collision for the ingress proxy.
+
+**Fix Applied**:
+- Ensured the inbound `VirtualService oauth2-server` is exported mesh-wide:
+  - `metadata.annotations["networking.istio.io/exportTo"]: "*"`
+- Removed `serviceentry-oauth2.yaml` from the Istio kustomization so inbound host routing for `oauth2.cat-herding.net` is unambiguous at the ingress gateway.
+
+**How to Verify**:
+1. Re-apply manifests and wait ~1–2 minutes for config push.
+2. Verify the gateway has the route for the host:
+   - `istioctl proxy-config routes <ingress-pod> -n aks-istio-ingress --name https.443.https --filter oauth2.cat-herding.net`
+   - `istioctl proxy-status | grep -E "ACK|SYNCED"` (all ingress pods should be in sync)
+3. Hit the authorize URL directly and confirm the login UI renders:
+   - `https://oauth2.cat-herding.net/oauth2/authorize?...`
+
+**Notes**:
+- If internal workloads must egress to `https://oauth2.cat-herding.net`, prefer configuring an egress `ServiceEntry` and related policies in a separate overlay, avoiding reuse of the same host for ingress routing.
+
 ### Issue: "Invalid client credentials"
 **Cause**: Client secret mismatch between Key Vault and database
 **Solution**: Verify secrets match:
