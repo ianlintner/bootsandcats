@@ -14,7 +14,7 @@ spec:
     metadata:
       annotations:
         sidecar.istio.io/inject: "true"
-        sidecar.istio.io/userVolumeMount: '{"rendered-oauth-sds":{"mountPath":"/etc/istio/oauth2","readOnly":true}}'
+        sidecar.istio.io/userVolumeMount: '[{"name":"rendered-sds","mountPath":"/etc/istio/oauth2","readonly":true}]'
       labels:
         app: profile-service
     spec:
@@ -47,7 +47,7 @@ spec:
         - name: secrets-store
           mountPath: /mnt/oauth2-secrets
           readOnly: true
-        - name: rendered-oauth-sds
+        - name: rendered-sds
           mountPath: /etc/istio/oauth2
       containers:
       - name: profile-service
@@ -110,7 +110,7 @@ spec:
           readOnly: true
           volumeAttributes:
             secretProviderClass: "profile-service-secrets-provider"
-      - name: rendered-oauth-sds
+      - name: rendered-sds
         emptyDir: {}
       tolerations:
       - key: "kubernetes.azure.com/scalesetpriority"
