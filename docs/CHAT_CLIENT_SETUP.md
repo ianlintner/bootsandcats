@@ -13,8 +13,8 @@ The OAuth2 Authorization Server must have a confidential client registered.
 
 In this repo, it’s seeded via Flyway migrations in `infrastructure/k8s/apps/configs/flyway-migrations-configmap.yaml`:
 
-- `V13__add_chat_service_client.sql` seeds client `chat-service`
-- `V14__update_chat_service_client_secret.sql` sets a dev/test secret (`demo-chat-service-client-secret`)
+- `V13__add_chat_service_client.sql` seeds client `chat-backend`
+- `V14__update_chat_service_client_secret.sql` sets a dev/test secret (`demo-chat-backend-client-secret`)
 
 Redirect URIs:
 
@@ -36,6 +36,8 @@ A helper script is provided:
 - `scripts/setup-chat-client-secrets.sh`
 
 By default it uploads the **demo values** that match Flyway V14.
+
+> Note: the migration filenames say `chat_service`, but the actual registered `client_id` is `chat-backend`.
 
 ## 3) Kubernetes: SecretProviderClass + Envoy filters
 
