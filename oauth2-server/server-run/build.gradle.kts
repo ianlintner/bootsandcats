@@ -26,6 +26,10 @@ dependencies {
     
     // Metrics
     implementation("io.micrometer:micrometer-registry-prometheus")
+
+    // Tracing (Micrometer Tracing -> OpenTelemetry -> OTLP)
+    implementation("io.micrometer:micrometer-tracing-bridge-otel")
+    implementation("io.opentelemetry:opentelemetry-exporter-otlp")
     
     // Azure integration
     implementation("com.azure:azure-identity:1.15.0")

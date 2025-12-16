@@ -105,10 +105,11 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "prod"
-        - name: OTEL_SDK_DISABLED
-          value: "true"
-        - name: OTEL_EXPORTER_OTLP_ENDPOINT
-          value: "http://otel-collector:4317"
+        # Tracing (Micrometer Tracing -> OTLP HTTP)
+        - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+          value: "http://otel-collector:4318/v1/traces"
+        - name: TRACING_SAMPLING_PROBABILITY
+          value: "0.05"
         - name: OAUTH2_ISSUER_URL
           valueFrom:
             secretKeyRef:

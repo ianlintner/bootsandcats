@@ -1,5 +1,8 @@
 package com.bootsandcats.oauth2.service;
 
+import java.util.Locale;
+
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import io.micrometer.core.annotation.Timed;
@@ -19,7 +22,10 @@ public class OAuth2MetricsService {
     private final Counter authorizationRequestCounter;
     private final Counter authorizationFailedCounter;
 
+    private final MeterRegistry meterRegistry;
+
     public OAuth2MetricsService(MeterRegistry meterRegistry) {
+        this.meterRegistry = meterRegistry;
         this.tokenIssuedCounter =
                 Counter.builder("oauth2.tokens.issued")
                         .description("Number of tokens issued")
@@ -39,6 +45,49 @@ public class OAuth2MetricsService {
                 Counter.builder("oauth2.authorization.failed")
                         .description("Number of failed authorization attempts")
                         .register(meterRegistry);
+    }
+
+    /**
+     * Record a request outcome for an OAuth2/OIDC endpoint.
+     *
+     * <p>This metric is designed for SLO-style dashboards and must remain low-cardinality.
+     *
+     * <p>Do not include per-client, per-user, token, or IP labels.
+     *
+     * @param endpoint logical endpoint name (e.g. token, authorize, introspect, revoke, userinfo)
+     * @param outcome success or failure
+     * @param grantType OAuth2 grant type (token endpoint only) or null
+     * @param error OAuth2 error code (e.g. invalid_grant) or exception type; null means none
+     */
+    public void recordEndpointRequest(
+            String endpoint,
+            String outcome,
+            @Nullable String grantType,
+            @Nullable String error) {
+        String safeEndpoint = normalize(endpoint, "unknown");
+        String safeOutcome = normalize(outcome, "unknown");
+        String safeGrantType = normalize(grantType, "none");
+        String safeError = normalize(error, "none");
+
+        Counter.builder("oauth2.endpoint.requests")
+                .description("OAuth2/OIDC endpoint requests by endpoint, outcome, grant_type, and error")
+                .tag("endpoint", safeEndpoint)
+                .tag("outcome", safeOutcome)
+                .tag("grant_type", safeGrantType)
+                .tag("error", safeError)
+                .register(meterRegistry)
+                .increment();
+    }
+
+    private String normalize(@Nullable String value, String fallback) {
+        if (value == null) {
+            return fallback;
+        }
+        String trimmed = value.trim();
+        if (trimmed.isEmpty()) {
+            return fallback;
+        }
+        return trimmed.toLowerCase(Locale.ROOT);
     }
 
     @Timed(value = "oauth2.token.issue", description = "Time to issue token")

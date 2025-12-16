@@ -21,6 +21,11 @@ exporters:
     endpoint: "0.0.0.0:8889"
     namespace: oauth2
 
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+
   debug:
     verbosity: normal
 
@@ -34,7 +39,7 @@ service:
     traces:
       receivers: [otlp]
       processors: [memory_limiter, batch]
-      exporters: [debug]
+      exporters: [otlp/tempo, debug]
 
     metrics:
       receivers: [otlp]
