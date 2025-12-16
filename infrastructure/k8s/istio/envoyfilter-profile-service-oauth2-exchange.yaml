@@ -1,7 +1,7 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
-  name: profile-service-oauth2-exchange
+  name: profile-oauth2-exchange
   namespace: default
   labels:
     app.kubernetes.io/managed-by: kustomize
@@ -55,10 +55,12 @@ spec:
             redirect_uri: "%REQ(x-forwarded-proto)%://%REQ(:authority)%/_oauth2/callback"
             redirect_path_matcher:
               path:
-                exact: /_oauth2/callback
+                # NOTE: Envoy matches against the full ":path" header which can include the query string.
+                # Use prefix matching so /_oauth2/callback?code=...&state=... is handled by the OAuth2 filter.
+                prefix: /_oauth2/callback
             signout_path:
               path:
-                exact: /_oauth2/logout
+                prefix: /_oauth2/logout
             forward_bearer_token: true
             default_expires_in: 900s
             csrf_token_expires_in: 600s

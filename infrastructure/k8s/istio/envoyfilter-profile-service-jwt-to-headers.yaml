@@ -1,7 +1,7 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
-  name: profile-service-jwt-to-headers
+  name: profile-jwt-to-headers
   namespace: default
   labels:
     app.kubernetes.io/managed-by: kustomize
