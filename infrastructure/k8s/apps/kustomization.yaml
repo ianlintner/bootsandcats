@@ -6,6 +6,7 @@ resources:
   - oauth2-server
   - profile-service
   - github-review-service
+  - slop-detector
   # Shared operational resources
   - configs/flyway-migrations-configmap.yaml
   - configs/pdb.yaml

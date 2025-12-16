@@ -15,3 +15,7 @@ resources:
   - telemetry.yaml
   - postgres-mtls.yaml
   - postgres-peer-auth.yaml
+  - envoyfilter-slop-detector-oauth2-exchange.yaml
+  - envoyfilter-slop-detector-jwt-to-headers.yaml
+  - requestauthentication-slop-detector.yaml
+  - envoy-oauth2-sds-configmap-slop-detector.yaml
