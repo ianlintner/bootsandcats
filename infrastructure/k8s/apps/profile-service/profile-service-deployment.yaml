@@ -12,9 +12,43 @@ spec:
       app: profile-service
   template:
     metadata:
+      annotations:
+        sidecar.istio.io/inject: "true"
+        sidecar.istio.io/userVolumeMount: '{"rendered-oauth-sds":{"mountPath":"/etc/istio/oauth2","readOnly":true}}'
       labels:
         app: profile-service
     spec:
+      initContainers:
+      - name: render-oauth-sds
+        image: python:3.11-alpine
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          python3 <<'EOFPY'
+          import os
+
+          client_secret = open('/mnt/oauth2-secrets/profile-service-client-secret').read().strip()
+          hmac_secret = open('/mnt/oauth2-secrets/profile-service-oauth-hmac-secret').read().strip()
+
+          token_config = f"""resources:\n- \"@type\": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret\n  name: profile-service-oauth-token\n  generic_secret:\n    secret:\n      inline_string: \"{client_secret}\"\n"""
+          hmac_config = f"""resources:\n- \"@type\": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret\n  name: profile-service-oauth-hmac\n  generic_secret:\n    secret:\n      inline_string: \"{hmac_secret}\"\n"""
+
+          os.makedirs('/etc/istio/oauth2', exist_ok=True)
+
+          with open('/etc/istio/oauth2/profile-service-oauth-token.yaml', 'w') as f:
+              f.write(token_config)
+
+          with open('/etc/istio/oauth2/profile-service-oauth-hmac.yaml', 'w') as f:
+              f.write(hmac_config)
+
+          print('Profile-service OAuth2 SDS configs rendered successfully')
+          EOFPY
+        volumeMounts:
+        - name: secrets-store
+          mountPath: /mnt/oauth2-secrets
+          readOnly: true
+        - name: rendered-oauth-sds
+          mountPath: /etc/istio/oauth2
       containers:
       - name: profile-service
         image: gabby.azurecr.io/profile-service:latest
@@ -76,6 +110,8 @@ spec:
           readOnly: true
           volumeAttributes:
             secretProviderClass: "profile-service-secrets-provider"
+      - name: rendered-oauth-sds
+        emptyDir: {}
       tolerations:
       - key: "kubernetes.azure.com/scalesetpriority"
         operator: "Equal"

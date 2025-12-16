@@ -1,0 +1,38 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: chat-gateway
+spec:
+  selector:
+    istio: aks-istio-ingressgateway-external
+  servers:
+    # HTTPS with TLS certificate for cat-herding.net (wildcard)
+    - port:
+        number: 443
+        name: https-chat-cat-herding
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: cat-herding-wildcard-tls
+      hosts:
+        - 'chat.cat-herding.net'
+    # HTTPS for hugecat.net (for API/WebSocket - frontend uses this URL)
+    - port:
+        number: 443
+        name: https-chat-hugecat
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: chat-hugecat-tls-cert
+      hosts:
+        - 'chat.hugecat.net'
+    # HTTP redirect to HTTPS
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - 'chat.cat-herding.net'
+        - 'chat.hugecat.net'
+      tls:
+        httpsRedirect: true

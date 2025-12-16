@@ -1,0 +1,130 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-backend
+  labels:
+    app: chat-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chat-backend
+  template:
+    metadata:
+      labels:
+        app: chat-backend
+        version: v1
+      annotations:
+        sidecar.istio.io/inject: 'true'
+        sidecar.istio.io/proxyCPU: 10m
+        sidecar.istio.io/proxyMemory: 32Mi
+        sidecar.istio.io/proxyCPULimit: 500m
+        sidecar.istio.io/proxyMemoryLimit: 512Mi
+    spec:
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: chat
+      automountServiceAccountToken: true
+      containers:
+      - name: chat-backend
+        image: gabby.azurecr.io/chat-backend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5001
+          name: http
+        env:
+        - name: AZURE_DEPLOYMENT
+          value: 'true'
+        - name: PORT
+          value: '5001'
+        - name: NODE_ENV
+          value: production
+        - name: REDIS_HOST
+          value: redis-service
+        - name: REDIS_PORT
+          value: '6379'
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-auth
+              key: redis-password
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: chat-secrets
+              key: JWT_SECRET
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: chat-secrets-from-keyvault
+              key: OPENAI_API_KEY
+        envFrom:
+        - configMapRef:
+            name: chat-backend-config
+        startupProbe:
+          httpGet:
+            path: /healthz
+            port: 5001
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5001
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 2
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5001
+          initialDelaySeconds: 30
+          periodSeconds: 15
+          timeoutSeconds: 2
+          failureThreshold: 3
+        volumeMounts:
+        - name: rendered-oauth-sds
+          mountPath: /etc/istio/oauth2
+          readOnly: true
+      tolerations:
+      - key: kubernetes.azure.com/scalesetpriority
+        operator: Equal
+        value: spot
+        effect: NoSchedule
+      initContainers:
+      - name: render-oauth-sds
+        image: python:3.11-alpine
+        command:
+        - /bin/sh
+        - -c
+        args:
+        - "python3 <<'EOFPY'\nimport os\n\nclient_secret = open('/mnt/oauth2-secrets/chat-client-secret').read().strip()\n\
+          hmac_secret = open('/mnt/oauth2-secrets/chat-oauth-hmac-secret').read().strip()\n\
+          \ntoken_config = f\"\"\"resources:\n- \"@type\": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret\n\
+          \  name: chat-oauth-token\n  generic_secret:\n    secret:\n      inline_string:\
+          \ \"{client_secret}\"\n\"\"\"\n\nhmac_config = f\"\"\"resources:\n- \"@type\"\
+          : type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret\n\
+          \  name: chat-oauth-hmac\n  generic_secret:\n    secret:\n      inline_string:\
+          \ \"{hmac_secret}\"\n\"\"\"\n\nos.makedirs('/etc/istio/oauth2', exist_ok=True)\n\
+          \nwith open('/etc/istio/oauth2/chat-oauth-token.yaml', 'w') as f:\n    f.write(token_config)\n\
+          \nwith open('/etc/istio/oauth2/chat-oauth-hmac.yaml', 'w') as f:\n    f.write(hmac_config)\n\
+          \nprint(\"OAuth2 SDS configs rendered successfully\")\nEOFPY\n"
+        volumeMounts:
+        - name: oauth2-secrets-store
+          mountPath: /mnt/oauth2-secrets
+          readOnly: true
+        - name: rendered-oauth-sds
+          mountPath: /etc/istio/oauth2
+      volumes:
+      - name: oauth2-secrets-store
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: azure-keyvault-oauth2-secrets
+      - name: rendered-oauth-sds
+        emptyDir: {}

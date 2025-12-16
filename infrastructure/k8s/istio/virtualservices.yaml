@@ -3,6 +3,8 @@ kind: VirtualService
 metadata:
   name: oauth2-server
   namespace: default
+  annotations:
+    networking.istio.io/exportTo: "*"
 spec:
   hosts:
   - oauth2.cat-herding.net
