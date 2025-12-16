@@ -523,7 +523,7 @@ data:
                 'chat-backend-client-001',
                 'chat-backend',
                 CURRENT_TIMESTAMP,
-                '{noop}REPLACE_WITH_CHAT_SERVICE_CLIENT_SECRET',
+            '{noop}REPLACE_WITH_CHAT_BACKEND_CLIENT_SECRET',
                 NULL,
                 'Chat Service',
                 'client_secret_post',
