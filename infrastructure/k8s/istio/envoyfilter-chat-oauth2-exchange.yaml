@@ -121,3 +121,5 @@ spec:
               prefix_match: "/openapi"
             - name: ":path"
               prefix_match: "/assets/"
+            - name: ":path"
+              prefix_match: "/_expo/"
