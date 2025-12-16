@@ -81,3 +81,24 @@ spec:
         host: slop-detector
         port:
           number: 80
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: security-agency
+  namespace: default
+spec:
+  hosts:
+  - security-agency.cat-herding.net
+  gateways:
+  - aks-istio-ingress/cat-herding-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: security-agency
+        port:
+          number: 80

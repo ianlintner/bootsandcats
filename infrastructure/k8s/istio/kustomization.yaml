@@ -19,3 +19,9 @@ resources:
   - envoyfilter-slop-detector-jwt-to-headers.yaml
   - requestauthentication-slop-detector.yaml
   - envoy-oauth2-sds-configmap-slop-detector.yaml
+  - envoyfilter-security-agency-oauth2-exchange.yaml
+  - envoyfilter-security-agency-jwt-to-headers.yaml
+  - requestauthentication-security-agency.yaml
+  - envoy-oauth2-sds-configmap-security-agency.yaml
+  - envoyfilter-security-agency-oauth2-exchange.yaml
+  - envoyfilter-security-agency-jwt-to-headers.yaml
