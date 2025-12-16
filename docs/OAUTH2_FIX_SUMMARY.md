@@ -35,28 +35,30 @@ File: `infrastructure/k8s/apps/chat/deployment.yaml`
 - Init container: "OAuth2 SDS configs rendered successfully"
 - Sidecar mount: `/etc/istio/oauth2` mounted from `rendered-sds`
 
-#### ⚠️ Profile-Service (external repo) - REQUIRES UPDATE
-Action needed in profile-service deployment:
+#### ✅ Profile-Service (bootsandcats repo) - FIXED
+File: `infrastructure/k8s/apps/profile-service/profile-service-deployment.yaml`
 
-```yaml
-# 1. Update init container volumeMount
-initContainers:
-- name: render-oauth-sds
-  volumeMounts:
-  - mountPath: /etc/istio/oauth2
-    name: rendered-sds  # Change from rendered-oauth-sds
+1. Updated annotation to array format:
+   ```yaml
+   sidecar.istio.io/userVolumeMount: '[{"name":"rendered-sds","mountPath":"/etc/istio/oauth2","readonly":true}]'
+   ```
 
-# 2. Rename volume definition
-volumes:
-- name: rendered-sds
-  emptyDir: {}
-# Remove: rendered-oauth-sds volume
+2. Renamed volume throughout deployment:
+   - Init container `render-oauth-sds` volumeMount: `rendered-oauth-sds` → `rendered-sds`
+   - Volume definition: `rendered-oauth-sds` → `rendered-sds`
 
-# 3. Annotation should remain (already correct):
-# sidecar.istio.io/userVolumeMount: '[{"name":"rendered-sds",...}]'
-```
+**Result**: OAuth flow now works correctly ✅
+- Redirect: `302 → https://oauth2.cat-herding.net/oauth2/authorize`
+- PKCE cookies: `OauthNonce`, `CodeVerifier` set correctly
+- Init container: "Profile-service OAuth2 SDS configs rendered successfully"
+- Sidecar mount: `/etc/istio/oauth2` mounted from `rendered-sds`
 
-## Testing Results
+#### ✅ Github-Review (already working) - VERIFIED
+No changes needed, already using `rendered-sds` consistently.
+
+**Result**: OAuth flow continues to work correctly ✅
+
+## Testing Results (All Services)
 
 ### Chat OAuth Flow ✅
 ```bash
@@ -72,10 +74,31 @@ $ kubectl get pod chat-backend-85c57569f8-qltm4 -o jsonpath='{.spec.containers[?
 rendered-sds
 ```
 
+### Profile-Service OAuth Flow ✅
+```bash
+$ curl -sI https://profile.cat-herding.net/ | head -3
+HTTP/2 302 
+set-cookie: OauthNonce=...;secure;HttpOnly
+location: https://oauth2.cat-herding.net/oauth2/authorize?client_id=profile-service&code_challenge=...
+```
+
+### Github-Review OAuth Flow ✅
+```bash
+$ curl -sI https://gh-review.cat-herding.net/ | head -3
+HTTP/2 302 
+set-cookie: OauthNonce=...;secure;HttpOnly
+location: https://oauth2.cat-herding.net/oauth2/authorize?client_id=github-review-service&code_challenge=...
+```
+
 ### Init Container Logs ✅
 ```bash
+# Chat
 $ kubectl logs chat-backend-85c57569f8-qltm4 -c render-oauth-sds
 OAuth2 SDS configs rendered successfully
+
+# Profile-Service
+$ kubectl logs profile-service-cc97465fb-gsrnd -c render-oauth-sds
+Profile-service OAuth2 SDS configs rendered successfully
 ```
 
 ## Standard Pattern (All Services)
@@ -105,14 +128,15 @@ spec:
         emptyDir: {}
 ```
 
-## Related Changes
+## Deployment Status
 
-### Earlier Fixes (Also Applied)
-1. Added `networking.istio.io/exportTo: "*"` to oauth2 VirtualService (mesh-wide visibility)
-2. Removed ServiceEntry from kustomization (eliminated host conflict)
-3. Updated all EnvoyFilters to use prefix matching:
-   - `redirect_path_matcher.path.prefix: /_oauth2/callback`
-   - `signout_path.path.prefix: /_oauth2/logout`
+### ✅ All Services Fixed and Tested (Dec 16, 2025)
+- **Chat**: OAuth flow working ✅
+- **Profile-Service**: OAuth flow working ✅
+- **Github-Review**: OAuth flow working ✅
+
+All three services now use the standardized `rendered-sds` volume naming pattern with array-format Istio annotations.
+
 
 ## Key Learnings
 

@@ -16,22 +16,10 @@ Profile-service OAuth2 flow fails with 404 at `/oauth2/authorize` due to volume 
 - Changed volume name from `rendered-oauth-sds` → `rendered-sds`
 - Added explicit annotation: `sidecar.istio.io/userVolumeMount: '[{"name":"rendered-sds","mountPath":"/etc/istio/oauth2","readonly":true}]'`
 
-#### Profile-Service (external repo) ⚠️ REQUIRES UPDATE
-Action needed in profile-service deployment repo:
-```yaml
-# Fix init container volume mount
-initContainers:
-- name: render-oauth-sds
-  volumeMounts:
-  - mountPath: /etc/istio/oauth2
-    name: rendered-sds  # Change from rendered-oauth-sds
-
-# Fix volume definition
-volumes:
-- name: rendered-sds
-  emptyDir: {}
-# Remove: rendered-oauth-sds volume
-```
+#### Profile-Service (bootsandcats repo) ✅ FIXED
+- Updated `infrastructure/k8s/apps/profile-service/profile-service-deployment.yaml`
+- Changed volume name from `rendered-oauth-sds` → `rendered-sds`
+- Updated annotation to array format: `sidecar.istio.io/userVolumeMount: '[{"name":"rendered-sds","mountPath":"/etc/istio/oauth2","readonly":true}]'`
 
 #### Github-Review (external repo) ✅ ALREADY CORRECT
 No changes needed - already uses `rendered-sds` consistently.
@@ -41,8 +29,10 @@ No changes needed - already uses `rendered-sds` consistently.
 | Service | Init Container Output | Istio Mount | Status |
 |---------|----------------------|-------------|--------|
 | **github-review** ✅ | `rendered-sds` | `rendered-sds` | Working |
-| **chat** ✅ | `rendered-sds` | `rendered-sds` | **FIXED** |
-| **profile-service** ⚠️ | `rendered-oauth-sds` | `rendered-sds` | **Needs external repo update** |
+| **chat** ✅ | `rendered-sds` | `rendered-sds` | **FIXED & TESTED** |
+| **profile-service** ✅ | `rendered-sds` | `rendered-sds` | **FIXED & TESTED** |
+
+All services now use consistent `rendered-sds` volume naming.
 
 ### Detailed Findings
 
@@ -190,39 +180,41 @@ credentials:
 
 ## Immediate Actions
 
-### For Profile-Service (External Repo)
+### ✅ All Services Fixed (Dec 16, 2025)
 
-Update the deployment manifest:
-
-```bash
-# In profile-service deployment YAML, ensure:
-# 1. Init container writes to rendered-sds
-# 2. Volume is named rendered-sds
-# 3. Annotation mounts rendered-sds
-
-# Then apply and restart
-kubectl apply -f deployment.yaml
-kubectl rollout restart deployment/profile-service -n default
-```
-
-### For Chat (This Repo) ✅ COMPLETE
-Already fixed in commit [current].
+All deployments updated and tested successfully:
+- **Chat**: OAuth flow working
+- **Profile-Service**: OAuth flow working  
+- **Github-Review**: OAuth flow working (unchanged)
 
 ## Testing After Fix
 
 ```bash
-# 1. Restart chat to pick up changes
-kubectl rollout restart deployment/chat-backend -n default
-kubectl rollout status deployment/chat-backend -n default
+# 1. Chat - verified
+$ curl -sI https://chat.cat-herding.net/ | head -3
+HTTP/2 302
+location: https://oauth2.cat-herding.net/oauth2/authorize?client_id=chat-backend...
 
-# 2. Verify volume mount
-POD=$(kubectl get pod -n default -l app=chat-backend -o jsonpath='{.items[0].metadata.name}')
-kubectl get pod -n default $POD -o jsonpath='{.spec.containers[?(@.name=="istio-proxy")].volumeMounts[?(@.mountPath=="/etc/istio/oauth2")].name}'
-# Should output: rendered-sds
+# 2. Profile-Service - verified
+$ curl -sI https://profile.cat-herding.net/ | head -3
+HTTP/2 302
+location: https://oauth2.cat-herding.net/oauth2/authorize?client_id=profile-service...
 
-# 3. Test OAuth flow
-curl -sI https://chat.cat-herding.net/ | head -5
-# Should redirect to oauth2.cat-herding.net/oauth2/authorize (302)
+# 3. Github-Review - verified
+$ curl -sI https://gh-review.cat-herding.net/ | head -3
+HTTP/2 302
+location: https://oauth2.cat-herding.net/oauth2/authorize?client_id=github-review-service...
+
+# 4. Volume mounts - all show rendered-sds
+$ for app in chat-backend profile-service github-review-service; do
+  POD=$(kubectl get pod -l app=$app -o jsonpath='{.items[0].metadata.name}')
+  echo -n "$app: "
+  kubectl get pod $POD -o jsonpath='{.spec.containers[?(@.name=="istio-proxy")].volumeMounts[?(@.mountPath=="/etc/istio/oauth2")].name}'
+  echo ""
+done
+chat-backend: rendered-sds
+profile-service: rendered-sds
+github-review-service: rendered-sds
 ```
 
 ## Client Registration Validation
