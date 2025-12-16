@@ -8,9 +8,6 @@ resources:
   - requestauthentication-github-review.yaml
   - envoyfilter-github-review-oauth2-exchange.yaml
   - envoyfilter-github-review-jwt-to-headers.yaml
-  - requestauthentication-chat.yaml
-  - envoyfilter-chat-oauth2-exchange.yaml
-  - envoyfilter-chat-jwt-to-headers.yaml
   - envoy-oauth2-sds-configmap.yaml
   - virtualservices.yaml
   - envoyfilter-profile-service-oauth2-exchange.yaml
