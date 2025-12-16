@@ -9,3 +9,6 @@ spec:
       postgresql: postgres-ha
   mtls:
     mode: STRICT
+  portLevelMtls:
+    8000:
+      mode: PERMISSIVE
