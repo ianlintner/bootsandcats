@@ -24,7 +24,7 @@ spec:
       - name: flyway-repair
         image: flyway/flyway:11-alpine
         args:
-        - -url=jdbc:postgresql://postgres.default.svc.cluster.local:5432/$(DATABASE_NAME)
+        - -url=jdbc:postgresql://postgres.default.svc.cluster.local:5432/$(DATABASE_NAME)?sslmode=disable
         - -user=$(DATABASE_USERNAME)
         - -password=$(DATABASE_PASSWORD)
         - -locations=filesystem:/flyway/sql
@@ -60,7 +60,7 @@ spec:
       - name: flyway-migrate
         image: flyway/flyway:11-alpine
         args:
-        - -url=jdbc:postgresql://postgres.default.svc.cluster.local:5432/$(DATABASE_NAME)
+        - -url=jdbc:postgresql://postgres.default.svc.cluster.local:5432/$(DATABASE_NAME)?sslmode=disable
         - -user=$(DATABASE_USERNAME)
         - -password=$(DATABASE_PASSWORD)
         - -baselineOnMigrate=true

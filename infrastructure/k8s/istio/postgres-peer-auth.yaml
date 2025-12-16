@@ -12,3 +12,5 @@ spec:
   portLevelMtls:
     8000:
       mode: PERMISSIVE
+    5432:
+      mode: PERMISSIVE

@@ -103,11 +103,7 @@ spec:
       cnpg.io/cluster: postgres-ha
   action: ALLOW
   rules:
-  - from:
-    - source:
-        namespaces:
-        - default
-    to:
+  - to:
     - operation:
         ports:
         - "5432"
