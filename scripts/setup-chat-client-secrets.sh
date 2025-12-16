@@ -1,5 +1,5 @@
 #!/bin/bash
-# Setup Chat Service OAuth2 secrets in Azure Key Vault.
+# Setup Chat Backend OAuth2 secrets in Azure Key Vault.
 #
 # This creates the Key Vault secrets consumed by the chat application's Istio Envoy OAuth2 filter:
 # - chat-client-secret       (OAuth2 confidential client secret; used by Envoy oauth2 filter token exchange)
@@ -26,7 +26,8 @@ if [[ "$MODE" != "demo" && "$MODE" != "random" ]]; then
 fi
 
 if [[ "$MODE" == "demo" ]]; then
-  CHAT_CLIENT_SECRET="demo-chat-service-client-secret"
+  # Matches V14__update_chat_service_client_secret.sql (client_id = chat-backend)
+  CHAT_CLIENT_SECRET="demo-chat-backend-client-secret"
   # 32 bytes base64-ish token for HMAC; safe for demo.
   CHAT_OAUTH_HMAC_SECRET="demo-chat-oauth-hmac-secret"
 else
@@ -66,7 +67,7 @@ echo "Next steps:"
 echo "1) Ensure the chat cluster has SecretProviderClass 'azure-keyvault-chat-secrets' applied."
 echo "2) In the chat app repo, mount the CSI secrets volume and render these into Envoy SDS files:"
 echo "   /etc/istio/oauth2/chat-oauth-token.yaml and /etc/istio/oauth2/chat-oauth-hmac.yaml"
-echo "3) Ensure the Authorization Server has a matching client registration for client_id 'chat-service'"
+echo "3) Ensure the Authorization Server has a matching client registration for client_id 'chat-backend'"
 echo "   with redirect URI https://chat.cat-herding.net/_oauth2/callback"
 
 echo ""
