@@ -60,17 +60,15 @@ public class OAuth2MetricsService {
      * @param error OAuth2 error code (e.g. invalid_grant) or exception type; null means none
      */
     public void recordEndpointRequest(
-            String endpoint,
-            String outcome,
-            @Nullable String grantType,
-            @Nullable String error) {
+            String endpoint, String outcome, @Nullable String grantType, @Nullable String error) {
         String safeEndpoint = normalize(endpoint, "unknown");
         String safeOutcome = normalize(outcome, "unknown");
         String safeGrantType = normalize(grantType, "none");
         String safeError = normalize(error, "none");
 
         Counter.builder("oauth2.endpoint.requests")
-                .description("OAuth2/OIDC endpoint requests by endpoint, outcome, grant_type, and error")
+                .description(
+                        "OAuth2/OIDC endpoint requests by endpoint, outcome, grant_type, and error")
                 .tag("endpoint", safeEndpoint)
                 .tag("outcome", safeOutcome)
                 .tag("grant_type", safeGrantType)

@@ -50,7 +50,8 @@ public class OAuth2EndpointMetricsListener
         }
     }
 
-    private void recordSuccess(AuthenticationSuccessEvent event, @Nullable HttpServletRequest request) {
+    private void recordSuccess(
+            AuthenticationSuccessEvent event, @Nullable HttpServletRequest request) {
         String endpoint = resolveEndpoint(event, request);
         String grantType = resolveGrantType(endpoint, request);
         metricsService.recordEndpointRequest(endpoint, "success", grantType, "none");
@@ -64,7 +65,8 @@ public class OAuth2EndpointMetricsListener
         metricsService.recordEndpointRequest(endpoint, "failure", grantType, error);
     }
 
-    private String resolveEndpoint(AbstractAuthenticationEvent event, @Nullable HttpServletRequest request) {
+    private String resolveEndpoint(
+            AbstractAuthenticationEvent event, @Nullable HttpServletRequest request) {
         var authentication = event.getAuthentication();
 
         if (authentication instanceof OAuth2AccessTokenAuthenticationToken) {
