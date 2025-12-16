@@ -6,6 +6,6 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: postgres-ha
+      postgresql: postgres-ha
   mtls:
     mode: STRICT
