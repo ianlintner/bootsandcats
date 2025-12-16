@@ -13,7 +13,7 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-  - name: postgres
+  - name: tcp-postgres
     port: 5432
     targetPort: 5432
   selector:
@@ -31,7 +31,7 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-  - name: postgres
+  - name: tcp-postgres
     port: 5432
     targetPort: 5432
   selector:
@@ -59,9 +59,6 @@ spec:
   inheritedMetadata:
     annotations:
       sidecar.istio.io/inject: "true"
-      # Exclude PostgreSQL port from Istio traffic interception for direct DB connections
-      traffic.sidecar.istio.io/excludeInboundPorts: "5432"
-      traffic.sidecar.istio.io/excludeOutboundPorts: "5432"
 
   # Bootstrap from scratch with initial database
   bootstrap:
