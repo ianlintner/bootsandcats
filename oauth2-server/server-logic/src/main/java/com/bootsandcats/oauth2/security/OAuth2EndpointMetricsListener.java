@@ -141,7 +141,7 @@ public class OAuth2EndpointMetricsListener
                 && !oauth2Exception.getError().getErrorCode().isBlank()) {
             return oauth2Exception.getError().getErrorCode();
         }
-        return exception != null ? exception.getClass().getSimpleName() : "unknown";
+        return exception != null ? "exception" : "unknown";
     }
 
     @Nullable

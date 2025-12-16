@@ -1,0 +1,74 @@
+{
+  "uid": "oauth2-endpoints",
+  "title": "OAuth2 Server - Endpoint Drilldown",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "tags": ["bootsandcats", "oauth2", "endpoints"],
+  "templating": {
+    "list": [
+      {
+        "type": "custom",
+        "name": "endpoint",
+        "label": "Endpoint",
+        "query": "token,authorize,introspect,revoke,userinfo,discovery,jwks",
+        "current": { "text": "token", "value": "token" }
+      },
+      {
+        "type": "custom",
+        "name": "outcome",
+        "label": "Outcome",
+        "query": "success,failure",
+        "current": { "text": "failure", "value": "failure" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Requests by outcome",
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 9 },
+      "targets": [
+        {
+          "expr": "sum by (outcome) (rate(oauth2_endpoint_requests_total{endpoint=\"$endpoint\"}[5m]))",
+          "legendFormat": "{{outcome}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Failures by error code",
+      "gridPos": { "x": 0, "y": 9, "w": 12, "h": 9 },
+      "targets": [
+        {
+          "expr": "sum by (error) (rate(oauth2_endpoint_requests_total{endpoint=\"$endpoint\",outcome=\"failure\"}[5m]))",
+          "legendFormat": "{{error}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Token endpoint by grant_type",
+      "gridPos": { "x": 12, "y": 9, "w": 12, "h": 9 },
+      "targets": [
+        {
+          "expr": "sum by (grant_type,outcome) (rate(oauth2_endpoint_requests_total{endpoint=\"token\"}[5m]))",
+          "legendFormat": "{{grant_type}} / {{outcome}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP status rate (oauth2/*)",
+      "gridPos": { "x": 0, "y": 18, "w": 24, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum by (status) (rate(http_server_requests_seconds_count{uri=~\"/oauth2/.*\"}[5m]))",
+          "legendFormat": "{{status}}"
+        }
+      ]
+    }
+  ]
+}

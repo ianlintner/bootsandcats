@@ -1,0 +1,105 @@
+{
+  "uid": "oauth2-slos",
+  "title": "OAuth2 Server - SLO Overview",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "tags": ["bootsandcats", "oauth2", "slo"],
+  "templating": {
+    "list": [
+      {
+        "type": "custom",
+        "name": "endpoint",
+        "label": "Endpoint",
+        "query": "token,authorize,introspect,revoke,userinfo,discovery,jwks",
+        "current": { "text": "token", "value": "token" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Request rate (custom endpoint metric)",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(oauth2_endpoint_requests_total{endpoint=\"$endpoint\"}[5m]))",
+          "legendFormat": "req/s"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Success rate (custom endpoint metric)",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(oauth2_endpoint_requests_total{endpoint=\"$endpoint\",outcome=\"success\"}[5m])) / sum(rate(oauth2_endpoint_requests_total{endpoint=\"$endpoint\"}[5m]))",
+          "legendFormat": "success-rate"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Top failures by OAuth2 error (custom endpoint metric)",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 9 },
+      "targets": [
+        {
+          "expr": "topk(10, sum by (error) (rate(oauth2_endpoint_requests_total{endpoint=\"$endpoint\",outcome=\"failure\"}[5m])))",
+          "legendFormat": "{{error}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Availability (HTTP, exclude 5xx)",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 9 },
+      "targets": [
+        {
+          "expr": "1 - (sum(rate(http_server_requests_seconds_count{uri=~\"/oauth2/(token|authorize|introspect|revoke)\"}[5m])) - sum(rate(http_server_requests_seconds_count{uri=~\"/oauth2/(token|authorize|introspect|revoke)\",status!~\"5..\"}[5m]))) / sum(rate(http_server_requests_seconds_count{uri=~\"/oauth2/(token|authorize|introspect|revoke)\"}[5m]))",
+          "legendFormat": "availability (aggregate oauth2/*)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "p95 latency (HTTP)",
+      "gridPos": { "x": 0, "y": 17, "w": 24, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{uri=\"/oauth2/token\"}[5m])))",
+          "legendFormat": "token"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{uri=\"/oauth2/introspect\"}[5m])))",
+          "legendFormat": "introspect"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{uri=\"/oauth2/revoke\"}[5m])))",
+          "legendFormat": "revoke"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      }
+    }
+  ]
+}

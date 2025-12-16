@@ -3,13 +3,25 @@ kind: Kustomization
 
 resources:
   - grafana.yaml
+  - prometheus.yaml
   - tempo.yaml
   - otel-collector.yaml
+
+# NOTE: Grafana expects a Secret named `grafana-admin-secret` with keys
+# `admin-user` and `admin-password`.
+#
+# We ship an example manifest at:
+#   infrastructure/k8s/apps/monitoring/grafana-admin-secret.example.yaml
+#
+# Do NOT commit real credentials.
 
 generatorOptions:
   disableNameSuffixHash: true
 
 configMapGenerator:
+  - name: prometheus-config
+    files:
+      - ../../../prometheus.yml
   - name: grafana-datasources
     files:
       - grafana/provisioning/datasources/datasources.yaml
