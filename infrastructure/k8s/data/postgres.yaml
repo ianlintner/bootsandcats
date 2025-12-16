@@ -55,7 +55,10 @@ spec:
   # Primary update strategy
   primaryUpdateStrategy: unsupervised
 
-  # Enable Istio sidecar injection for PostgreSQL pods
+  # NOTE: CloudNativePG operator talks directly to each instance's local HTTP status endpoint
+  # (podIP:8000, e.g. /pg/status). If an Istio sidecar is injected, Envoy can intercept that
+  # traffic and reset the connection (especially when the operator is not in the mesh and/or
+  # strict mTLS is enabled). Keep sidecar injection disabled for CNPG-managed PostgreSQL pods.
   inheritedMetadata:
     annotations:
       sidecar.istio.io/inject: "true"
@@ -82,11 +85,6 @@ spec:
 
   # Tolerate spot instances
   affinity:
-    tolerations:
-    - key: "kubernetes.azure.com/scalesetpriority"
-      operator: "Equal"
-      value: "spot"
-      effect: "NoSchedule"
     enablePodAntiAffinity: true
     topologyKey: kubernetes.io/hostname
     podAntiAffinityType: preferred
@@ -101,10 +99,6 @@ spec:
       - host all all 10.0.0.0/8 scram-sha-256
       - host all all 172.16.0.0/12 scram-sha-256
       - host all all 192.168.0.0/16 scram-sha-256
-
-  # Monitoring
-  monitoring:
-    enablePodMonitor: false
 
 # Note: The following secrets should be created manually or via sealed-secrets/external-secrets:
 # - postgres-superuser-secret (keys: username, password)

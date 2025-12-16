@@ -53,7 +53,10 @@ spec:
               cluster: oauth2_token_cluster_chat
               uri: http://oauth2-server.default.svc.cluster.local:9000/oauth2/token
               timeout: 5s
-            redirect_uri: "%REQ(x-forwarded-proto)%://%REQ(:authority)%/_oauth2/callback"
+            # NOTE: This filter runs on SIDECAR_INBOUND. Depending on the ingress/gateway topology,
+            # x-forwarded-proto may be absent or reflect the hop-to-pod scheme (often http).
+            # Force https so the redirect_uri matches the externally-registered callback.
+            redirect_uri: "https://%REQ(:authority)%/_oauth2/callback"
             redirect_path_matcher:
               path:
                 # NOTE: Envoy matches against the full ":path" header which can include the query string.

@@ -107,3 +107,4 @@ spec:
     - operation:
         ports:
         - "5432"
+        - "8000"

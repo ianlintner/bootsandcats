@@ -16,3 +16,5 @@ resources:
   - envoyfilter-profile-service-oauth2-exchange.yaml
   - envoyfilter-profile-service-jwt-to-headers.yaml
   - telemetry.yaml
+  - postgres-mtls.yaml
+  - postgres-peer-auth.yaml

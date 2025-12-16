@@ -8,9 +8,5 @@ spec:
     matchLabels:
       postgresql: postgres-ha
   mtls:
-    mode: STRICT
-  portLevelMtls:
-    8000:
-      mode: PERMISSIVE
-    5432:
-      mode: PERMISSIVE
+    mode: PERMISSIVE
+
