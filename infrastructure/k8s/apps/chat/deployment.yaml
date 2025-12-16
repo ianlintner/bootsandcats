@@ -20,6 +20,7 @@ spec:
         sidecar.istio.io/proxyMemory: 32Mi
         sidecar.istio.io/proxyCPULimit: 500m
         sidecar.istio.io/proxyMemoryLimit: 512Mi
+        sidecar.istio.io/userVolumeMount: '[{"name":"rendered-sds","mountPath":"/etc/istio/oauth2","readonly":true}]'
     spec:
       securityContext:
         seccompProfile:
@@ -87,7 +88,7 @@ spec:
           timeoutSeconds: 2
           failureThreshold: 3
         volumeMounts:
-        - name: rendered-oauth-sds
+        - name: rendered-sds
           mountPath: /etc/istio/oauth2
           readOnly: true
       tolerations:
@@ -117,7 +118,7 @@ spec:
         - name: oauth2-secrets-store
           mountPath: /mnt/oauth2-secrets
           readOnly: true
-        - name: rendered-oauth-sds
+        - name: rendered-sds
           mountPath: /etc/istio/oauth2
       volumes:
       - name: oauth2-secrets-store
@@ -126,5 +127,5 @@ spec:
           readOnly: true
           volumeAttributes:
             secretProviderClass: azure-keyvault-oauth2-secrets
-      - name: rendered-oauth-sds
+      - name: rendered-sds
         emptyDir: {}
