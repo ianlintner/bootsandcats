@@ -9,7 +9,6 @@ resources:
   - secrets.yaml
   - deployment.yaml
   - service.yaml
-  - istio-gateway.yaml
   - istio-virtualservice.yaml
   - secret-provider-class.yaml
   - secret-provider-oauth2.yaml
