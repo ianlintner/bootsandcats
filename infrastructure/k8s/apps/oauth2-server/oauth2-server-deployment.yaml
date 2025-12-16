@@ -16,6 +16,8 @@ spec:
       labels:
         app: oauth2-server
         version: v1
+      annotations:
+        proxy.istio.io/config: '{ "holdApplicationUntilProxyStarts": true }'
     spec:
       initContainers:
       # Repair any failed migrations before attempting migrate

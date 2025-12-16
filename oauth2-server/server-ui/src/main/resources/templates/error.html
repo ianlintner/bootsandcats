@@ -119,18 +119,18 @@
 <body>
 <div class="card">
     <div class="eyebrow">Boots & Cats • Auth Server</div>
-    <div class="status">${statusCode} • ${reasonPhrase}</div>
+    <div class="status"><span th:text="${status}">500</span> • <span th:text="${error}">Error</span></div>
     <h1>Something went wrong</h1>
-    <p class="muted">${statusMessage}</p>
+    <p class="muted" th:text="${message}">Unknown error occurred.</p>
 
     <div class="grid">
         <div class="panel">
             <strong>Path</strong>
-            <div>${path}</div>
+            <div th:text="${path}">/</div>
         </div>
         <div class="panel">
             <strong>Timestamp</strong>
-            <div>${timestamp}</div>
+            <div th:text="${timestamp}">Now</div>
         </div>
         <div class="panel">
             <strong>Next steps</strong>

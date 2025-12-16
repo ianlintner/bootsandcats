@@ -3,6 +3,12 @@ package com.bootsandcats.oauth2.config;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +21,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -37,6 +44,7 @@ import org.springframework.security.oauth2.server.authorization.token.JwtEncodin
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
@@ -100,23 +108,26 @@ public class AuthorizationServerConfig {
                         (authorizationServer) ->
                                 authorizationServer
                                         .authorizationEndpoint(
-                                                endpoint ->
-                                                        endpoint.authenticationProviders(
-                                                                providers ->
-                                                                        providers.forEach(
-                                                                                provider -> {
-                                                                                    if (provider
-                                                                                            instanceof
-                                                                                            OAuth2AuthorizationCodeRequestAuthenticationProvider
-                                                                                                            codeProvider) {
-                                                                                        codeProvider
-                                                                                                .setAuthenticationValidator(
-                                                                                                        redirectUriPathOnlyValidator()
-                                                                                                                .andThen(
-                                                                                                                        OAuth2AuthorizationCodeRequestAuthenticationValidator
-                                                                                                                                .DEFAULT_SCOPE_VALIDATOR));
-                                                                                    }
-                                                                                })))
+                                                endpoint -> {
+                                                    endpoint.errorResponseHandler(
+                                                            authorizationErrorResponseHandler());
+                                                    endpoint.authenticationProviders(
+                                                            providers ->
+                                                                    providers.forEach(
+                                                                            provider -> {
+                                                                                if (provider
+                                                                                        instanceof
+                                                                                        OAuth2AuthorizationCodeRequestAuthenticationProvider
+                                                                                                        codeProvider) {
+                                                                                    codeProvider
+                                                                                            .setAuthenticationValidator(
+                                                                                                    redirectUriPathOnlyValidator()
+                                                                                                            .andThen(
+                                                                                                                    OAuth2AuthorizationCodeRequestAuthenticationValidator
+                                                                                                                            .DEFAULT_SCOPE_VALIDATOR));
+                                                                                }
+                                                                            }));
+                                                })
                                         .oidc(
                                                 oidc ->
                                                         oidc.providerConfigurationEndpoint(
@@ -536,5 +547,15 @@ public class AuthorizationServerConfig {
         } catch (NumberFormatException ex) {
             return false;
         }
+    }
+
+    private AuthenticationFailureHandler authorizationErrorResponseHandler() {
+        return (request, response, exception) -> {
+            try {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, exception.getMessage());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        };
     }
 }

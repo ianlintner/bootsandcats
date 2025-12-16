@@ -58,18 +58,19 @@ public class CustomErrorController { // implements ErrorController {
 
         Map<String, Object> model =
                 Map.of(
-                        "statusCode",
+                        "status",
                         errorView.statusCode(),
-                        "statusMessage",
+                        "message",
                         errorView.message(),
-                        "reasonPhrase",
+                        "error",
                         errorView.reasonPhrase(),
                         "path",
                         errorView.path(),
                         "timestamp",
                         OffsetDateTime.now());
 
-        ModelAndView mav = new ModelAndView("error", model, errorView.httpStatus());
+        ModelAndView mav = new ModelAndView("error");
+        mav.addAllObjects(model);
         mav.setStatus(errorView.httpStatus());
         return mav;
     }
@@ -88,14 +89,19 @@ public class CustomErrorController { // implements ErrorController {
         }
 
         HttpStatus httpStatus = HttpStatus.valueOf(statusCode);
-        String message =
-                switch (statusCode) {
-                    case 400 -> "Bad request";
-                    case 401 -> "Unauthorized";
-                    case 403 -> "Access denied";
-                    case 404 -> "Resource not found";
-                    default -> "An unexpected error occurred";
-                };
+        Object errorMessage = request.getAttribute(RequestDispatcher.ERROR_MESSAGE);
+        String message = errorMessage != null ? errorMessage.toString() : "";
+
+        if (message.isEmpty()) {
+            message =
+                    switch (statusCode) {
+                        case 400 -> "Bad request";
+                        case 401 -> "Unauthorized";
+                        case 403 -> "Access denied";
+                        case 404 -> "Resource not found";
+                        default -> "An unexpected error occurred";
+                    };
+        }
 
         String path =
                 request.getAttribute(RequestDispatcher.ERROR_REQUEST_URI)
