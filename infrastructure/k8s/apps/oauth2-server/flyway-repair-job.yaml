@@ -1,0 +1,43 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: flyway-repair
+  namespace: default
+spec:
+  ttlSecondsAfterFinished: 300  # Auto-cleanup after 5 minutes
+  backoffLimit: 3
+  activeDeadlineSeconds: 600  # Terminate job after 10 minutes
+  template:
+    metadata:
+      labels:
+        app: flyway-repair
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: flyway-repair
+        image: gabby.azurecr.io/flyway-migrate:latest
+        command: ["flyway", "repair"]
+        env:
+        - name: FLYWAY_URL
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: database-url
+        - name: FLYWAY_USER
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: database-username
+        - name: FLYWAY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: database-password
+        - name: FLYWAY_LOCATIONS
+          value: "filesystem:/flyway/sql"
+        - name: FLYWAY_VALIDATE_ON_MIGRATE
+          value: "true"
+        - name: FLYWAY_CLEAN_DISABLED
+          value: "true"

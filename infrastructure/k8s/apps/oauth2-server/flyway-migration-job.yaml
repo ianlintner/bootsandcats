@@ -15,11 +15,14 @@ spec:
   # Keep successful jobs for debugging, failed jobs for troubleshooting
   ttlSecondsAfterFinished: 600
   backoffLimit: 3
+  activeDeadlineSeconds: 600  # Terminate job after 10 minutes
   template:
     metadata:
       labels:
         app: oauth2-server
         component: database-migrations
+      annotations:
+        sidecar.istio.io/inject: "false"
     spec:
       restartPolicy: Never
       initContainers:

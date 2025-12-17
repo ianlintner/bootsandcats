@@ -37,6 +37,24 @@ public class DataInitializer {
     @Value("${oauth2.m2m-client-secret:m2m-secret}")
     private String m2mClientSecret;
 
+    @Value("${oauth2.profile-ui-client-secret:demo-profile-ui-client-secret}")
+    private String profileUiClientSecret;
+
+    @Value("${oauth2.profile-service-client-secret:demo-profile-service-client-secret}")
+    private String profileServiceClientSecret;
+
+    @Value("${oauth2.github-review-service-client-secret:demo-github-review-service-client-secret}")
+    private String githubReviewServiceClientSecret;
+
+    @Value("${oauth2.chat-service-client-secret:demo-chat-service-client-secret}")
+    private String chatServiceClientSecret;
+
+    @Value("${oauth2.slop-detector-client-secret:demo-slop-detector-client-secret}")
+    private String slopDetectorClientSecret;
+
+    @Value("${oauth2.security-agency-client-secret:demo-security-agency-client-secret}")
+    private String securityAgencyClientSecret;
+
     @Value("${oauth2.preserve-client-secrets:true}")
     private boolean preserveClientSecrets;
 
@@ -73,7 +91,7 @@ public class DataInitializer {
                     "profile-ui",
                     () ->
                             buildProfileUiClient(
-                                    passwordEncoder.encode(demoClientSecret),
+                                    passwordEncoder.encode(profileUiClientSecret),
                                     UUID.randomUUID().toString()));
 
             registerOrUpdateClient(
@@ -82,7 +100,43 @@ public class DataInitializer {
                     "profile-service",
                     () ->
                             buildProfileServiceClient(
-                                    passwordEncoder.encode(demoClientSecret),
+                                    passwordEncoder.encode(profileServiceClientSecret),
+                                    UUID.randomUUID().toString()));
+
+            registerOrUpdateClient(
+                    repository,
+                    securityAuditService,
+                    "github-review-service",
+                    () ->
+                            buildGithubReviewServiceClient(
+                                    passwordEncoder.encode(githubReviewServiceClientSecret),
+                                    UUID.randomUUID().toString()));
+
+            registerOrUpdateClient(
+                    repository,
+                    securityAuditService,
+                    "chat-backend",
+                    () ->
+                            buildChatBackendClient(
+                                    passwordEncoder.encode(chatServiceClientSecret),
+                                    UUID.randomUUID().toString()));
+
+            registerOrUpdateClient(
+                    repository,
+                    securityAuditService,
+                    "slop-detector",
+                    () ->
+                            buildSlopDetectorClient(
+                                    passwordEncoder.encode(slopDetectorClientSecret),
+                                    UUID.randomUUID().toString()));
+
+            registerOrUpdateClient(
+                    repository,
+                    securityAuditService,
+                    "security-agency",
+                    () ->
+                            buildSecurityAgencyClient(
+                                    passwordEncoder.encode(securityAgencyClientSecret),
                                     UUID.randomUUID().toString()));
         };
     }
@@ -298,6 +352,96 @@ public class DataInitializer {
                         ClientSettings.builder()
                                 .requireAuthorizationConsent(false)
                                 .requireProofKey(false)
+                                .build())
+                .build();
+    }
+
+    private RegisteredClient buildGithubReviewServiceClient(String encodedSecret, String id) {
+        return RegisteredClient.withId(id)
+                .clientId("github-review-service")
+                .clientIdIssuedAt(Instant.now())
+                .clientSecret(encodedSecret)
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
+                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                .scope("api:read")
+                .scope("api:write")
+                .tokenSettings(
+                        TokenSettings.builder()
+                                .accessTokenTimeToLive(Duration.ofMinutes(15))
+                                .build())
+                .clientSettings(
+                        ClientSettings.builder()
+                                .requireAuthorizationConsent(false)
+                                .build())
+                .build();
+    }
+
+    private RegisteredClient buildChatBackendClient(String encodedSecret, String id) {
+        return RegisteredClient.withId(id)
+                .clientId("chat-backend")
+                .clientIdIssuedAt(Instant.now())
+                .clientSecret(encodedSecret)
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
+                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                .redirectUri("https://chat.cat-herding.net/_oauth2/callback")
+                .postLogoutRedirectUri("https://chat.cat-herding.net/")
+                .scope(OidcScopes.OPENID)
+                .scope(OidcScopes.PROFILE)
+                .scope(OidcScopes.EMAIL)
+                .tokenSettings(
+                        TokenSettings.builder()
+                                .accessTokenTimeToLive(Duration.ofHours(1))
+                                .refreshTokenTimeToLive(Duration.ofDays(1))
+                                .reuseRefreshTokens(true)
+                                .build())
+                .clientSettings(
+                        ClientSettings.builder()
+                                .requireAuthorizationConsent(false)
+                                .requireProofKey(false)
+                                .build())
+                .build();
+    }
+
+    private RegisteredClient buildSlopDetectorClient(String encodedSecret, String id) {
+        return RegisteredClient.withId(id)
+                .clientId("slop-detector")
+                .clientIdIssuedAt(Instant.now())
+                .clientSecret(encodedSecret)
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
+                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                .scope("api:read")
+                .scope("api:write")
+                .tokenSettings(
+                        TokenSettings.builder()
+                                .accessTokenTimeToLive(Duration.ofMinutes(15))
+                                .build())
+                .clientSettings(
+                        ClientSettings.builder()
+                                .requireAuthorizationConsent(false)
+                                .build())
+                .build();
+    }
+
+    private RegisteredClient buildSecurityAgencyClient(String encodedSecret, String id) {
+        return RegisteredClient.withId(id)
+                .clientId("security-agency")
+                .clientIdIssuedAt(Instant.now())
+                .clientSecret(encodedSecret)
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
+                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                .scope("api:read")
+                .scope("api:write")
+                .tokenSettings(
+                        TokenSettings.builder()
+                                .accessTokenTimeToLive(Duration.ofMinutes(15))
+                                .build())
+                .clientSettings(
+                        ClientSettings.builder()
+                                .requireAuthorizationConsent(false)
                                 .build())
                 .build();
     }
