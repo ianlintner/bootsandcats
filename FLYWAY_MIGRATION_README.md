@@ -19,15 +19,20 @@ This solution provides a standalone Flyway migration container for running datab
    - Contains all 19 database migration scripts
    - Configurable via environment variables
 
-2. **Docker Compose Integration** ([infrastructure/docker-compose.yml](infrastructure/docker-compose.yml))
+2. **Init Container Deployment** ([infrastructure/k8s/apps/oauth2-server/oauth2-server-deployment.yaml](infrastructure/k8s/apps/oauth2-server/oauth2-server-deployment.yaml))
+   - Flyway runs as init container (recommended approach)
+   - Automatic migration on every pod start
+   - Self-healing and simple to manage
+
+3. **Docker Compose Integration** ([infrastructure/docker-compose.yml](infrastructure/docker-compose.yml))
    - `flyway-migrate` service runs before oauth2-server
    - Automatic dependency management
    - Easy local testing
 
-3. **Kubernetes Job** ([infrastructure/k8s/apps/oauth2-server/flyway-migration-job.yaml](infrastructure/k8s/apps/oauth2-server/flyway-migration-job.yaml))
+4. **Kubernetes Job** ([infrastructure/k8s/apps/oauth2-server/flyway-migration-job.yaml](infrastructure/k8s/apps/oauth2-server/flyway-migration-job.yaml)) - Optional
+   - Alternative to init container for Helm deployments
    - Runs as pre-install/pre-upgrade hook
-   - Waits for PostgreSQL to be ready
-   - Supports Flyway placeholders for secrets
+   - Better for large-scale deployments
 
 4. **Build & Test Scripts**
    - [oauth2-server/build-flyway-container.sh](oauth2-server/build-flyway-container.sh) - Build and push container
@@ -42,6 +47,7 @@ This solution provides a standalone Flyway migration container for running datab
 - **[FLYWAY_QUICKSTART.md](oauth2-server/FLYWAY_QUICKSTART.md)** - Get started quickly
 - **[FLYWAY_CONTAINER.md](oauth2-server/FLYWAY_CONTAINER.md)** - Comprehensive documentation
 - **[FLYWAY_MIGRATION_IMPLEMENTATION.md](oauth2-server/FLYWAY_MIGRATION_IMPLEMENTATION.md)** - Implementation details
+- **[FLYWAY_INIT_CONTAINER_VS_JOB.md](oauth2-server/FLYWAY_INIT_CONTAINER_VS_JOB.md)** - Init container vs Job comparison
 
 ## Getting Started
 
@@ -103,14 +109,19 @@ kubectl logs -l component=database-migrations
 
 ```
 ┌─────────────────────────────────────────┐
-│         Deployment Sequence              │
+│      Deployment with Init Container     │
 └─────────────────────────────────────────┘
 
-PostgreSQL starts
+Pod Starts
     ↓
-Flyway migration container runs
-    ↓ (waits for completion)
-OAuth2 Server starts
+Init Container: flyway-migrate
+    ├─ Connects to PostgreSQL
+    ├─ Checks migration status
+    ├─ Applies pending migrations
+    └─ Exits (success)
+    ↓
+Main Container: oauth2-server
+    └─ Starts with validated schema
 ```
 
 ### Container Structure
