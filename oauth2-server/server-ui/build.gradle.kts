@@ -66,6 +66,16 @@ tasks.named<Jar>("jar") {
     enabled = false
 }
 
+// Copy Flyway migrations from server-dao to server-ui resources for bootJar packaging
+val copyMigrations by tasks.registering(Copy::class) {
+    from(project(":oauth2-server:server-dao").file("src/main/resources/db/migration"))
+    into(layout.buildDirectory.dir("resources/main/db/migration"))
+}
+
+tasks.named("processResources") {
+    dependsOn(copyMigrations)
+}
+
 // Configure default test task to exclude testcontainers tests (run those separately)
 tasks.named<Test>("test") {
     useJUnitPlatform {
