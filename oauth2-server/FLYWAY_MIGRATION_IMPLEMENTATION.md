@@ -74,18 +74,19 @@ Created a containerized Flyway setup that:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                        Deployment Flow                       │
+│                   Deployment Flow (Init Container)           │
 └─────────────────────────────────────────────────────────────┘
 
-1. PostgreSQL starts
+1. Pod creation starts
    ↓
-2. Flyway migration container runs (Job/Service)
+2. Init Container: flyway-migrate
+   - Connects to PostgreSQL
    - Applies all pending migrations
    - Validates schema
    - Exits on completion
    ↓
-3. OAuth2 Server starts
-   - Spring Boot Flyway disabled
+3. Main Container: OAuth2 Server starts
+   - Spring Boot Flyway disabled (prod-no-flyway profile)
    - JPA validates schema matches entities
    - Application ready
 
