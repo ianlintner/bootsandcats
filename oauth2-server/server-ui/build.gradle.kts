@@ -4,6 +4,16 @@ plugins {
     id("java")
 }
 
+// Custom Gradle task to run Flyway migrations programmatically
+// Usage: ./gradlew :oauth2-server:server-ui:runFlywayMigration
+// Note: Spring Boot 4.0.0 Flyway autoconfiguration is unreliable, use this task for local testing
+tasks.register<JavaExec>("runFlywayMigration") {
+    group = "flyway"
+    description = "Run Flyway migrations programmatically (use before bootRun for local testing)"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("com.bootsandcats.oauth2.RunFlywayMigration")
+}
+
 // OpenTelemetry Java Agent version - use agent approach instead of starter library
 // The agent attaches via -javaagent and is compatible with any Spring Boot version
 val otelAgentVersion = "2.12.0"
