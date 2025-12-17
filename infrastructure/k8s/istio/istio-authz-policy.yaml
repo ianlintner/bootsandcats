@@ -130,3 +130,66 @@ spec:
     - operation:
         methods: ["GET", "POST"]
         paths: ["/oauth2/*"]
+
+---
+# Allow profile-service to complete the OAuth flow and serve static assets via the gateway
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: profile-service-frontend-access
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    project: bootsandcats
+spec:
+  selector:
+    matchLabels:
+      app: profile-service
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals:
+        - cluster.local/ns/aks-istio-ingress/sa/istio-ingressgateway-service-account
+        - cluster.local/ns/default/sa/oauth2-server
+    to:
+    - operation:
+        methods: ["GET", "POST"]
+        paths:
+        - "/_oauth2/callback"
+        - "/_oauth2/logout"
+        - "/favicon.ico"
+        - "/profile-app.js"
+        - "/index.html"
+        - "/swagger"
+        - "/swagger/*"
+        - "/openapi"
+        - "/openapi/*"
+        - "/css/*"
+        - "/js/*"
+        - "/images/*"
+
+---
+# Allow profile-service to reach the OAuth2 server for token exchanges
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: oauth2-server-profile-service-access
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    project: bootsandcats
+spec:
+  selector:
+    matchLabels:
+      app: oauth2-server
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals:
+        - cluster.local/ns/default/sa/default
+    to:
+    - operation:
+        ports:
+        - "9000"
