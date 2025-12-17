@@ -125,27 +125,36 @@ docker-compose run flyway-migrate validate
 
 ### Kubernetes Deployment
 
-```bash
-# Build and push container
-cd oauth2-server
-./build-flyway-container.sh --push
+**Primary Method: Init Container**
 
-# Deploy migration job (runs automatically before oauth2-server)
-kubectl apply -f ../infrastructure/k8s/apps/oauth2-server/flyway-migration-job.yaml
+The deployment now includes Flyway as an init container:
+
+```bash
+# Deploy (migrations run automatically as init container)
+kubectl apply -f infrastructure/k8s/apps/oauth2-server/oauth2-server-deployment.yaml
+
+# Watch init container logs
+kubectl logs -f deployment/oauth2-server -c flyway-migrate
+
+# Check pod status (will show Init:0/1 while migrating)
+kubectl get pods -l app=oauth2-server
+```
+
+**Alternative Method: Kubernetes Job** (optional, for Helm)
+
+```bash
+# Run standalone job before deployment
+kubectl apply -f infrastructure/k8s/apps/oauth2-server/flyway-migration-job.yaml
 
 # Check status
 kubectl get job flyway-migrate
-kubectl logs -l component=database-migrations
+kubectl logs job/flyway-migrate
 
-# Manual migration run
-kubectl run flyway-migrate \
-  --image=gabby.azurecr.io/flyway-migrate:latest \
-  --restart=Never \
-  --env="FLYWAY_URL=jdbc:postgresql://postgres.default.svc.cluster.local:5432/oauth2db" \
-  --env="FLYWAY_USER=postgres" \
-  --env="FLYWAY_PASSWORD=yourpassword" \
-  -- migrate
+# Then deploy application
+kubectl apply -f infrastructure/k8s/apps/oauth2-server/oauth2-server-deployment.yaml
 ```
+
+See [FLYWAY_INIT_CONTAINER_VS_JOB.md](FLYWAY_INIT_CONTAINER_VS_JOB.md) for comparison.
 
 ### CI/CD Integration
 
