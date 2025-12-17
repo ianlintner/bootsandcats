@@ -53,8 +53,8 @@ spec:
           valueFrom:
             secretKeyRef:
               name: profile-service-secrets
-              key: oauth2-client-secret
-              optional: true
+              key: profile-service-client-secret
+              optional: false
         - name: FLYWAY_PLACEHOLDERS_CHAT_SERVICE_CLIENT_SECRET
           valueFrom:
             secretKeyRef:

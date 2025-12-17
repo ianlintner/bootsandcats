@@ -557,3 +557,16 @@ data:
         UPDATE oauth2_registered_client
         SET client_secret = '{noop}demo-chat-backend-client-secret'
         WHERE client_id = 'chat-backend';
+
+    V15__sync_profile_service_client_secret_from_keyvault.sql: |
+        -- Sync profile-service confidential client secret to match the secret provisioned
+        -- for the profile-service Envoy OAuth2 filter token exchange.
+        --
+        -- This addresses redirect loops (ERR_TOO_MANY_REDIRECTS) caused by invalid_client errors
+        -- during the callback code->token exchange.
+        --
+        -- Source of truth: Flyway placeholder ${profile_service_client_secret}
+
+        UPDATE oauth2_registered_client
+        SET client_secret = '{noop}${profile_service_client_secret}'
+        WHERE client_id = 'profile-service';

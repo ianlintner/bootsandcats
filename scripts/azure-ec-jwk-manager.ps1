@@ -35,7 +35,7 @@ param(
 $ErrorActionPreference = "Stop"
 $VerbosePreference = "Continue"
 
-$script:K8sSecretName = "oauth2-app-secrets"
+$script:K8sSecretName = "oauth2-jwk-secret"
 $script:ProjectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $script:TempDir = Join-Path ([System.IO.Path]::GetTempPath()) "azure-jwk-$(Get-Random)"
 
@@ -155,7 +155,15 @@ function Validate-Jwk {
         return $false
     }
 
-    Write-Success "JWK validation passed (EC P-256 with ES256)"
+    # The authorization server must have a PRIVATE signing key. The public JWKS
+    # (/oauth2/jwks) intentionally omits the private component ("d").
+    if ([string]::IsNullOrWhiteSpace($key.d)) {
+        Write-Error "JWK is missing private key material (EC field 'd')."
+        Write-Error "Generate a full signing key (includes 'd'); do NOT copy from /oauth2/jwks."
+        return $false
+    }
+
+    Write-Success "JWK validation passed (EC P-256 with ES256, private key present)"
     return $true
 }
 
@@ -233,7 +241,7 @@ function Update-K8sSecret {
 
     # Create or update the secret
     kubectl create secret generic $script:K8sSecretName `
-        --from-file="jwk.json=$JwkFile" `
+        --from-file="static-jwk=$JwkFile" `
         --namespace=$K8sNamespace `
         --dry-run=client -o yaml | kubectl apply -f - | Out-Null
 

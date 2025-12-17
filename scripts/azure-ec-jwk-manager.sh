@@ -144,6 +144,7 @@ validate_jwk() {
     local key_type=$(jq -r '.keys[0].kty' "$jwk_file")
     local algorithm=$(jq -r '.keys[0].alg' "$jwk_file")
     local curve=$(jq -r '.keys[0].crv' "$jwk_file")
+    local private_d=$(jq -r '.keys[0].d // empty' "$jwk_file")
 
     if [ "$key_type" != "EC" ]; then
         log_error "Expected key type EC, got $key_type"
@@ -160,7 +161,15 @@ validate_jwk() {
         return 1
     fi
 
-    log_success "JWK validation passed (EC P-256 with ES256)"
+    # The authorization server must have a PRIVATE signing key. The public JWKS
+    # (/oauth2/jwks) intentionally omits the private component ("d").
+    if [ -z "$private_d" ] || [ "$private_d" = "null" ]; then
+        log_error "JWK is missing private key material (EC field 'd')."
+        log_error "Generate a full signing key (includes 'd'); do NOT copy from /oauth2/jwks."
+        return 1
+    fi
+
+    log_success "JWK validation passed (EC P-256 with ES256, private key present)"
     return 0
 }
 

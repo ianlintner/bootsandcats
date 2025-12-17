@@ -15,11 +15,84 @@ echo "GitHub Review: https://$GITHUB_REVIEW_DOMAIN"
 echo "OAuth2 Server: https://$OAUTH2_SERVER"
 echo
 
+# Helper: base64 decode (macOS vs GNU coreutils)
+base64_decode() {
+    # Usage: echo "..." | base64_decode
+    # IMPORTANT: do not probe base64 by running it without args, because that consumes stdin.
+    if base64 --help 2>&1 | grep -q -- '--decode'; then
+        base64 --decode
+    else
+        base64 -D
+    fi
+}
+
+# Helper: terminate background port-forward cleanly
+stop_port_forward() {
+    local pf_pid="$1"
+    if [ -n "$pf_pid" ]; then
+        kill "$pf_pid" 2>/dev/null || true
+        # Give the process a moment to exit.
+        sleep 1
+    fi
+}
+
+# Test 0: OAuth2 token issuance (validates JWK signing)
+echo "Test 0: OAuth2 token issuance (/oauth2/token via client_credentials)"
+echo "---"
+echo "Port-forwarding oauth2-server and requesting a token (no secrets printed)..."
+
+M2M_CLIENT_ID="${M2M_CLIENT_ID:-m2m-client}"
+M2M_CLIENT_SECRET="${M2M_CLIENT_SECRET:-${OAUTH2_M2M_CLIENT_SECRET:-}}"
+
+if [ -z "$M2M_CLIENT_SECRET" ]; then
+    # Best-effort: load from in-cluster secret if available. Do not echo.
+    # NOTE: kubectl jsonpath supports dashed keys in dot-notation (used elsewhere in this repo).
+    # Keep stderr for debugging (but do not print the secret itself).
+    M2M_CLIENT_SECRET_B64=$(kubectl get secret -n default oauth2-app-secrets -o jsonpath='{.data.m2m-client-secret}' 2>/dev/null || true)
+    if [ -n "$M2M_CLIENT_SECRET_B64" ]; then
+        M2M_CLIENT_SECRET=$(echo -n "$M2M_CLIENT_SECRET_B64" | base64_decode 2>/dev/null || true)
+    fi
+fi
+
+if kubectl port-forward -n default svc/oauth2-server 9000:9000 >/dev/null 2>&1 &
+then
+    OAUTH2_PF_PID=$!
+    sleep 2
+
+    if [ -z "$M2M_CLIENT_SECRET" ]; then
+        echo "⚠️  WARN: No m2m client secret available. Set M2M_CLIENT_SECRET (or OAUTH2_M2M_CLIENT_SECRET) to enable token test."
+    else
+        HTTP_CODE=$(curl -s -o /tmp/oauth2_token_response.json -w "%{http_code}" \
+            -u "$M2M_CLIENT_ID:$M2M_CLIENT_SECRET" \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            --data "grant_type=client_credentials&scope=profile:read" \
+            http://localhost:9000/oauth2/token \
+            -m 10 2>/dev/null || true)
+
+        if [ "$HTTP_CODE" = "200" ] && grep -q '"access_token"' /tmp/oauth2_token_response.json 2>/dev/null; then
+            echo "✅ PASS: /oauth2/token returned 200 and included an access_token"
+        else
+            echo "❌ FAIL: /oauth2/token did not succeed (HTTP $HTTP_CODE)"
+            # Print a small snippet for debugging (avoid leaking tokens)
+            if [ -f /tmp/oauth2_token_response.json ]; then
+                sed -e 's/"access_token"\s*:\s*"[^"]\+"/"access_token":"***REDACTED***"/g' \
+                    -e 's/"refresh_token"\s*:\s*"[^"]\+"/"refresh_token":"***REDACTED***"/g' \
+                    /tmp/oauth2_token_response.json | head -c 600
+                echo
+            fi
+        fi
+    fi
+
+    stop_port_forward "$OAUTH2_PF_PID"
+fi
+echo
+
 # Test 1: Health checks are accessible without OAuth
 echo "Test 1: Health checks (should be accessible without OAuth)"
 echo "---"
 if kubectl port-forward -n default svc/profile-service 8080:80 >/dev/null 2>&1 &
 then
+    PROFILE_PF_PID=$!
     sleep 2
     if curl -s http://localhost:8080/health -m 2 >/dev/null; then
         echo "✅ PASS: /health endpoint accessible"
@@ -31,8 +104,7 @@ then
     else
         echo "❌ FAIL: /actuator/health endpoint not accessible"
     fi
-    killall kubectl 2>/dev/null || true
-    sleep 1
+    stop_port_forward "$PROFILE_PF_PID"
 fi
 echo
 
