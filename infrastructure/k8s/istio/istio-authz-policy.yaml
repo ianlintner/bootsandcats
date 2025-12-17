@@ -108,3 +108,25 @@ spec:
         ports:
         - "5432"
         - "8000"
+
+---
+# Allow oauth2-server to access its own endpoints
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: oauth2-server-endpoint-access
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    project: bootsandcats
+spec:
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals:
+        - "cluster.local/ns/default/sa/oauth2-server"
+    to:
+    - operation:
+        methods: ["GET", "POST"]
+        paths: ["/oauth2/*"]

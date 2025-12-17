@@ -28,8 +28,8 @@ spec:
             - endpoint:
                 address:
                   socket_address:
-                    address: ${TOKEN_ENDPOINT_HOST}
-                    port_value: ${TOKEN_ENDPOINT_PORT}
+                    address: oauth2-server.default.svc.cluster.local
+                    port_value: 8080
   - applyTo: HTTP_FILTER
     match:
       context: SIDECAR_INBOUND
