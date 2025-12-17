@@ -19,81 +19,6 @@ spec:
       annotations:
         proxy.istio.io/config: '{ "holdApplicationUntilProxyStarts": true }'
     spec:
-      initContainers:
-      # Repair any failed migrations before attempting migrate
-      - name: flyway-repair
-        image: flyway/flyway:11-alpine
-        args:
-        - -url=jdbc:postgresql://postgres.default.svc.cluster.local:5432/$(DATABASE_NAME)?sslmode=disable
-        - -user=$(DATABASE_USERNAME)
-        - -password=$(DATABASE_PASSWORD)
-        - -locations=filesystem:/flyway/sql
-        - repair
-        env:
-        - name: DATABASE_NAME
-          valueFrom:
-            secretKeyRef:
-              name: oauth2-app-secrets
-              key: database-name
-        - name: DATABASE_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: oauth2-app-secrets
-              key: database-username
-        - name: DATABASE_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: oauth2-app-secrets
-              key: database-password
-        volumeMounts:
-        - name: flyway-migrations
-          mountPath: /flyway/sql
-          readOnly: true
-        securityContext:
-          runAsNonRoot: true
-          runAsUser: 1001
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
-          capabilities:
-            drop:
-            - ALL
-      - name: flyway-migrate
-        image: flyway/flyway:11-alpine
-        args:
-        - -url=jdbc:postgresql://postgres.default.svc.cluster.local:5432/$(DATABASE_NAME)?sslmode=disable
-        - -user=$(DATABASE_USERNAME)
-        - -password=$(DATABASE_PASSWORD)
-        - -baselineOnMigrate=true
-        - -locations=filesystem:/flyway/sql
-        - migrate
-        env:
-        - name: DATABASE_NAME
-          valueFrom:
-            secretKeyRef:
-              name: oauth2-app-secrets
-              key: database-name
-        - name: DATABASE_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: oauth2-app-secrets
-              key: database-username
-        - name: DATABASE_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: oauth2-app-secrets
-              key: database-password
-        volumeMounts:
-        - name: flyway-migrations
-          mountPath: /flyway/sql
-          readOnly: true
-        securityContext:
-          runAsNonRoot: true
-          runAsUser: 1001
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
-          capabilities:
-            drop:
-            - ALL
       containers:
       - name: oauth2-server
         image: gabby.azurecr.io/oauth2-server:latest
@@ -258,9 +183,6 @@ spec:
           mountPath: "/mnt/secrets-store"
           readOnly: true
       volumes:
-      - name: flyway-migrations
-        configMap:
-          name: flyway-migrations
       - name: secrets-store
         csi:
           driver: secrets-store.csi.k8s.io
