@@ -14,40 +14,51 @@ spec:
     metadata:
       annotations:
         sidecar.istio.io/inject: "true"
-        sidecar.istio.io/userVolumeMount: '{"rendered-oauth-sds":{"mountPath":"/etc/istio/oauth2","readOnly":true}}'
+        sidecar.istio.io/userVolumeMount: >-
+          [{"name":"rendered-sds","mountPath":"/etc/istio/oauth2","readonly":true}]
       labels:
         app: profile-service
     spec:
       initContainers:
-      - name: render-oauth-sds
-        image: python:3.11-alpine
-        command: ["/bin/sh", "-c"]
-        args:
+      - name: render-sds-config
+        image: busybox:1.37
+        command:
+        - /bin/sh
+        - -c
         - |
-          python3 <<'EOFPY'
-          import os
-
-          client_secret = open('/mnt/oauth2-secrets/profile-service-client-secret').read().strip()
-          hmac_secret = open('/mnt/oauth2-secrets/profile-service-oauth-hmac-secret').read().strip()
-
-          token_config = f"""resources:\n- \"@type\": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret\n  name: profile-service-oauth-token\n  generic_secret:\n    secret:\n      inline_string: \"{client_secret}\"\n"""
-          hmac_config = f"""resources:\n- \"@type\": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret\n  name: profile-service-oauth-hmac\n  generic_secret:\n    secret:\n      inline_string: \"{hmac_secret}\"\n"""
-
-          os.makedirs('/etc/istio/oauth2', exist_ok=True)
-
-          with open('/etc/istio/oauth2/profile-service-oauth-token.yaml', 'w') as f:
-              f.write(token_config)
-
-          with open('/etc/istio/oauth2/profile-service-oauth-hmac.yaml', 'w') as f:
-              f.write(hmac_config)
-
-          print('Profile-service OAuth2 SDS configs rendered successfully')
-          EOFPY
+          set -e
+          echo "Initializing OAuth2 SDS files..."
+          
+          mkdir -p /etc/istio/oauth2
+          
+          CLIENT_SECRET=$(cat /mnt/secrets-store/profile-service-client-secret)
+          HMAC_SECRET=$(cat /mnt/secrets-store/profile-service-oauth-hmac-secret)
+          
+          cat > /etc/istio/oauth2/profile-service-oauth-token.yaml <<EOF
+          resources:
+          - "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret
+            name: profile-service-oauth-token
+            generic_secret:
+              secret:
+                inline_string: "${CLIENT_SECRET}"
+          EOF
+          
+          cat > /etc/istio/oauth2/profile-service-oauth-hmac.yaml <<EOF
+          resources:
+          - "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret
+            name: profile-service-oauth-hmac
+            generic_secret:
+              secret:
+                inline_string: "${HMAC_SECRET}"
+          EOF
+          
+          echo "OAuth2 SDS files initialized successfully"
+          ls -la /etc/istio/oauth2/
         volumeMounts:
         - name: secrets-store
-          mountPath: /mnt/oauth2-secrets
+          mountPath: /mnt/secrets-store
           readOnly: true
-        - name: rendered-oauth-sds
+        - name: rendered-sds
           mountPath: /etc/istio/oauth2
       containers:
       - name: profile-service
@@ -103,6 +114,9 @@ spec:
         - name: secrets-store
           mountPath: "/mnt/secrets-store"
           readOnly: true
+        - name: rendered-sds
+          mountPath: /etc/istio/oauth2
+          readOnly: true
       volumes:
       - name: secrets-store
         csi:
@@ -110,7 +124,7 @@ spec:
           readOnly: true
           volumeAttributes:
             secretProviderClass: "profile-service-secrets-provider"
-      - name: rendered-oauth-sds
+      - name: rendered-sds
         emptyDir: {}
       tolerations:
       - key: "kubernetes.azure.com/scalesetpriority"
