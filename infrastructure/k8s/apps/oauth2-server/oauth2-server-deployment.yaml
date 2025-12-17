@@ -105,11 +105,10 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "prod"
-        # Tracing (Micrometer Tracing -> OTLP HTTP)
-        - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
-          value: "http://otel-collector:4318/v1/traces"
-        - name: TRACING_SAMPLING_PROBABILITY
-          value: "0.05"
+        - name: OTEL_SDK_DISABLED
+          value: "true"
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://otel-collector:4317"
         - name: OAUTH2_ISSUER_URL
           valueFrom:
             secretKeyRef:
@@ -158,43 +157,36 @@ spec:
             secretKeyRef:
               name: oauth2-app-secrets
               key: github-client-id
-              optional: true
         - name: GITHUB_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
               name: oauth2-app-secrets
               key: github-client-secret
-              optional: true
         - name: GOOGLE_CLIENT_ID
           valueFrom:
             secretKeyRef:
               name: oauth2-app-secrets
               key: google-client-id
-              optional: true
         - name: GOOGLE_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
               name: oauth2-app-secrets
               key: google-client-secret
-              optional: true
         - name: AZURE_CLIENT_ID
           valueFrom:
             secretKeyRef:
               name: oauth2-app-secrets
               key: azure-client-id
-              optional: true
         - name: AZURE_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
               name: oauth2-app-secrets
               key: azure-client-secret
-              optional: true
         - name: AZURE_TENANT_ID
           valueFrom:
             secretKeyRef:
               name: oauth2-app-secrets
               key: azure-tenant-id
-              optional: true
         - name: SSL_KEYSTORE_PASSWORD
           valueFrom:
             secretKeyRef:
@@ -261,10 +253,20 @@ spec:
           capabilities:
             drop:
             - ALL
+        volumeMounts:
+        - name: secrets-store
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
       volumes:
       - name: flyway-migrations
         configMap:
           name: flyway-migrations
+      - name: secrets-store
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "oauth2-server-secrets-provider"
 ---
 apiVersion: v1
 kind: Service
