@@ -370,10 +370,7 @@ public class DataInitializer {
                         TokenSettings.builder()
                                 .accessTokenTimeToLive(Duration.ofMinutes(15))
                                 .build())
-                .clientSettings(
-                        ClientSettings.builder()
-                                .requireAuthorizationConsent(false)
-                                .build())
+                .clientSettings(ClientSettings.builder().requireAuthorizationConsent(false).build())
                 .build();
     }
 
@@ -418,10 +415,7 @@ public class DataInitializer {
                         TokenSettings.builder()
                                 .accessTokenTimeToLive(Duration.ofMinutes(15))
                                 .build())
-                .clientSettings(
-                        ClientSettings.builder()
-                                .requireAuthorizationConsent(false)
-                                .build())
+                .clientSettings(ClientSettings.builder().requireAuthorizationConsent(false).build())
                 .build();
     }
 
@@ -439,10 +433,7 @@ public class DataInitializer {
                         TokenSettings.builder()
                                 .accessTokenTimeToLive(Duration.ofMinutes(15))
                                 .build())
-                .clientSettings(
-                        ClientSettings.builder()
-                                .requireAuthorizationConsent(false)
-                                .build())
+                .clientSettings(ClientSettings.builder().requireAuthorizationConsent(false).build())
                 .build();
     }
 }
