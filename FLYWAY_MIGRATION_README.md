@@ -95,14 +95,19 @@ cd oauth2-server
 ### Deploy to Kubernetes
 
 ```bash
-# Apply the migration job
+# The deployment includes the init container by default
+kubectl apply -f infrastructure/k8s/apps/oauth2-server/oauth2-server-deployment.yaml
+
+# Watch the init container logs during deployment
+kubectl logs -f deployment/oauth2-server -c flyway-migrate
+
+# Check deployment status
+kubectl get pods -l app=oauth2-server
+
+# Optional: Use the standalone Job instead (for Helm deployments)
 kubectl apply -f infrastructure/k8s/apps/oauth2-server/flyway-migration-job.yaml
-
-# Check status
-kubectl get job flyway-migrate
-
-# View logs
-kubectl logs -l component=database-migrations
+kubectl wait --for=condition=complete job/flyway-migrate
+kubectl logs job/flyway-migrate
 ```
 
 ## Architecture
