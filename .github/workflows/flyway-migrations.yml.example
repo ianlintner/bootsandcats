@@ -1,0 +1,143 @@
+# Example GitHub Actions Workflow for Flyway Migrations
+# Add this to your existing CI/CD pipeline
+
+name: Build and Deploy Flyway Migrations
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'oauth2-server/server-dao/src/main/resources/db/migration/**'
+      - 'oauth2-server/Dockerfile.flyway'
+  pull_request:
+    paths:
+      - 'oauth2-server/server-dao/src/main/resources/db/migration/**'
+      - 'oauth2-server/Dockerfile.flyway'
+
+env:
+  REGISTRY: gabby.azurecr.io
+  IMAGE_NAME: flyway-migrate
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Flyway container
+      working-directory: oauth2-server
+      run: |
+        docker build -f Dockerfile.flyway -t flyway-migrate:test .
+
+    - name: Start PostgreSQL for testing
+      run: |
+        docker run -d \
+          --name postgres-test \
+          -e POSTGRES_DB=oauth2db \
+          -e POSTGRES_USER=postgres \
+          -e POSTGRES_PASSWORD=testpassword \
+          -p 5432:5432 \
+          postgres:15-alpine
+        
+        # Wait for PostgreSQL to be ready
+        until docker exec postgres-test pg_isready -U postgres; do
+          echo "Waiting for PostgreSQL..."
+          sleep 2
+        done
+
+    - name: Test Flyway migrations
+      env:
+        DATABASE_URL: jdbc:postgresql://localhost:5432/oauth2db
+        DATABASE_USERNAME: postgres
+        DATABASE_PASSWORD: testpassword
+        FLYWAY_IMAGE_TAG: flyway-migrate:test
+      run: |
+        ./scripts/test-flyway-migrations.sh
+
+    - name: Cleanup
+      if: always()
+      run: |
+        docker stop postgres-test || true
+        docker rm postgres-test || true
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Log in to Azure Container Registry
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ env.REGISTRY }}
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
+
+    - name: Build and push Flyway container
+      working-directory: oauth2-server
+      run: |
+        IMAGE_TAG="${{ github.sha }}"
+        FULL_IMAGE="${REGISTRY}/${IMAGE_NAME}"
+        
+        docker build -f Dockerfile.flyway \
+          -t "${FULL_IMAGE}:${IMAGE_TAG}" \
+          -t "${FULL_IMAGE}:latest" \
+          .
+        
+        docker push "${FULL_IMAGE}:${IMAGE_TAG}"
+        docker push "${FULL_IMAGE}:latest"
+
+    - name: Update Kubernetes deployment (optional)
+      if: github.event_name == 'push'
+      run: |
+        # If using GitOps, update the image tag in the manifest
+        # Or trigger a deployment workflow
+        echo "Flyway image pushed: ${REGISTRY}/${IMAGE_NAME}:${{ github.sha }}"
+
+  deploy-dev:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: development
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+
+    - name: Configure kubectl
+      run: |
+        echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig
+        export KUBECONFIG=./kubeconfig
+
+    - name: Run Flyway migration job
+      run: |
+        kubectl apply -f infrastructure/k8s/apps/oauth2-server/flyway-migration-job.yaml
+        
+        # Wait for job to complete
+        kubectl wait --for=condition=complete --timeout=300s job/flyway-migrate || \
+        kubectl wait --for=condition=failed --timeout=300s job/flyway-migrate
+        
+        # Get job status
+        kubectl get job flyway-migrate -o yaml
+
+    - name: Check migration logs
+      if: always()
+      run: |
+        kubectl logs -l component=database-migrations --tail=100
+
+    - name: Deploy application (after successful migration)
+      if: success()
+      run: |
+        kubectl rollout restart deployment/oauth2-server
+        kubectl rollout status deployment/oauth2-server

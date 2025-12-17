@@ -19,6 +19,81 @@ spec:
       annotations:
         proxy.istio.io/config: '{ "holdApplicationUntilProxyStarts": true }'
     spec:
+      initContainers:
+      # Run Flyway migrations before starting the application
+      - name: flyway-migrate
+        image: gabby.azurecr.io/flyway-migrate:latest
+        imagePullPolicy: Always
+        command: ["flyway", "migrate"]
+        env:
+        - name: FLYWAY_URL
+          value: "jdbc:postgresql://postgres.default.svc.cluster.local:5432/oauth2db?sslmode=disable"
+        - name: FLYWAY_USER
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: database-username
+        - name: FLYWAY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: database-password
+        - name: FLYWAY_LOCATIONS
+          value: "filesystem:/flyway/sql"
+        - name: FLYWAY_BASELINE_ON_MIGRATE
+          value: "false"
+        - name: FLYWAY_VALIDATE_ON_MIGRATE
+          value: "true"
+        - name: FLYWAY_OUT_OF_ORDER
+          value: "false"
+        - name: FLYWAY_CLEAN_DISABLED
+          value: "true"
+        # Flyway placeholders for secret values in migrations
+        - name: FLYWAY_PLACEHOLDERS_PROFILE_SERVICE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: profile-service-secrets
+              key: oauth2-client-secret
+              optional: true
+        - name: FLYWAY_PLACEHOLDERS_CHAT_SERVICE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: chat-service-secrets
+              key: oauth2-client-secret
+              optional: true
+        - name: FLYWAY_PLACEHOLDERS_GITHUB_REVIEW_SERVICE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: github-review-service-secrets
+              key: oauth2-client-secret
+              optional: true
+        - name: FLYWAY_PLACEHOLDERS_SLOP_DETECTOR_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: slop-detector-secrets
+              key: oauth2-client-secret
+              optional: true
+        - name: FLYWAY_PLACEHOLDERS_SECURITY_AGENCY_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: security-agency-secrets
+              key: oauth2-client-secret
+              optional: true
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
       containers:
       - name: oauth2-server
         image: gabby.azurecr.io/oauth2-server:latest
@@ -29,7 +104,7 @@ spec:
           protocol: TCP
         env:
         - name: SPRING_PROFILES_ACTIVE
-          value: "prod"
+          value: "prod,prod-no-flyway"
         - name: OTEL_SDK_DISABLED
           value: "true"
         - name: OTEL_EXPORTER_OTLP_ENDPOINT

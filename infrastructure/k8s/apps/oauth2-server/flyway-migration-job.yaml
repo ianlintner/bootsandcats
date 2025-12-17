@@ -1,0 +1,104 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: flyway-migrate
+  namespace: default
+  labels:
+    app: oauth2-server
+    component: database-migrations
+  annotations:
+    # This annotation ensures the job runs before the deployment
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-5"
+    helm.sh/hook-delete-policy: before-hook-creation
+spec:
+  # Keep successful jobs for debugging, failed jobs for troubleshooting
+  ttlSecondsAfterFinished: 600
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: oauth2-server
+        component: database-migrations
+    spec:
+      restartPolicy: Never
+      initContainers:
+      # Wait for PostgreSQL to be ready
+      - name: wait-for-postgres
+        image: postgres:15-alpine
+        command:
+        - sh
+        - -c
+        - |
+          until pg_isready -h postgres.default.svc.cluster.local -p 5432 -U postgres; do
+            echo "Waiting for PostgreSQL to be ready..."
+            sleep 2
+          done
+          echo "PostgreSQL is ready!"
+        env:
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: database-password
+      containers:
+      - name: flyway
+        image: gabby.azurecr.io/flyway-migrate:latest
+        imagePullPolicy: Always
+        command: ["flyway", "migrate"]
+        env:
+        - name: FLYWAY_URL
+          value: "jdbc:postgresql://postgres.default.svc.cluster.local:5432/oauth2db?sslmode=disable"
+        - name: FLYWAY_USER
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: database-username
+        - name: FLYWAY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: database-password
+        - name: FLYWAY_LOCATIONS
+          value: "filesystem:/flyway/sql"
+        - name: FLYWAY_BASELINE_ON_MIGRATE
+          value: "false"
+        - name: FLYWAY_VALIDATE_ON_MIGRATE
+          value: "true"
+        - name: FLYWAY_OUT_OF_ORDER
+          value: "false"
+        - name: FLYWAY_CLEAN_DISABLED
+          value: "true"
+        # Optional: Add placeholders for secret values
+        # These can be used in migration scripts like ${profile_service_client_secret}
+        - name: FLYWAY_PLACEHOLDERS_PROFILE_SERVICE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: profile-service-secrets
+              key: oauth2-client-secret
+              optional: true
+        - name: FLYWAY_PLACEHOLDERS_CHAT_SERVICE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: chat-service-secrets
+              key: oauth2-client-secret
+              optional: true
+        - name: FLYWAY_PLACEHOLDERS_GITHUB_REVIEW_SERVICE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: github-review-service-secrets
+              key: oauth2-client-secret
+              optional: true
+        - name: FLYWAY_PLACEHOLDERS_SLOP_DETECTOR_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: slop-detector-secrets
+              key: oauth2-client-secret
+              optional: true
+        - name: FLYWAY_PLACEHOLDERS_SECURITY_AGENCY_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: security-agency-secrets
+              key: oauth2-client-secret
+              optional: true
+

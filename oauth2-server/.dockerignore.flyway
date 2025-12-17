@@ -1,0 +1,50 @@
+# Flyway container only needs migration scripts
+# Exclude everything else to keep the image small
+
+# Build artifacts
+target/
+build/
+*.jar
+*.war
+*.ear
+
+# Source code (not needed in migration container)
+src/main/java/
+src/test/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Version control
+.git/
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# Configuration files (except migrations)
+*.yml
+*.yaml
+*.properties
+!server-dao/src/main/resources/db/migration/**
+
+# Gradle/Maven
+.gradle/
+gradle/
+gradlew
+gradlew.bat
+build.gradle.kts
+settings.gradle.kts
+pom.xml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

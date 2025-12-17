@@ -1,0 +1,29 @@
+# Flyway Migration Container
+# This container runs database migrations separately from the application
+FROM flyway/flyway:11.2.0-alpine
+
+# Copy migration scripts from the server-dao module
+COPY server-dao/src/main/resources/db/migration /flyway/sql
+
+# Set default Flyway configuration
+# These can be overridden via environment variables at runtime
+ENV FLYWAY_URL=jdbc:postgresql://postgres:5432/oauth2db \
+    FLYWAY_USER=postgres \
+    FLYWAY_PASSWORD=postgres \
+    FLYWAY_LOCATIONS=filesystem:/flyway/sql \
+    FLYWAY_BASELINE_ON_MIGRATE=false \
+    FLYWAY_VALIDATE_ON_MIGRATE=true \
+    FLYWAY_OUT_OF_ORDER=false \
+    FLYWAY_CLEAN_DISABLED=true
+
+# Health check script for Kubernetes readiness
+RUN echo '#!/bin/sh' > /flyway/health.sh && \
+    echo 'flyway info > /dev/null 2>&1' >> /flyway/health.sh && \
+    chmod +x /flyway/health.sh
+
+# Set working directory
+WORKDIR /flyway
+
+# The default command will run migrations
+# Override with 'info', 'validate', 'baseline', etc. as needed
+CMD ["migrate"]

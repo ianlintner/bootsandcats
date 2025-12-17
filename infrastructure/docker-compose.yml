@@ -37,6 +37,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      flyway-migrate:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/actuator/health"]
       interval: 30s
@@ -60,6 +62,23 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  flyway-migrate:
+    build:
+      context: ../oauth2-server
+      dockerfile: Dockerfile.flyway
+    environment:
+      - FLYWAY_URL=jdbc:postgresql://postgres:5432/oauth2db
+      - FLYWAY_USER=${POSTGRES_USER:-postgres}
+      - FLYWAY_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - FLYWAY_LOCATIONS=filesystem:/flyway/sql
+      - FLYWAY_BASELINE_ON_MIGRATE=false
+      - FLYWAY_VALIDATE_ON_MIGRATE=true
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: migrate
+    restart: "no"
 
   redis:
     image: redis:alpine
