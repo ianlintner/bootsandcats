@@ -143,13 +143,15 @@ flyway-migrate:latest
 
 ## Key Features
 
+✅ **Init Container Pattern** - Migrations run automatically before app starts
+✅ **Self-Healing** - Every pod restart ensures migrations are applied
 ✅ **Separation of Concerns** - Database migrations decoupled from application
-✅ **Kubernetes Native** - Runs as Job with pre-install/pre-upgrade hooks
+✅ **Kubernetes Native** - Works with standard Deployment resources
 ✅ **Docker Compose Support** - Easy local development and testing
 ✅ **CI/CD Ready** - Scripts for automated testing and deployment
-✅ **Observable** - Clear job status and logs
+✅ **Observable** - Clear init container status and logs
 ✅ **Safe** - Clean command disabled, validation enabled
-✅ **Flexible** - Same container works everywhere
+✅ **Flexible** - Same container works as init container or Job
 
 ## Configuration
 
