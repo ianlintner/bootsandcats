@@ -411,6 +411,8 @@ public class DataInitializer {
                 .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
                 .scope("api:read")
                 .scope("api:write")
+                .redirectUri("https://slop.cat-herding.net/_oauth2/callback")
+                .postLogoutRedirectUri("https://slop.cat-herding.net/")
                 .tokenSettings(
                         TokenSettings.builder()
                                 .accessTokenTimeToLive(Duration.ofMinutes(15))
@@ -427,6 +429,8 @@ public class DataInitializer {
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
                 .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                .redirectUri("https://security-agency.cat-herding.net/_oauth2/callback")
+                .postLogoutRedirectUri("https://security-agency.cat-herding.net/")
                 .scope("api:read")
                 .scope("api:write")
                 .tokenSettings(
