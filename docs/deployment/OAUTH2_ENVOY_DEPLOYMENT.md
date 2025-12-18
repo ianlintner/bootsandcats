@@ -9,7 +9,7 @@ Replaced Lua-based OAuth flows with Envoy's `envoy.filters.http.oauth2`:
 - **Profile Service**: `envoyfilter-profile-oauth2-exchange.yaml`
   - Client ID: `profile-service`
   - Callback: `https://profile.cat-herding.net/_oauth2/callback`
-  - Cookies: `_profile_session`, `_profile_oauth_hmac`, `_profile_oauth_expires`
+   - Cookies: `_profilesvc_session_v2`, `_profilesvc_oauth_hmac_v2`, `_profilesvc_oauth_expires_v2`
   
 - **GitHub Review Service**: `envoyfilter-github-review-oauth2-exchange.yaml`
   - Client ID: `github-review-service`
