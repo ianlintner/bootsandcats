@@ -2,7 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - istio-proxy-config.yaml
+  # - istio-proxy-config.yaml
   - istio-authz-policy.yaml
   - requestauthentication-profile.yaml
   - requestauthentication-github-review.yaml
