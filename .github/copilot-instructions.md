@@ -16,6 +16,10 @@ This is a Spring Boot OAuth2 Authorization Server with OpenID Connect (OIDC), PK
 * Azure with azure mcp
 * We have memory mcp use it as needed
 
+## Azure
+* "name": "Azure subscription 1",
+* "tenantId": "42ddc44e-97dd-4c3b-bf8a-31c785e24c67",
+*"user": "lintner.ian@gmail.com"
 
 ## Build and Test Commands
 
