@@ -9,6 +9,14 @@ This is a Spring Boot OAuth2 Authorization Server with OpenID Connect (OIDC), PK
 - **Build Tool**: Gradle 9.0 (multi-module Kotlin DSL)
 - **Key Features**: OAuth 2.1, OIDC 1.0, PKCE, JWT tokens, OpenTelemetry, Prometheus metrics
 
+## Terminal Use
+* Don't run port forwards, applications, etc in foreground if you need to run a tool afterward use run in bg or &
+* Don't use big terminal commands with HEREDOC or trying to escape it will break the terminal integration find simple short multiple snippets or write scripts
+* Use kubeview-mcp vs kubectl when possible
+* Azure with azure mcp
+* We have memory mcp use it as needed
+
+
 ## Build and Test Commands
 
 ```bash
