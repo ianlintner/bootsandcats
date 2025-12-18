@@ -23,5 +23,3 @@ resources:
   - envoyfilter-security-agency-jwt-to-headers.yaml
   - requestauthentication-security-agency.yaml
   - envoy-oauth2-sds-configmap-security-agency.yaml
-  - envoyfilter-security-agency-oauth2-exchange.yaml
-  - envoyfilter-security-agency-jwt-to-headers.yaml

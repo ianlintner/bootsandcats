@@ -7,9 +7,10 @@
 ### 1. **Envoy OAuth2 Native Filters**
 Replaced Lua-based OAuth flows with Envoy's `envoy.filters.http.oauth2`:
 - **Profile Service**: `envoyfilter-profile-oauth2-exchange.yaml`
-  - Client ID: `profile-service`
-  - Callback: `https://profile.cat-herding.net/_oauth2/callback`
-   - Cookies: `_profilesvc_session_v2`, `_profilesvc_oauth_hmac_v2`, `_profilesvc_oauth_expires_v2`
+   - Client ID: `profile-service`
+   - Callback: `https://profile.cat-herding.net/_oauth2/callback`
+    - Cookies: `_profilesvc_session_v3`, `_profilesvc_oauth_hmac_v3`, `_profilesvc_oauth_expires_v3`
+       - _Updated to the v3 suffix on Jan 4, 2026 to invalidate stale v2 cookies after rotating the Key Vault client/HMAC secrets._
   
 - **GitHub Review Service**: `envoyfilter-github-review-oauth2-exchange.yaml`
   - Client ID: `github-review-service`

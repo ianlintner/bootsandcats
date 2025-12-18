@@ -78,9 +78,9 @@ spec:
                 # NOTE: These cookie names are intentionally unique and versioned.
                 # If we ever change token/hmac secrets or cookie encoding behavior, bump the suffix
                 # to avoid redirect loops caused by stale cookies that can no longer be decrypted.
-                bearer_token: "_profilesvc_session_v2"
-                oauth_hmac: "_profilesvc_oauth_hmac_v2"
-                oauth_expires: "_profilesvc_oauth_expires_v2"
+                bearer_token: "_profilesvc_session_v3"
+                oauth_hmac: "_profilesvc_oauth_hmac_v3"
+                oauth_expires: "_profilesvc_oauth_expires_v3"
             cookie_configs:
               bearer_token_cookie_config:
                 same_site: LAX
