@@ -26,6 +26,26 @@ base64_decode() {
     fi
 }
 
+# Helper: application/x-www-form-urlencoded encoding (RFC 6749 uses this for Basic client auth)
+# Spring Authorization Server decodes client_id/client_secret from Basic auth using form URL-decoding,
+# which means '+' is treated as space unless the client percent-encodes it as %2B.
+form_urlencode() {
+    local raw="$1"
+    if command -v python3 >/dev/null 2>&1; then
+        python3 - <<'PY' "$raw"
+import sys
+import urllib.parse
+
+print(urllib.parse.quote_plus(sys.argv[1]))
+PY
+        return 0
+    fi
+
+    # Minimal fallback (handles the most common foot-gun: '+' in base64-like secrets).
+    # This does NOT attempt to fully implement RFC 3986 / x-www-form-urlencoded.
+    printf '%s' "$raw" | sed -e 's/%/%25/g' -e 's/+/\%2B/g' -e 's/ /+/g'
+}
+
 # Helper: terminate background port-forward cleanly
 stop_port_forward() {
     local pf_pid="$1"
@@ -62,8 +82,14 @@ then
     if [ -z "$M2M_CLIENT_SECRET" ]; then
         echo "⚠️  WARN: No m2m client secret available. Set M2M_CLIENT_SECRET (or OAUTH2_M2M_CLIENT_SECRET) to enable token test."
     else
+        # IMPORTANT: For client_secret_basic, RFC 6749 requires application/x-www-form-urlencoded encoding
+        # of client_id and client_secret before constructing the Basic header.
+        ENCODED_ID=$(form_urlencode "$M2M_CLIENT_ID")
+        ENCODED_SECRET=$(form_urlencode "$M2M_CLIENT_SECRET")
+        BASIC_AUTH=$(printf '%s' "$ENCODED_ID:$ENCODED_SECRET" | base64 | tr -d '\n')
+
         HTTP_CODE=$(curl -s -o /tmp/oauth2_token_response.json -w "%{http_code}" \
-            -u "$M2M_CLIENT_ID:$M2M_CLIENT_SECRET" \
+            -H "Authorization: Basic $BASIC_AUTH" \
             -H "Content-Type: application/x-www-form-urlencoded" \
             --data "grant_type=client_credentials&scope=profile:read" \
             http://localhost:9000/oauth2/token \
