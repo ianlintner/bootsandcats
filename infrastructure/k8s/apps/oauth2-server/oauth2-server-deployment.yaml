@@ -105,6 +105,8 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "prod,prod-no-flyway"
+        - name: OAUTH2_SYNC_CLIENT_SECRETS
+          value: "true"
         - name: OTEL_SDK_DISABLED
           value: "true"
         - name: OTEL_EXPORTER_OTLP_ENDPOINT
@@ -136,6 +138,11 @@ spec:
             secretKeyRef:
               name: oauth2-app-secrets
               key: m2m-client-secret
+        - name: OAUTH2_PROFILE_SERVICE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: profile-service-secrets
+              key: profile-service-client-secret
         - name: OAUTH2_DEMO_USER_PASSWORD
           valueFrom:
             secretKeyRef:

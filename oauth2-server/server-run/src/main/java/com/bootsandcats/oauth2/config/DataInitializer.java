@@ -21,6 +21,7 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
+import org.springframework.util.StringUtils;
 
 import com.bootsandcats.oauth2.model.AuditEventResult;
 import com.bootsandcats.oauth2.model.AuditEventType;
@@ -58,6 +59,14 @@ public class DataInitializer {
     @Value("${oauth2.preserve-client-secrets:true}")
     private boolean preserveClientSecrets;
 
+        /**
+         * When true, allow syncing a small allowlist of client secrets from environment-provided
+         * values. This is meant for production where secrets are managed externally (e.g., Key Vault)
+         * and rotated without re-seeding the database.
+         */
+        @Value("${oauth2.sync-client-secrets:false}")
+        private boolean syncClientSecrets;
+
     @Bean
     public CommandLineRunner initializeClients(
             RegisteredClientRepository repository,
@@ -66,6 +75,7 @@ public class DataInitializer {
         return args -> {
             registerOrUpdateClient(
                     repository,
+                    passwordEncoder,
                     securityAuditService,
                     "demo-client",
                     () ->
@@ -75,18 +85,22 @@ public class DataInitializer {
 
             registerOrUpdateClient(
                     repository,
+                    passwordEncoder,
                     securityAuditService,
                     "public-client",
                     () -> buildPublicClient(UUID.randomUUID().toString()));
 
             registerOrUpdateClient(
                     repository,
+                    passwordEncoder,
                     securityAuditService,
                     "m2m-client",
+                    m2mClientSecret,
                     () -> buildMachineToMachineClient(passwordEncoder.encode(m2mClientSecret)));
 
             registerOrUpdateClient(
                     repository,
+                    passwordEncoder,
                     securityAuditService,
                     "profile-ui",
                     () ->
@@ -96,8 +110,10 @@ public class DataInitializer {
 
             registerOrUpdateClient(
                     repository,
+                    passwordEncoder,
                     securityAuditService,
                     "profile-service",
+                    profileServiceClientSecret,
                     () ->
                             buildProfileServiceClient(
                                     passwordEncoder.encode(profileServiceClientSecret),
@@ -105,6 +121,7 @@ public class DataInitializer {
 
             registerOrUpdateClient(
                     repository,
+                    passwordEncoder,
                     securityAuditService,
                     "github-review-service",
                     () ->
@@ -114,6 +131,7 @@ public class DataInitializer {
 
             registerOrUpdateClient(
                     repository,
+                    passwordEncoder,
                     securityAuditService,
                     "chat-backend",
                     () ->
@@ -123,6 +141,7 @@ public class DataInitializer {
 
             registerOrUpdateClient(
                     repository,
+                    passwordEncoder,
                     securityAuditService,
                     "slop-detector",
                     () ->
@@ -132,6 +151,7 @@ public class DataInitializer {
 
             registerOrUpdateClient(
                     repository,
+                    passwordEncoder,
                     securityAuditService,
                     "security-agency",
                     () ->
@@ -143,8 +163,19 @@ public class DataInitializer {
 
     private void registerOrUpdateClient(
             RegisteredClientRepository repository,
+            PasswordEncoder passwordEncoder,
             SecurityAuditService securityAuditService,
             String clientId,
+            Supplier<RegisteredClient> supplier) {
+        registerOrUpdateClient(repository, passwordEncoder, securityAuditService, clientId, null, supplier);
+    }
+
+    private void registerOrUpdateClient(
+            RegisteredClientRepository repository,
+            PasswordEncoder passwordEncoder,
+            SecurityAuditService securityAuditService,
+            String clientId,
+            String rawClientSecret,
             Supplier<RegisteredClient> supplier) {
         RegisteredClient existing = repository.findByClientId(clientId);
         RegisteredClient desired = supplier.get();
@@ -156,12 +187,42 @@ public class DataInitializer {
             return;
         }
 
-        // If preserveClientSecrets is true, don't update existing clients
+        boolean allowSecretSyncForClient =
+                syncClientSecrets
+                        && ("m2m-client".equals(clientId) || "profile-service".equals(clientId));
+
         if (preserveClientSecrets) {
-            log.info(
-                    "OAuth client '{}' already exists, preserving existing configuration "
-                            + "(oauth2.preserve-client-secrets=true)",
+            if (!allowSecretSyncForClient) {
+                log.info(
+                        "OAuth client '{}' already exists, preserving existing configuration "
+                                + "(oauth2.preserve-client-secrets=true)",
+                        clientId);
+                return;
+            }
+
+            if (!StringUtils.hasText(rawClientSecret)) {
+                log.info(
+                        "OAuth client '{}' already exists; secret sync enabled but no secret value "
+                                + "provided (skipping)",
+                        clientId);
+                return;
+            }
+
+            if (passwordEncoder.matches(rawClientSecret, existing.getClientSecret())) {
+                log.info(
+                        "OAuth client '{}' already exists; secret sync enabled and secret matches "
+                                + "(no update)",
+                        clientId);
+                return;
+            }
+
+            RegisteredClient updatedSecretOnly =
+                    RegisteredClient.from(existing).clientSecret(desired.getClientSecret()).build();
+            log.warn(
+                    "OAuth client '{}' secret mismatch detected; updating stored secret from environment",
                     clientId);
+            repository.save(updatedSecretOnly);
+            auditClientEvent(securityAuditService, AuditEventType.CLIENT_UPDATED, updatedSecretOnly);
             return;
         }
 
@@ -169,9 +230,13 @@ public class DataInitializer {
 
         builder.clientId(desired.getClientId());
         builder.clientIdIssuedAt(existing.getClientIdIssuedAt());
-        // Preserve the existing client secret - never overwrite it
-        // Use existing.getClientSecret() instead of desired.getClientSecret()
-        builder.clientSecret(existing.getClientSecret());
+        // By default, preserve secrets (avoids accidental rotation).
+        // If sync-client-secrets is enabled for this client and a mismatch is detected, update.
+        boolean shouldSyncSecret = allowSecretSyncForClient && StringUtils.hasText(rawClientSecret);
+        boolean shouldUpdateSecret =
+                shouldSyncSecret
+                        && !passwordEncoder.matches(rawClientSecret, existing.getClientSecret());
+        builder.clientSecret(shouldUpdateSecret ? desired.getClientSecret() : existing.getClientSecret());
         builder.clientSecretExpiresAt(desired.getClientSecretExpiresAt());
         builder.clientName(desired.getClientName());
         builder.clientAuthenticationMethods(
@@ -202,7 +267,10 @@ public class DataInitializer {
         builder.clientSettings(desired.getClientSettings());
         builder.tokenSettings(desired.getTokenSettings());
 
-        log.info("Updating OAuth client '{}' in database (preserving secret)", clientId);
+        log.info(
+                "Updating OAuth client '{}' in database ({})",
+                clientId,
+                shouldUpdateSecret ? "secret updated" : "secret preserved");
         RegisteredClient updated = builder.build();
         repository.save(updated);
         auditClientEvent(securityAuditService, AuditEventType.CLIENT_UPDATED, updated);
