@@ -91,7 +91,7 @@ then
         HTTP_CODE=$(curl -s -o /tmp/oauth2_token_response.json -w "%{http_code}" \
             -H "Authorization: Basic $BASIC_AUTH" \
             -H "Content-Type: application/x-www-form-urlencoded" \
-            --data "grant_type=client_credentials&scope=profile:read" \
+            --data "grant_type=client_credentials&scope=api:read" \
             http://localhost:9000/oauth2/token \
             -m 10 2>/dev/null || true)
 
