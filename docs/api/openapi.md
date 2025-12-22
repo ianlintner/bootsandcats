@@ -171,7 +171,7 @@ jobs:
           distribution: 'temurin'
           
       - name: Start Application
-        run: ./mvnw spring-boot:start -DskipTests &
+        run: ./gradlew :server-ui:bootRun -x test &
         
       - name: Wait for Application
         run: sleep 30
