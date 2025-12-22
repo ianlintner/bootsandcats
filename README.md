@@ -322,6 +322,13 @@ Metrics are exposed at `/actuator/prometheus`. Key metrics include:
 
 Use the provided `prometheus.yml` and `docker-compose.yml` to set up a complete observability stack.
 
+## Maintenance & hygiene
+
+- Routine checks: `./gradlew spotlessCheck spotbugsMain test`
+- Full verification: `./gradlew build` (same tasks as the bundled pre-commit hook)
+- Hook helper: `./scripts/pre-commit-checks.sh`
+- More details: see `docs/MAINTENANCE.md`
+
 ## Workflows
 
 Status badges:
