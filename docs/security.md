@@ -439,10 +439,10 @@ See [Incident Response](operations/incident-response.md) for detailed procedures
 
 ```bash
 # OWASP Dependency Check
-./mvnw org.owasp:dependency-check-maven:check
+./gradlew dependencyCheckAnalyze
 
 # SpotBugs with FindSecBugs
-./mvnw spotbugs:check
+./gradlew spotbugsMain
 
 # Container scan
 trivy image oauth2-server:latest
