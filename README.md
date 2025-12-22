@@ -292,11 +292,11 @@ Testcontainers tests run against real PostgreSQL and Redis containers for produc
 ### Security Scanning
 
 ```bash
-# Run OWASP dependency check
-./mvnw org.owasp:dependency-check-maven:check
+# Run OWASP Dependency-Check
+./gradlew dependencyCheckAnalyze
 
 # Run SpotBugs with FindSecBugs
-./mvnw spotbugs:check
+./gradlew spotbugsMain
 ```
 
 ## Observability
@@ -406,17 +406,17 @@ MIT License
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Run tests: `./mvnw verify`
-5. Format code: `./mvnw spotless:apply`
+4. Run tests: `./gradlew build`
+5. Format code: `./gradlew spotlessApply`
 6. Submit a pull request
 
 ## Pre-commit Quality Gate
 
-To prevent commits that break the main quality bars, the repository ships with a Git pre-commit hook that runs the following Maven goals in order:
+To prevent commits that break the main quality bars, the repository ships with a Git pre-commit hook that runs the following Gradle tasks in order:
 
-- `./mvnw spotless:check` – verifies formatting
-- `./mvnw spotbugs:check` – runs static analysis / linting
-- `./mvnw verify` – builds the project and executes tests
+- `./gradlew spotlessCheck` – verifies formatting
+- `./gradlew spotbugsMain` – runs static analysis / linting
+- `./gradlew build` – builds the project and executes tests
 
 ### Installation
 
