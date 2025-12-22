@@ -59,13 +59,13 @@ public class DataInitializer {
     @Value("${oauth2.preserve-client-secrets:true}")
     private boolean preserveClientSecrets;
 
-        /**
-         * When true, allow syncing a small allowlist of client secrets from environment-provided
-         * values. This is meant for production where secrets are managed externally (e.g., Key Vault)
-         * and rotated without re-seeding the database.
-         */
-        @Value("${oauth2.sync-client-secrets:false}")
-        private boolean syncClientSecrets;
+    /**
+     * When true, allow syncing a small allowlist of client secrets from environment-provided
+     * values. This is meant for production where secrets are managed externally (e.g., Key Vault)
+     * and rotated without re-seeding the database.
+     */
+    @Value("${oauth2.sync-client-secrets:false}")
+    private boolean syncClientSecrets;
 
     @Bean
     public CommandLineRunner initializeClients(
@@ -167,7 +167,8 @@ public class DataInitializer {
             SecurityAuditService securityAuditService,
             String clientId,
             Supplier<RegisteredClient> supplier) {
-        registerOrUpdateClient(repository, passwordEncoder, securityAuditService, clientId, null, supplier);
+        registerOrUpdateClient(
+                repository, passwordEncoder, securityAuditService, clientId, null, supplier);
     }
 
     private void registerOrUpdateClient(
@@ -222,7 +223,8 @@ public class DataInitializer {
                     "OAuth client '{}' secret mismatch detected; updating stored secret from environment",
                     clientId);
             repository.save(updatedSecretOnly);
-            auditClientEvent(securityAuditService, AuditEventType.CLIENT_UPDATED, updatedSecretOnly);
+            auditClientEvent(
+                    securityAuditService, AuditEventType.CLIENT_UPDATED, updatedSecretOnly);
             return;
         }
 
@@ -236,7 +238,8 @@ public class DataInitializer {
         boolean shouldUpdateSecret =
                 shouldSyncSecret
                         && !passwordEncoder.matches(rawClientSecret, existing.getClientSecret());
-        builder.clientSecret(shouldUpdateSecret ? desired.getClientSecret() : existing.getClientSecret());
+        builder.clientSecret(
+                shouldUpdateSecret ? desired.getClientSecret() : existing.getClientSecret());
         builder.clientSecretExpiresAt(desired.getClientSecretExpiresAt());
         builder.clientName(desired.getClientName());
         builder.clientAuthenticationMethods(
