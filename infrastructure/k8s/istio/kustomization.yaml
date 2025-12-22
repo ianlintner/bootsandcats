@@ -1,6 +1,6 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
+namespace: default
 resources:
   # - istio-proxy-config.yaml
   - istio-authz-policy.yaml
@@ -23,3 +23,6 @@ resources:
   - envoyfilter-security-agency-jwt-to-headers.yaml
   - requestauthentication-security-agency.yaml
   - envoy-oauth2-sds-configmap-security-agency.yaml
+  - envoyfilter-secure-subdomain-oauth2.yaml
+  - envoyfilter-secure-subdomain-jwt.yaml
+  - envoy-oauth2-sds-configmap-secure-subdomain.yaml

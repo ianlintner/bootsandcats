@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: envoy-oauth2-sds-secure-subdomain
+  namespace: aks-istio-ingress
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    project: bootsandcats
+data:
+  secure-subdomain-oauth-token.yaml: |
+    resources:
+    - "@type": "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret"
+      name: secure-subdomain-oauth-token
+      generic_secret:
+        secret:
+          inline_string: "REPLACE_WITH_CLIENT_SECRET"
+  secure-subdomain-oauth-hmac.yaml: |
+    resources:
+    - "@type": "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret"
+      name: secure-subdomain-oauth-hmac
+      generic_secret:
+        secret:
+          inline_string: "REPLACE_WITH_HMAC_SECRET"
