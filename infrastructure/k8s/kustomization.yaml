@@ -15,5 +15,27 @@ resources:
   - istio
   - secrets
 
+patches:
+  - path: apps/configs/patch-spot-tolerations-deployments.yaml
+    target:
+      kind: Deployment
+      namespace: default
+  - path: apps/configs/patch-spot-tolerations-statefulsets.yaml
+    target:
+      kind: StatefulSet
+      namespace: default
+  - path: apps/configs/patch-spot-tolerations-daemonsets.yaml
+    target:
+      kind: DaemonSet
+      namespace: default
+  - path: apps/configs/patch-spot-tolerations-jobs.yaml
+    target:
+      kind: Job
+      namespace: default
+  - path: apps/configs/patch-spot-tolerations-cronjobs.yaml
+    target:
+      kind: CronJob
+      namespace: default
+
 generatorOptions:
   disableNameSuffixHash: true
