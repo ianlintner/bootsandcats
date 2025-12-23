@@ -11,30 +11,95 @@ spec:
   # Opt-in OAuth2 enforcement for non-secure hosts.
   #
   # How this works:
-  # - The base filter (`envoyfilter-secure-subdomain-oauth2.yaml`) disables OAuth2 by default
-  #   and then enables it only for `*.secure.cat-herding.net`.
-  # - This allowlist filter re-enables OAuth2 for explicitly listed virtual hosts.
+  # - The base filter (`envoyfilter-secure-subdomain-oauth2.yaml`) installs the OAuth2 filter
+  #   but disables enforcement by default on all gateway virtual hosts.
+  # - This allowlist filter enables enforcement for explicitly listed virtual hosts.
   #
   # Add hosts by duplicating a configPatch and setting `vhost.name` to "<host>:443".
   # Example:
   # - name: "profile.cat-herding.net:443"
   # - name: "slop-detector.cat-herding.net:443"
   configPatches:
-    # ---- Add allowlisted host entries below ----
+    # ---- Allowlisted host entries (prod) ----
 
-    # Example (disabled by default):
-    # - applyTo: VIRTUAL_HOST
-    #   match:
-    #     context: GATEWAY
-    #     routeConfiguration:
-    #       vhost:
-    #         name: "profile.cat-herding.net:443"
-    #         route:
-    #           name: ""
-    #   patch:
-    #     operation: MERGE
-    #     value:
-    #       typed_per_filter_config:
-    #         envoy.filters.http.oauth2:
-    #           "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2PerRoute
-    #           disabled: false
+    # Secure namespace wildcard (protect all apps under *.secure.cat-herding.net)
+    - applyTo: VIRTUAL_HOST
+      match:
+        context: GATEWAY
+        routeConfiguration:
+          vhost:
+            name: "*.secure.cat-herding.net:443"
+            route:
+              name: ""
+      patch:
+        operation: MERGE
+        value:
+          typed_per_filter_config:
+            envoy.filters.http.oauth2:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2PerRoute
+              disabled: false
+
+    # Explicit allowlist for normal hosts
+    - applyTo: VIRTUAL_HOST
+      match:
+        context: GATEWAY
+        routeConfiguration:
+          vhost:
+            name: "profile.cat-herding.net:443"
+            route:
+              name: ""
+      patch:
+        operation: MERGE
+        value:
+          typed_per_filter_config:
+            envoy.filters.http.oauth2:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2PerRoute
+              disabled: false
+
+    - applyTo: VIRTUAL_HOST
+      match:
+        context: GATEWAY
+        routeConfiguration:
+          vhost:
+            name: "gh-review.cat-herding.net:443"
+            route:
+              name: ""
+      patch:
+        operation: MERGE
+        value:
+          typed_per_filter_config:
+            envoy.filters.http.oauth2:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2PerRoute
+              disabled: false
+
+    - applyTo: VIRTUAL_HOST
+      match:
+        context: GATEWAY
+        routeConfiguration:
+          vhost:
+            name: "slop-detector.cat-herding.net:443"
+            route:
+              name: ""
+      patch:
+        operation: MERGE
+        value:
+          typed_per_filter_config:
+            envoy.filters.http.oauth2:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2PerRoute
+              disabled: false
+
+    - applyTo: VIRTUAL_HOST
+      match:
+        context: GATEWAY
+        routeConfiguration:
+          vhost:
+            name: "security-agency.cat-herding.net:443"
+            route:
+              name: ""
+      patch:
+        operation: MERGE
+        value:
+          typed_per_filter_config:
+            envoy.filters.http.oauth2:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2PerRoute
+              disabled: false
