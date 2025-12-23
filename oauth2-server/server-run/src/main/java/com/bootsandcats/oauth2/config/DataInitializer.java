@@ -9,6 +9,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -310,7 +311,68 @@ public class DataInitializer {
                                 || "profile-service".equals(clientId)
                                 || "secure-subdomain-client".equals(clientId));
 
+        // Even when we preserve client secrets/config in production, we still need the
+        // secure-subdomain-client redirect URIs to match the gateway-generated callback URL
+        // (https://<public-host>/_oauth2/callback). Historically this client was configured with
+        // wildcard redirect URIs, which Spring Authorization Server does not support.
+        boolean allowSecureSubdomainClientConfigSync = "secure-subdomain-client".equals(clientId);
+
         if (preserveClientSecrets) {
+            if (allowSecureSubdomainClientConfigSync) {
+                // Preserve secret by default, but reconcile the rest of the config to the desired
+                // state so gateway-wide OAuth2 works reliably.
+                boolean shouldSyncSecret =
+                        allowSecretSyncForClient && StringUtils.hasText(rawClientSecret);
+                boolean shouldUpdateSecret =
+                        shouldSyncSecret
+                                && !passwordEncoder.matches(
+                                        rawClientSecret, existing.getClientSecret());
+
+                RegisteredClient.Builder builder = RegisteredClient.from(existing);
+                builder.clientId(desired.getClientId());
+                builder.clientIdIssuedAt(existing.getClientIdIssuedAt());
+                builder.clientSecret(
+                        shouldUpdateSecret ? desired.getClientSecret() : existing.getClientSecret());
+                builder.clientSecretExpiresAt(desired.getClientSecretExpiresAt());
+                builder.clientName(desired.getClientName());
+                builder.clientAuthenticationMethods(
+                        methods -> {
+                            methods.clear();
+                            methods.addAll(desired.getClientAuthenticationMethods());
+                        });
+                builder.authorizationGrantTypes(
+                        grantTypes -> {
+                            grantTypes.clear();
+                            grantTypes.addAll(desired.getAuthorizationGrantTypes());
+                        });
+                builder.redirectUris(
+                        uris -> {
+                            uris.clear();
+                            uris.addAll(desired.getRedirectUris());
+                        });
+                builder.postLogoutRedirectUris(
+                        uris -> {
+                            uris.clear();
+                            uris.addAll(desired.getPostLogoutRedirectUris());
+                        });
+                builder.scopes(
+                        scopes -> {
+                            scopes.clear();
+                            scopes.addAll(desired.getScopes());
+                        });
+                builder.clientSettings(desired.getClientSettings());
+                builder.tokenSettings(desired.getTokenSettings());
+
+                log.info(
+                        "Reconciling OAuth client '{}' configuration in database ({}) while preserving secrets (oauth2.preserve-client-secrets=true)",
+                        clientId,
+                        shouldUpdateSecret ? "secret updated" : "secret preserved");
+                RegisteredClient updated = builder.build();
+                repository.save(updated);
+                auditClientEvent(securityAuditService, AuditEventType.CLIENT_UPDATED, updated);
+                return;
+            }
+
             if (!allowSecretSyncForClient) {
                 log.info(
                         "OAuth client '{}' already exists, preserving existing configuration "
@@ -631,6 +693,33 @@ public class DataInitializer {
     }
 
     private RegisteredClient buildSecureSubdomainClient(String encodedSecret, String id) {
+        // NOTE: Spring Authorization Server requires redirect URIs to match exactly.
+        // Wildcards such as https://*.cat-herding.net/... are not supported.
+        Set<String> redirectUris =
+                Set.of(
+                        "https://profile.cat-herding.net/_oauth2/callback",
+                        "https://gh-review.cat-herding.net/_oauth2/callback",
+                        "https://chat.cat-herding.net/_oauth2/callback",
+                        "https://security-agency.cat-herding.net/_oauth2/callback",
+                        "https://slop.cat-herding.net/_oauth2/callback",
+                        "https://slop-detector.cat-herding.net/_oauth2/callback",
+                        // Local dev (explicit ports; no wildcards).
+                        "http://localhost:3000/_oauth2/callback",
+                        "http://localhost:5001/_oauth2/callback",
+                        "http://localhost:8080/_oauth2/callback");
+
+        Set<String> postLogoutRedirectUris =
+                Set.of(
+                        "https://profile.cat-herding.net/_oauth2/logout",
+                        "https://gh-review.cat-herding.net/_oauth2/logout",
+                        "https://chat.cat-herding.net/_oauth2/logout",
+                        "https://security-agency.cat-herding.net/_oauth2/logout",
+                        "https://slop.cat-herding.net/_oauth2/logout",
+                        "https://slop-detector.cat-herding.net/_oauth2/logout",
+                        "http://localhost:3000/_oauth2/logout",
+                        "http://localhost:5001/_oauth2/logout",
+                        "http://localhost:8080/_oauth2/logout");
+
         return RegisteredClient.withId(id)
                 .clientId("secure-subdomain-client")
                 .clientIdIssuedAt(Instant.now())
@@ -638,10 +727,8 @@ public class DataInitializer {
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-                .redirectUri("https://*.secure.cat-herding.net/_oauth2/callback")
-                .redirectUri("http://localhost:*/_oauth2/callback")
-                .postLogoutRedirectUri("https://*.secure.cat-herding.net/_oauth2/logout")
-                .postLogoutRedirectUri("http://localhost:*/_oauth2/logout")
+                .redirectUris(uris -> uris.addAll(redirectUris))
+                .postLogoutRedirectUris(uris -> uris.addAll(postLogoutRedirectUris))
                 .scope(OidcScopes.OPENID)
                 .scope(OidcScopes.PROFILE)
                 .scope(OidcScopes.EMAIL)
