@@ -4,3 +4,8 @@ kind: Kustomization
 resources:
   - secret-provider-class-secure-subdomain-oauth.yaml
   - secure-subdomain-oauth-sds-renderer.yaml
+
+# Mount the rendered SDS Secret into the AKS-managed Istio ingress gateway
+# so Envoy's OAuth2 filter can read its secrets from /etc/istio/oauth2.
+patchesStrategicMerge:
+  - patch-ingressgateway-mount-secure-subdomain-oauth-sds.yaml

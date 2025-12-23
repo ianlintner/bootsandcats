@@ -59,14 +59,17 @@ spec:
                   secretProviderClass: secure-subdomain-oauth-secrets-provider
           containers:
             - name: render
-              image: registry.k8s.io/kubectl:v1.30.2
+              # The official registry.k8s.io/kubectl image is distroless and does not include /bin/sh.
+              # This job uses a shell script to render files, so use a kubectl image that includes a shell.
+              # Prefer MCR mirror to avoid Docker Hub rate limits.
+              image: mcr.microsoft.com/oss/bitnami/kubectl:1.30.2
               imagePullPolicy: IfNotPresent
               volumeMounts:
                 - name: secrets-store-inline
                   mountPath: /mnt/secrets-store
                   readOnly: true
               command:
-                - sh
+                - /bin/sh
                 - -lc
                 - |
                   set -eu
