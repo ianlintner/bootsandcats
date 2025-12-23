@@ -11,10 +11,19 @@ All traffic to `*.secure.cat-herding.net` is automatically protected by:
 
 ## How It Works
 
-1. **Gateway-Level Protection**: EnvoyFilters are applied at the Istio ingress gateway level, matching on the domain `*.secure.cat-herding.net`
-2. **Single OAuth2 Client**: One client (`secure-subdomain-client`) handles authentication for all secure subdomains
+1. **Gateway-Level Protection**: EnvoyFilters are applied at the Istio ingress gateway level, matching on the domain `*.secure.cat-herding.net`.
+2. **Single OAuth2 Client**: One client (`secure-subdomain-client`) handles authentication for all subdomains.
 3. **Wildcard Redirect URIs**: The client supports `https://*.secure.cat-herding.net/_oauth2/callback`
-4. **Shared Cookies**: Session cookies are set with `domain: .secure.cat-herding.net` for seamless SSO
+4. **Shared Cookies (apex)**: Session cookies are set with `domain: .cat-herding.net` so a successful login can be reused across *other* subdomains, if/when they opt-in to enforcement.
+
+### Opt-in for other `*.cat-herding.net` domains
+
+Not every `*.cat-herding.net` hostname should be protected by default.
+
+To protect selected apps on their normal hosts (e.g., `app.cat-herding.net`) while still using the same SSO session cookies, we recommend an **opt-in** approach:
+
+- **Option A (Istio gateway opt-in)**: a dedicated gateway for protected hosts; apps opt in by referencing that gateway in their VirtualService (can be patched via kustomize using a label).
+- **Option B (oauth2-proxy + ext_authz)**: run `oauth2-proxy` once and use an Envoy `ext_authz` filter at the gateway; apps opt in by referencing the protected gateway / route.
 
 ## Setup Instructions
 
@@ -123,7 +132,7 @@ Access `https://myapp.secure.cat-herding.net` - you'll be automatically redirect
 
 ### Session Management
 
-- **Cookie Domain**: `.secure.cat-herding.net` (note the leading dot for subdomain sharing)
+- **Cookie Domain**: `.cat-herding.net` (note the leading dot for subdomain sharing)
 - **Cookie Names**:
   - `_secure_session`: Bearer token
   - `_secure_oauth_hmac`: HMAC for token validation

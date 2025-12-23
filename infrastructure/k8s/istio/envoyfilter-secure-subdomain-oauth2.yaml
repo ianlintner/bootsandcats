@@ -82,18 +82,20 @@ spec:
             cookie_configs:
               bearer_token_cookie_config:
                 same_site: LAX
-                domain: ".secure.cat-herding.net"
+                domain: ".cat-herding.net"
               oauth_hmac_cookie_config:
                 same_site: LAX
-                domain: ".secure.cat-herding.net"
+                domain: ".cat-herding.net"
               oauth_expires_cookie_config:
                 same_site: LAX
-                domain: ".secure.cat-herding.net"
+                domain: ".cat-herding.net"
             auth_scopes:
             - openid
             - profile
             - email
             pass_through_matcher:
+            - name: ":authority"
+              exact_match: "oauth2.cat-herding.net"
             - name: ":path"
               prefix_match: "/actuator"
             - name: ":path"
@@ -102,7 +104,13 @@ spec:
               exact_match: "/healthz"
             - name: ":path"
               exact_match: "/ready"
-  # Apply OAuth2 filter only to *.secure.cat-herding.net domains
+  # Apply OAuth2 filter only to opted-in domains.
+  #
+  # IMPORTANT:
+  # - We keep the cookie domain as ".cat-herding.net" so sessions can be shared at the apex.
+  # - We do NOT enable OAuth2 for all *.cat-herding.net by default because not every app/host
+  #   should be protected automatically.
+  # - Opt-in is achieved by routing/architecture (e.g., a dedicated gateway or host pattern).
   - applyTo: VIRTUAL_HOST
     match:
       context: GATEWAY
