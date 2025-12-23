@@ -26,9 +26,9 @@ If login/token exchange fails with `invalid_client`, the common cause is a misma
 
 ### Kubernetes Resources (Unified gateway model)
 
-1. **✅ Deployment** ([deployment.yaml](../infrastructure/k8s/apps/chat/deployment.yaml))
-   - Pod is running and healthy
-   - No per-app OAuth2 exchange filter is required for browser login
+1. **✅ Chat app manifests (external repo)**
+   - This repo no longer deploys a `chat` app under `infrastructure/k8s/apps/`.
+   - Validate chat deployment, Service, Gateway, and VirtualService in the chat repo.
 
 2. **✅ Azure Key Vault Secrets (gateway)**
    - `secure-subdomain-client-secret` ✅
@@ -44,19 +44,12 @@ If login/token exchange fails with `invalid_client`, the common cause is a misma
 5. **✅ Istio EnvoyFilter - JWT**
    - JWT validation is done at the gateway (see `infrastructure/k8s/istio/envoyfilter-secure-subdomain-jwt.yaml`) and/or with RequestAuthentication policies depending on the app.
 
-6. **✅ Istio RequestAuthentication** ([requestauthentication-chat.yaml](../infrastructure/k8s/istio/requestauthentication-chat.yaml))
-   - Issuer: `https://oauth2.cat-herding.net`
-   - JWKS URI configured correctly
-   - Audiences: `chat-backend`, `m2m-client`
+6. **✅ Istio RequestAuthentication (namespace)**
+   - This repo deploys a namespace-scoped `RequestAuthentication` named `default-jwt-auth` in `default`.
+   - If the chat app runs in a different namespace or you need audience restrictions, define a RequestAuthentication in the chat repo.
 
-7. **✅ Istio VirtualService** ([istio-virtualservice.yaml](../infrastructure/k8s/apps/chat/istio-virtualservice.yaml))
-   - Routes configured for WebSocket, API, health checks
-   - CORS policy properly configured
-
-8. **✅ Istio Gateway** ([istio-gateway.yaml](../infrastructure/k8s/apps/chat/istio-gateway.yaml))
-   - HTTPS configured for `chat.cat-herding.net`
-   - TLS certificate: `cat-herding-wildcard-tls`
-   - HTTP redirect to HTTPS enabled
+7. **✅ Istio VirtualService / Gateway (external repo)**
+   - Ensure chat routes (WebSocket/API/health) are configured in the chat repo.
 
 ## OAuth2 Flow
 
@@ -69,13 +62,13 @@ Istio Ingress Gateway
      |
      | 2. Route to chat-backend pod
      v
-Envoy Sidecar (OAuth2 Filter)
+Istio Ingress Gateway (OAuth2 Filter)
      |
      | 3. Check for session cookie
      | 4. If not authenticated, redirect to authorize endpoint
      |
-     | Redirect: https://oauth2.cat-herding.net/oauth2/authorize?
-     |           client_id=chat-backend&
+   | Redirect: https://oauth2.cat-herding.net/oauth2/authorize?
+   |           client_id=secure-subdomain-client&
      |           redirect_uri=https://chat.cat-herding.net/_oauth2/callback&
      |           scope=openid+profile+email&
      |           response_type=code
@@ -88,12 +81,12 @@ OAuth2 Server (oauth2.cat-herding.net)
      |
      | Redirect: https://chat.cat-herding.net/_oauth2/callback?code=XXXXX&state=YYYYY
      v
-Envoy Sidecar (OAuth2 Filter)
+Istio Ingress Gateway (OAuth2 Filter)
      |
-     | 8. Exchange authorization code for access token
-     |    POST http://oauth2-server.default.svc.cluster.local:9000/oauth2/token
-     |    Body: grant_type=authorization_code&code=XXXXX&redirect_uri=...
-     |    Auth: Basic base64(chat-backend:demo-chat-backend-client-secret)
+   | 8. Exchange authorization code for access token
+   |    POST http://oauth2-server.default.svc.cluster.local:9000/oauth2/token
+   |    Body: grant_type=authorization_code&code=XXXXX&redirect_uri=...
+   |    Client: secure-subdomain-client (secret must match gateway SDS)
      |
      | 9. Receive access token (JWT)
      | 10. Store in cookie: _chat_session

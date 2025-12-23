@@ -1,3 +1,0 @@
-# This patch can only work on deployments in the same kustomization.
-# Since chat-backend is in an external repo, we need to use kubectl patch directly
-# See the patch-chat-sds-init.sh script instead
