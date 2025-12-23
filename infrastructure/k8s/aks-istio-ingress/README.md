@@ -23,8 +23,18 @@ Those two keys are the files Envoy loads from:
 
 ## Mounting into the ingress gateway
 
-Because the AKS-managed ingress gateway Deployment is **not** managed by this repo's kustomize
-overlay, kustomize cannot patch it directly.
+You must mount `secure-subdomain-oauth-sds` into the **AKS-managed** ingress gateway Pod at
+`/etc/istio/oauth2`.
+
+Because the gateway Deployment is managed by the AKS Istio addon/Helm release, it is **not** rendered
+by this repo’s `kustomize build infrastructure/k8s/aks-istio-ingress` output. That means you typically
+apply the mount as a **runtime patch** (manual operation) rather than expecting kustomize to emit it.
+
+A template patch is provided in:
+
+- `patch-ingressgateway-mount-secure-subdomain-oauth-sds.yaml`
+
+Update `metadata.name` in that file to match your gateway Deployment (example: `aks-istio-ingressgateway-external-asm-1-27`).
 
 To mount `secure-subdomain-oauth-sds` into the ingress gateway at `/etc/istio/oauth2`, use the
 template patch in:
