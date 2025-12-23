@@ -1,12 +1,6 @@
 package com.bootsandcats.oauth2.config;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.Instant;
-
 import static org.assertj.core.api.Assertions.assertThat;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
@@ -15,6 +9,13 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Instant;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
@@ -37,13 +38,15 @@ class DataInitializerTest {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         SecurityAuditService securityAuditService = mock(SecurityAuditService.class);
 
-        DataInitializer initializer = new DataInitializer(repository, passwordEncoder, securityAuditService);
+        DataInitializer initializer =
+                new DataInitializer(repository, passwordEncoder, securityAuditService);
 
         Path secretFile = tempDir.resolve("secure-subdomain-client-secret");
         Files.writeString(secretFile, "from-file-secret\n");
 
         ReflectionTestUtils.setField(initializer, "secureSubdomainClientSecret", "from-env-secret");
-        ReflectionTestUtils.setField(initializer, "secureSubdomainClientSecretFile", secretFile.toString());
+        ReflectionTestUtils.setField(
+                initializer, "secureSubdomainClientSecretFile", secretFile.toString());
 
         assertThat(initializer.resolveSecureSubdomainClientSecret()).isEqualTo("from-file-secret");
     }
@@ -54,7 +57,8 @@ class DataInitializerTest {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         SecurityAuditService securityAuditService = mock(SecurityAuditService.class);
 
-        DataInitializer initializer = new DataInitializer(repository, passwordEncoder, securityAuditService);
+        DataInitializer initializer =
+                new DataInitializer(repository, passwordEncoder, securityAuditService);
 
         ReflectionTestUtils.setField(initializer, "secureSubdomainClientSecret", "from-env-secret");
         ReflectionTestUtils.setField(
@@ -72,14 +76,17 @@ class DataInitializerTest {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         SecurityAuditService securityAuditService = mock(SecurityAuditService.class);
 
-        DataInitializer initializer = new DataInitializer(repository, passwordEncoder, securityAuditService);
+        DataInitializer initializer =
+                new DataInitializer(repository, passwordEncoder, securityAuditService);
 
         Path secretFile = tempDir.resolve("secure-subdomain-client-secret");
         Files.writeString(secretFile, "new-rotated-secret\n");
 
         ReflectionTestUtils.setField(initializer, "syncClientSecrets", true);
-        ReflectionTestUtils.setField(initializer, "secureSubdomainClientSecret", "stale-env-secret");
-        ReflectionTestUtils.setField(initializer, "secureSubdomainClientSecretFile", secretFile.toString());
+        ReflectionTestUtils.setField(
+                initializer, "secureSubdomainClientSecret", "stale-env-secret");
+        ReflectionTestUtils.setField(
+                initializer, "secureSubdomainClientSecretFile", secretFile.toString());
 
         RegisteredClient existing =
                 RegisteredClient.withId("id")

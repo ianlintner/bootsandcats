@@ -40,18 +40,18 @@ public class DataInitializer {
 
     private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);
 
-        private final RegisteredClientRepository repository;
-        private final PasswordEncoder passwordEncoder;
-        private final SecurityAuditService securityAuditService;
+    private final RegisteredClientRepository repository;
+    private final PasswordEncoder passwordEncoder;
+    private final SecurityAuditService securityAuditService;
 
-        public DataInitializer(
-                        RegisteredClientRepository repository,
-                        PasswordEncoder passwordEncoder,
-                        SecurityAuditService securityAuditService) {
-                this.repository = repository;
-                this.passwordEncoder = passwordEncoder;
-                this.securityAuditService = securityAuditService;
-        }
+    public DataInitializer(
+            RegisteredClientRepository repository,
+            PasswordEncoder passwordEncoder,
+            SecurityAuditService securityAuditService) {
+        this.repository = repository;
+        this.passwordEncoder = passwordEncoder;
+        this.securityAuditService = securityAuditService;
+    }
 
     @Value("${oauth2.demo-client-secret:demo-secret}")
     private String demoClientSecret;
@@ -100,8 +100,8 @@ public class DataInitializer {
     private boolean syncClientSecrets;
 
     @Bean
-        public CommandLineRunner initializeClients() {
-                return args -> {
+    public CommandLineRunner initializeClients() {
+        return args -> {
             String resolvedSecureSubdomainClientSecret = resolveSecureSubdomainClientSecret();
             registerOrUpdateClient(
                     repository,
@@ -194,85 +194,88 @@ public class DataInitializer {
                     passwordEncoder,
                     securityAuditService,
                     "secure-subdomain-client",
-                                        resolvedSecureSubdomainClientSecret,
+                    resolvedSecureSubdomainClientSecret,
                     () ->
                             buildSecureSubdomainClient(
-                                                                        passwordEncoder.encode(resolvedSecureSubdomainClientSecret),
+                                    passwordEncoder.encode(resolvedSecureSubdomainClientSecret),
                                     UUID.randomUUID().toString()));
         };
     }
 
-        /**
-         * Periodically reconcile the secure-subdomain client secret in the DB so that if the
-         * externally-managed secret rotates (e.g. Key Vault), the token exchange from the ingress
-         * gateway does not fail with invalid_client.
-         */
-        @Scheduled(fixedDelayString = "${oauth2.client-secret-sync-interval-ms:300000}")
-        public void reconcileSecureSubdomainClientSecret() {
-                if (!syncClientSecrets) {
-                        return;
-                }
-
-                String rawSecret = resolveSecureSubdomainClientSecret();
-                if (!StringUtils.hasText(rawSecret)) {
-                        return;
-                }
-
-                RegisteredClient existing = repository.findByClientId("secure-subdomain-client");
-                if (existing == null) {
-                        log.warn(
-                                        "OAuth client 'secure-subdomain-client' not found during periodic reconcile; registering");
-                        registerOrUpdateClient(
-                                        repository,
-                                        passwordEncoder,
-                                        securityAuditService,
-                                        "secure-subdomain-client",
-                                        rawSecret,
-                                        () ->
-                                                        buildSecureSubdomainClient(
-                                                                        passwordEncoder.encode(rawSecret), UUID.randomUUID().toString()));
-                        return;
-                }
-
-                if (passwordEncoder.matches(rawSecret, existing.getClientSecret())) {
-                        return;
-                }
-
-                RegisteredClient updatedSecretOnly =
-                                RegisteredClient.from(existing).clientSecret(passwordEncoder.encode(rawSecret)).build();
-                log.warn(
-                                "OAuth client 'secure-subdomain-client' secret mismatch detected (periodic check); updating stored secret from mounted file");
-                repository.save(updatedSecretOnly);
-                auditClientEvent(securityAuditService, AuditEventType.CLIENT_UPDATED, updatedSecretOnly);
+    /**
+     * Periodically reconcile the secure-subdomain client secret in the DB so that if the
+     * externally-managed secret rotates (e.g. Key Vault), the token exchange from the ingress
+     * gateway does not fail with invalid_client.
+     */
+    @Scheduled(fixedDelayString = "${oauth2.client-secret-sync-interval-ms:300000}")
+    public void reconcileSecureSubdomainClientSecret() {
+        if (!syncClientSecrets) {
+            return;
         }
 
-        String resolveSecureSubdomainClientSecret() {
-                String fromFile = readSecretFromFile(secureSubdomainClientSecretFile);
-                if (StringUtils.hasText(fromFile)) {
-                        return fromFile;
-                }
-                return secureSubdomainClientSecret;
+        String rawSecret = resolveSecureSubdomainClientSecret();
+        if (!StringUtils.hasText(rawSecret)) {
+            return;
         }
 
-        String readSecretFromFile(String filePath) {
-                if (!StringUtils.hasText(filePath)) {
-                        return null;
-                }
-
-                Path path = Paths.get(filePath);
-                if (!Files.isRegularFile(path)) {
-                        return null;
-                }
-
-                try {
-                        // Strip trailing newlines/spaces that often appear in mounted secret files.
-                        String value = Files.readString(path, StandardCharsets.UTF_8).trim();
-                        return StringUtils.hasText(value) ? value : null;
-                } catch (IOException e) {
-                        log.warn("Failed to read secure-subdomain client secret from {}", filePath, e);
-                        return null;
-                }
+        RegisteredClient existing = repository.findByClientId("secure-subdomain-client");
+        if (existing == null) {
+            log.warn(
+                    "OAuth client 'secure-subdomain-client' not found during periodic reconcile; registering");
+            registerOrUpdateClient(
+                    repository,
+                    passwordEncoder,
+                    securityAuditService,
+                    "secure-subdomain-client",
+                    rawSecret,
+                    () ->
+                            buildSecureSubdomainClient(
+                                    passwordEncoder.encode(rawSecret),
+                                    UUID.randomUUID().toString()));
+            return;
         }
+
+        if (passwordEncoder.matches(rawSecret, existing.getClientSecret())) {
+            return;
+        }
+
+        RegisteredClient updatedSecretOnly =
+                RegisteredClient.from(existing)
+                        .clientSecret(passwordEncoder.encode(rawSecret))
+                        .build();
+        log.warn(
+                "OAuth client 'secure-subdomain-client' secret mismatch detected (periodic check); updating stored secret from mounted file");
+        repository.save(updatedSecretOnly);
+        auditClientEvent(securityAuditService, AuditEventType.CLIENT_UPDATED, updatedSecretOnly);
+    }
+
+    String resolveSecureSubdomainClientSecret() {
+        String fromFile = readSecretFromFile(secureSubdomainClientSecretFile);
+        if (StringUtils.hasText(fromFile)) {
+            return fromFile;
+        }
+        return secureSubdomainClientSecret;
+    }
+
+    String readSecretFromFile(String filePath) {
+        if (!StringUtils.hasText(filePath)) {
+            return null;
+        }
+
+        Path path = Paths.get(filePath);
+        if (!Files.isRegularFile(path)) {
+            return null;
+        }
+
+        try {
+            // Strip trailing newlines/spaces that often appear in mounted secret files.
+            String value = Files.readString(path, StandardCharsets.UTF_8).trim();
+            return StringUtils.hasText(value) ? value : null;
+        } catch (IOException e) {
+            log.warn("Failed to read secure-subdomain client secret from {}", filePath, e);
+            return null;
+        }
+    }
 
     private void registerOrUpdateClient(
             RegisteredClientRepository repository,
