@@ -1,21 +1,15 @@
 # OAuth2 Envoy Filter Deployment Summary
 
-**Status**: ✅ **COMPLETE** (Deployed Dec 12, 2025)
+**Status**: ✅ **CURRENT** (Unified gateway OAuth2; single client)
 
 ## What Was Implemented
 
-### 1. **Envoy OAuth2 Native Filters**
-Replaced Lua-based OAuth flows with Envoy's `envoy.filters.http.oauth2`:
-- **Profile Service**: `envoyfilter-profile-oauth2-exchange.yaml`
-   - Client ID: `profile-service`
-   - Callback: `https://profile.cat-herding.net/_oauth2/callback`
-    - Cookies: `_profilesvc_session_v3`, `_profilesvc_oauth_hmac_v3`, `_profilesvc_oauth_expires_v3`
-       - _Updated to the v3 suffix on Jan 4, 2026 to invalidate stale v2 cookies after rotating the Key Vault client/HMAC secrets._
-  
-- **GitHub Review Service**: `envoyfilter-github-review-oauth2-exchange.yaml`
-  - Client ID: `github-review-service`
-  - Callback: `https://gh-review.cat-herding.net/_oauth2/callback`
-  - Cookies: `_ghreview_session`, `_ghreview_oauth_hmac`, `_ghreview_oauth_expires`
+### 1. **Unified gateway Envoy OAuth2 filter**
+OAuth2 login is enforced at the **Istio ingress gateway** (not per-service) using Envoy's `envoy.filters.http.oauth2`.
+
+- **Single client**: `secure-subdomain-client`
+- **Callback**: `https://{any-host}.cat-herding.net/_oauth2/callback`
+- **Shared cookies (apex domain)**: `_secure_session`, `_secure_oauth_hmac`, `_secure_oauth_expires`
 
 **Features**:
 - Full OAuth2 authorization code flow
@@ -26,13 +20,9 @@ Replaced Lua-based OAuth flows with Envoy's `envoy.filters.http.oauth2`:
 - Logout support via `/_oauth2/logout`
 
 ### 2. **Secrets Management**
-All secrets moved from inline configuration to **Azure Key Vault**:
-- `profile-service-client-secret`: OAuth client credential
-- `profile-service-oauth-hmac-secret`: Session HMAC key (base64)
-- `github-review-client-secret`: OAuth client credential
-- `github-review-oauth-hmac-secret`: Session HMAC key (base64)
+The gateway uses a single OAuth2 client secret + HMAC secret (for the unified client) delivered via SDS.
 
-**Delivery**: SecretStore CSI Driver → Kubernetes Volumes → Envoy SDS ConfigMap
+**Delivery**: SecretStore CSI Driver → gateway pod volume → SDS-rendered files under `/etc/istio/oauth2/*`.
 
 ### 3. **Database Migrations**
 Flyway migration `V12__align_oauth2_clients_for_envoy_filter.sql`:
@@ -72,14 +62,10 @@ kubectl apply -k infrastructure/k8s
 ## Key Files Modified
 
 ### Infrastructure
-- `infrastructure/k8s/istio/envoyfilter-profile-oauth2-exchange.yaml` ← NEW native filter
-- `infrastructure/k8s/istio/envoyfilter-github-review-oauth2-exchange.yaml` ← NEW native filter
-- `infrastructure/k8s/istio/envoy-oauth2-sds-configmap.yaml` ← NEW SDS config
-- `infrastructure/k8s/secret-provider-class.yaml` ← Updated with new secrets
-- `infrastructure/k8s/secret-provider-class-github-review.yaml` ← Updated with HMAC secret
-- `infrastructure/k8s/apps/profile-service/profile-service-deployment.yaml` ← SDS volume mounts
-- `infrastructure/k8s/apps/github-review-service/github-review-service-deployment.yaml` ← SDS volume mounts
-- `infrastructure/k8s/kustomization.yaml` ← Registered new ConfigMap
+- `infrastructure/k8s/istio/envoyfilter-secure-subdomain-oauth2.yaml` ← unified gateway OAuth2 enforcement
+- `infrastructure/k8s/istio/envoy-oauth2-sds-configmap-secure-subdomain.yaml` ← SDS config for the unified client
+- `infrastructure/k8s/aks-istio-ingress/secret-provider-class-secure-subdomain-oauth.yaml` ← Key Vault integration
+- `infrastructure/k8s/aks-istio-ingress/secure-subdomain-oauth-sds-renderer.yaml` ← renders SDS secrets for the gateway
 
 ### Database
 - `oauth2-server/server-dao/.../V12__align_oauth2_clients_for_envoy_filter.sql` ← NEW migration
@@ -179,8 +165,8 @@ kubectl describe requestauthentication -n default
 
 ### Rollback Procedure
 ```bash
-# Revert EnvoyFilter deployment
-kubectl delete envoyfilter profile-oauth2-exchange github-review-oauth2-exchange -n default
+# Revert gateway OAuth2 enforcement (removes protection)
+kubectl delete envoyfilter secure-subdomain-oauth2-exchange -n aks-istio-ingress
 
 # Restore previous deployment
 kubectl rollout undo deployment/profile-service -n default
@@ -192,7 +178,7 @@ kubectl rollout undo deployment/github-review-service -n default
 ✅ **Secrets**: All OAuth2 client secrets stored in Azure Key Vault (never in manifests)  
 ✅ **Transport**: HTTPS enforced for all OAuth endpoints  
 ✅ **Cookies**: HttpOnly, Secure, SameSite=Lax  
-✅ **HMAC**: Independent key per service for session validation  
+✅ **HMAC**: Single key for shared gateway session validation  
 ✅ **Token Expiry**: 900s (15 min) default, configurable  
 ✅ **CSRF**: Enabled by default in Envoy OAuth2 filter
 
