@@ -88,10 +88,6 @@ spec:
       - name: oauth2-server
         image: gabby.azurecr.io/oauth2-server:latest
         imagePullPolicy: Always
-        resources:
-          limits:
-            cpu: "1000m"
-            memory: "1024Mi"
         ports:
         - containerPort: 9000
           name: http
@@ -132,6 +128,11 @@ spec:
             secretKeyRef:
               name: oauth2-app-secrets
               key: m2m-client-secret
+        - name: OAUTH2_SECURE_SUBDOMAIN_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-app-secrets
+              key: secure-subdomain-client-secret
         - name: OAUTH2_DEMO_USER_PASSWORD
           valueFrom:
             secretKeyRef:

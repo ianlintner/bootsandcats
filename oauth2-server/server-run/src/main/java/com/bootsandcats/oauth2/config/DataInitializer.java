@@ -56,6 +56,9 @@ public class DataInitializer {
     @Value("${oauth2.security-agency-client-secret:demo-security-agency-client-secret}")
     private String securityAgencyClientSecret;
 
+        @Value("${oauth2.secure-subdomain-client-secret:demo-secure-subdomain-client-secret}")
+        private String secureSubdomainClientSecret;
+
     @Value("${oauth2.preserve-client-secrets:true}")
     private boolean preserveClientSecrets;
 
@@ -158,6 +161,17 @@ public class DataInitializer {
                             buildSecurityAgencyClient(
                                     passwordEncoder.encode(securityAgencyClientSecret),
                                     UUID.randomUUID().toString()));
+
+            registerOrUpdateClient(
+                    repository,
+                    passwordEncoder,
+                    securityAuditService,
+                    "secure-subdomain-client",
+                    secureSubdomainClientSecret,
+                    () ->
+                            buildSecureSubdomainClient(
+                                    passwordEncoder.encode(secureSubdomainClientSecret),
+                                    UUID.randomUUID().toString()));
         };
     }
 
@@ -190,7 +204,9 @@ public class DataInitializer {
 
         boolean allowSecretSyncForClient =
                 syncClientSecrets
-                        && ("m2m-client".equals(clientId) || "profile-service".equals(clientId));
+                        && ("m2m-client".equals(clientId)
+                                || "profile-service".equals(clientId)
+                                || "secure-subdomain-client".equals(clientId));
 
         if (preserveClientSecrets) {
             if (!allowSecretSyncForClient) {
@@ -509,6 +525,36 @@ public class DataInitializer {
                                 .accessTokenTimeToLive(Duration.ofMinutes(15))
                                 .build())
                 .clientSettings(ClientSettings.builder().requireAuthorizationConsent(false).build())
+                .build();
+    }
+
+    private RegisteredClient buildSecureSubdomainClient(String encodedSecret, String id) {
+        return RegisteredClient.withId(id)
+                .clientId("secure-subdomain-client")
+                .clientIdIssuedAt(Instant.now())
+                .clientSecret(encodedSecret)
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
+                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                .redirectUri("https://*.secure.cat-herding.net/_oauth2/callback")
+                .redirectUri("http://localhost:*/_oauth2/callback")
+                .postLogoutRedirectUri("https://*.secure.cat-herding.net/_oauth2/logout")
+                .postLogoutRedirectUri("http://localhost:*/_oauth2/logout")
+                .scope(OidcScopes.OPENID)
+                .scope(OidcScopes.PROFILE)
+                .scope(OidcScopes.EMAIL)
+                .tokenSettings(
+                        TokenSettings.builder()
+                                .accessTokenTimeToLive(Duration.ofMinutes(15))
+                                .refreshTokenTimeToLive(Duration.ofHours(1))
+                                .reuseRefreshTokens(false)
+                                .authorizationCodeTimeToLive(Duration.ofMinutes(5))
+                                .build())
+                .clientSettings(
+                        ClientSettings.builder()
+                                .requireAuthorizationConsent(false)
+                                .requireProofKey(true)
+                                .build())
                 .build();
     }
 }
