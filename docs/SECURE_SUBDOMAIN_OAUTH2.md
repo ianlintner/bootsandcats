@@ -49,35 +49,46 @@ This script will:
 - Generate secure random secrets for client authentication and HMAC
 - Display the secrets you need to save
 
-### 2. Create Kubernetes Secrets
+> Important: the **client secret used by the OAuth2 server** must match the secret used by the **ingress gateway**.
+>
+> In this repo, the ingress gateway is wired from **Azure Key Vault** (see next step). If you already generated
+> `secure-subdomain-client-secret` in Key Vault, update the DB client secret to match that value.
 
-The script output will show you the exact command to run. It will look like:
+### 2. Sync secrets from Azure Key Vault (recommended)
 
-```bash
-kubectl create secret generic secure-subdomain-oauth-secrets \
-  --from-literal=client-secret='<CLIENT_SECRET>' \
-  --from-literal=hmac-secret='<HMAC_SECRET>' \
-  -n aks-istio-ingress \
-  --dry-run=client -o yaml | kubectl apply -f -
-```
+Apply the manifests that:
 
-### 3. Update the SDS ConfigMap
-
-Edit the ConfigMap to use the secrets:
+- Pull `secure-subdomain-client-secret` and `secure-subdomain-oauth-hmac-secret` from Key Vault `inker-kv`
+- Render the Envoy SDS files into a Kubernetes Secret `secure-subdomain-oauth-sds`
 
 ```bash
-kubectl edit configmap envoy-oauth2-sds-secure-subdomain -n aks-istio-ingress
+kubectl apply -k infrastructure/k8s/aks-istio-ingress/
 ```
 
-Replace `REPLACE_WITH_CLIENT_SECRET` and `REPLACE_WITH_HMAC_SECRET` with the values from step 1.
+### 3. Mount the rendered SDS secret into the ingress gateway
 
-### 4. Apply the Configuration
+Envoy is configured to read these files:
+
+- `/etc/istio/oauth2/secure-subdomain-oauth-token.yaml`
+- `/etc/istio/oauth2/secure-subdomain-oauth-hmac.yaml`
+
+Mount the Secret `secure-subdomain-oauth-sds` into the ingress gateway at `/etc/istio/oauth2`.
+
+A template patch is provided:
+
+- `infrastructure/k8s/aks-istio-ingress/patch-ingressgateway-mount-secure-subdomain-oauth-sds.yaml`
+
+If your AKS-managed ingress gateway Deployment name differs, update `metadata.name` in the patch.
+
+After patching, restart the ingress gateway pods so Envoy re-reads the SDS files.
+
+### 4. Apply the configuration
 
 ```bash
 kubectl apply -k infrastructure/k8s/istio/
 ```
 
-### 5. Verify the Setup
+### 5. Verify the setup
 
 Deploy an app and opt it in (example for a secure host):
 

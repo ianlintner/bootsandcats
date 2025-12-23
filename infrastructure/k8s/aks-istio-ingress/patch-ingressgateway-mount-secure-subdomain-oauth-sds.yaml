@@ -1,0 +1,22 @@
+# Template patch: mount the rendered SDS Secret into the ingress gateway.
+#
+# NOTE: The AKS-managed Istio ingress gateway Deployment name can differ.
+# Update metadata.name if needed.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aks-istio-ingressgateway-external
+  namespace: aks-istio-ingress
+spec:
+  template:
+    spec:
+      volumes:
+        - name: secure-subdomain-oauth-sds
+          secret:
+            secretName: secure-subdomain-oauth-sds
+      containers:
+        - name: istio-proxy
+          volumeMounts:
+            - name: secure-subdomain-oauth-sds
+              mountPath: /etc/istio/oauth2
+              readOnly: true

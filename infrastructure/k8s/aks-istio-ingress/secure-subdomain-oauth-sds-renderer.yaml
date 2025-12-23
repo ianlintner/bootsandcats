@@ -1,0 +1,105 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: secure-subdomain-oauth-sds-renderer
+  namespace: aks-istio-ingress
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: secure-subdomain-oauth-sds-renderer
+  namespace: aks-istio-ingress
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: secure-subdomain-oauth-sds-renderer
+  namespace: aks-istio-ingress
+subjects:
+  - kind: ServiceAccount
+    name: secure-subdomain-oauth-sds-renderer
+    namespace: aks-istio-ingress
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: secure-subdomain-oauth-sds-renderer
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: secure-subdomain-oauth-sds-renderer
+  namespace: aks-istio-ingress
+spec:
+  # Re-renders the SDS secret periodically so secret rotation in Key Vault propagates.
+  schedule: "0 * * * *" # hourly
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      ttlSecondsAfterFinished: 300
+      template:
+        metadata:
+          annotations:
+            sidecar.istio.io/inject: "false"
+        spec:
+          serviceAccountName: secure-subdomain-oauth-sds-renderer
+          restartPolicy: Never
+          volumes:
+            - name: secrets-store-inline
+              csi:
+                driver: secrets-store.csi.k8s.io
+                readOnly: true
+                volumeAttributes:
+                  secretProviderClass: secure-subdomain-oauth-secrets-provider
+          containers:
+            - name: render
+              image: bitnami/kubectl:1.30.2
+              imagePullPolicy: IfNotPresent
+              volumeMounts:
+                - name: secrets-store-inline
+                  mountPath: /mnt/secrets-store
+                  readOnly: true
+              command:
+                - sh
+                - -lc
+                - |
+                  set -eu
+                  umask 077
+
+                  CLIENT_SECRET="$(cat /mnt/secrets-store/secure-subdomain-client-secret)"
+                  HMAC_SECRET="$(cat /mnt/secrets-store/secure-subdomain-oauth-hmac-secret)"
+
+                  # Write the SDS resources to temporary files.
+                  cat > /tmp/secure-subdomain-oauth-token.yaml <<EOF
+                  resources:
+                  - "@type": "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret"
+                    name: secure-subdomain-oauth-token
+                    generic_secret:
+                      secret:
+                        inline_string: "${CLIENT_SECRET}"
+                  EOF
+
+                  cat > /tmp/secure-subdomain-oauth-hmac.yaml <<EOF
+                  resources:
+                  - "@type": "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret"
+                    name: secure-subdomain-oauth-hmac
+                    generic_secret:
+                      secret:
+                        inline_string: "${HMAC_SECRET}"
+                  EOF
+
+                  # Create/update the SDS secret. This must be mounted into the ingress gateway at /etc/istio/oauth2.
+                  kubectl -n aks-istio-ingress create secret generic secure-subdomain-oauth-sds \
+                    --from-file=secure-subdomain-oauth-token.yaml=/tmp/secure-subdomain-oauth-token.yaml \
+                    --from-file=secure-subdomain-oauth-hmac.yaml=/tmp/secure-subdomain-oauth-hmac.yaml \
+                    --dry-run=client -o yaml | kubectl apply -f -
+
+                  # Optional: verify the keys exist without printing secret values.
+                  kubectl -n aks-istio-ingress get secret secure-subdomain-oauth-sds \
+                    -o jsonpath='{.metadata.name} {.type} {.data.secure-subdomain-oauth-token\.yaml} {.data.secure-subdomain-oauth-hmac\.yaml}{"\n"}' >/dev/null
