@@ -6,7 +6,7 @@ metadata:
 spec:
   workloadSelector:
     labels:
-      app: aks-istio-ingressgateway-external
+      istio: aks-istio-ingress-external
 
   # Opt-in OAuth2 enforcement for non-secure hosts.
   #

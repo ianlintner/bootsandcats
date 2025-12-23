@@ -20,10 +20,11 @@ All traffic to `*.secure.cat-herding.net` is automatically protected by:
 
 Not every `*.cat-herding.net` hostname should be protected by default.
 
-To protect selected apps on their normal hosts (e.g., `app.cat-herding.net`) while still using the same SSO session cookies, we recommend an **opt-in** approach:
+To protect selected apps on their normal hosts (e.g., `app.cat-herding.net`) while still using the same SSO session cookies, use the repo-managed allowlist EnvoyFilter:
 
-- **Option A (Istio gateway opt-in)**: a dedicated gateway for protected hosts; apps opt in by referencing that gateway in their VirtualService (can be patched via kustomize using a label).
-- **Option B (oauth2-proxy + ext_authz)**: run `oauth2-proxy` once and use an Envoy `ext_authz` filter at the gateway; apps opt in by referencing the protected gateway / route.
+- `infrastructure/k8s/istio/envoyfilter-oauth2-allowlist.yaml`
+
+Add one `configPatch` entry per host (matching `vhost.name` like `profile.cat-herding.net:443`). Only hosts you explicitly add here will be protected.
 
 ## Setup Instructions
 
@@ -112,6 +113,11 @@ Access `https://myapp.secure.cat-herding.net` - you'll be automatically redirect
    - Applied to: Istio ingress gateway
    - Matches: `*.secure.cat-herding.net`
    - Provides: JWT validation, claim extraction to headers
+
+3. **envoyfilter-oauth2-allowlist.yaml**
+  - Applied to: Istio ingress gateway
+  - Matches: explicit `vhost.name` entries (e.g., `profile.cat-herding.net:443`)
+  - Provides: opt-in OAuth2 enforcement for non-secure hosts
 
 ### OAuth2 Flow
 

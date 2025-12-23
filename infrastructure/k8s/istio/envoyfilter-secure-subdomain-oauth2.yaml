@@ -126,16 +126,14 @@ spec:
           envoy.filters.http.oauth2:
             "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2PerRoute
             disabled: true
-  # 2) Enable OAuth2 only for the secure wildcard virtual host.
+  # 2) Enable OAuth2 for the secure-subdomain allowlist.
   #
-  # NOTE: Envoy/Istio vhost names are typically of the form "<host>:<port>".
-  # For wildcard hosts, the wildcard is preserved in the vhost name.
+  # NOTE: We use `domains` to match the secure wildcard host pattern.
   - applyTo: VIRTUAL_HOST
     match:
       context: GATEWAY
       routeConfiguration:
         vhost:
-          name: "*.secure.cat-herding.net:443"
           route:
             name: ""
     patch:
@@ -145,3 +143,5 @@ spec:
           envoy.filters.http.oauth2:
             "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2PerRoute
             disabled: false
+        domains:
+        - "*.secure.cat-herding.net"

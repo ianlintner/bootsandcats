@@ -20,7 +20,8 @@ This repo deploys via `kustomization.yaml` (see `infrastructure/k8s/kustomizatio
 - `secrets/secret-provider-class-redis.yaml`: Key Vault-backed secrets for Redis (password).
 - `secrets/secret-provider-class-chat.yaml`: Key Vault-backed secrets for the chat OAuth2 exchange filter.
 - `secrets/secret-provider-class-github-review.yaml`: Key Vault-backed secrets for the GitHub review service.
-- **Istio gateway OAuth2 SSO (secure subdomain)**: `istio/envoyfilter-secure-subdomain-oauth2.yaml` protects `*.secure.cat-herding.net` at the ingress gateway and sets cookies for the apex domain `.cat-herding.net` so sessions can be shared across subdomains. For protecting selected `*.cat-herding.net` hosts, use an opt-in gateway or oauth2-proxy + ext_authz pattern (see `docs/SECURE_SUBDOMAIN_OAUTH2.md`).
+- **Istio gateway OAuth2 SSO (secure subdomain)**: `istio/envoyfilter-secure-subdomain-oauth2.yaml` protects `*.secure.cat-herding.net` at the ingress gateway and sets cookies for the apex domain `.cat-herding.net` so sessions can be shared across subdomains.
+- **Istio gateway OAuth2 SSO (opt-in allowlist)**: `istio/envoyfilter-oauth2-allowlist.yaml` enables OAuth2 enforcement only for explicitly listed non-secure hosts (see `docs/SECURE_SUBDOMAIN_OAUTH2.md`).
 
 ### SecretProviderClass (Azure Key Vault)
 
