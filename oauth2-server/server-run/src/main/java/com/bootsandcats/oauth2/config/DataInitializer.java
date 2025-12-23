@@ -332,7 +332,9 @@ public class DataInitializer {
                 builder.clientId(desired.getClientId());
                 builder.clientIdIssuedAt(existing.getClientIdIssuedAt());
                 builder.clientSecret(
-                        shouldUpdateSecret ? desired.getClientSecret() : existing.getClientSecret());
+                        shouldUpdateSecret
+                                ? desired.getClientSecret()
+                                : existing.getClientSecret());
                 builder.clientSecretExpiresAt(desired.getClientSecretExpiresAt());
                 builder.clientName(desired.getClientName());
                 builder.clientAuthenticationMethods(
@@ -696,7 +698,8 @@ public class DataInitializer {
         // NOTE: Spring Authorization Server requires redirect URIs to match exactly.
         // Wildcards such as https://*.cat-herding.net/... are not supported.
         Set<String> redirectUris = new java.util.LinkedHashSet<>();
-        // Public hosts currently routed by the Istio Gateway (see infrastructure/k8s/istio/virtualservices.yaml)
+        // Public hosts currently routed by the Istio Gateway (see
+        // infrastructure/k8s/istio/virtualservices.yaml)
         redirectUris.add("https://profile.cat-herding.net/_oauth2/callback");
         redirectUris.add("https://gh-review.cat-herding.net/_oauth2/callback");
         redirectUris.add("https://slop-detector.cat-herding.net/_oauth2/callback");
