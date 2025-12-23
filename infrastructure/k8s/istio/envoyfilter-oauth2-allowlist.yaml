@@ -1,0 +1,40 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: oauth2-allowlist
+  namespace: aks-istio-ingress
+spec:
+  workloadSelector:
+    labels:
+      app: aks-istio-ingressgateway-external
+
+  # Opt-in OAuth2 enforcement for non-secure hosts.
+  #
+  # How this works:
+  # - The base filter (`envoyfilter-secure-subdomain-oauth2.yaml`) disables OAuth2 by default
+  #   and then enables it only for `*.secure.cat-herding.net`.
+  # - This allowlist filter re-enables OAuth2 for explicitly listed virtual hosts.
+  #
+  # Add hosts by duplicating a configPatch and setting `vhost.name` to "<host>:443".
+  # Example:
+  # - name: "profile.cat-herding.net:443"
+  # - name: "slop-detector.cat-herding.net:443"
+  configPatches:
+    # ---- Add allowlisted host entries below ----
+
+    # Example (disabled by default):
+    # - applyTo: VIRTUAL_HOST
+    #   match:
+    #     context: GATEWAY
+    #     routeConfiguration:
+    #       vhost:
+    #         name: "profile.cat-herding.net:443"
+    #         route:
+    #           name: ""
+    #   patch:
+    #     operation: MERGE
+    #     value:
+    #       typed_per_filter_config:
+    #         envoy.filters.http.oauth2:
+    #           "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2PerRoute
+    #           disabled: false

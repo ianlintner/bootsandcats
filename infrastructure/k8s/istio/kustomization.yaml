@@ -24,5 +24,6 @@ resources:
   - requestauthentication-security-agency.yaml
   - envoy-oauth2-sds-configmap-security-agency.yaml
   - envoyfilter-secure-subdomain-oauth2.yaml
+  - envoyfilter-oauth2-allowlist.yaml
   - envoyfilter-secure-subdomain-jwt.yaml
   - envoy-oauth2-sds-configmap-secure-subdomain.yaml

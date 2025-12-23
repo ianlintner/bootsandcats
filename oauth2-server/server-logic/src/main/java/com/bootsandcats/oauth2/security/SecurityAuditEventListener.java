@@ -98,6 +98,26 @@ public class SecurityAuditEventListener {
             details.put("authenticationType", authentication.getClass().getSimpleName());
         }
 
+        // Add request metadata for honeypot/audit correlation (do not include secrets)
+        if (request != null) {
+            details.put("httpMethod", request.getMethod());
+            details.put("requestUri", request.getRequestURI());
+            String userAgent = request.getHeader("User-Agent");
+            if (userAgent != null) {
+                details.put("userAgent", userAgent);
+            }
+            String forwardedFor = request.getHeader("X-Forwarded-For");
+            if (forwardedFor != null) {
+                details.put("xForwardedFor", forwardedFor);
+            }
+        }
+
+        // Add session/request details if available
+        if (authentication != null && authentication.getDetails() instanceof WebAuthenticationDetails webDetails) {
+            details.put("remoteAddress", webDetails.getRemoteAddress());
+            details.put("sessionId", webDetails.getSessionId());
+        }
+
         // Add OAuth2 specific error details
         if (exception instanceof OAuth2AuthenticationException oauth2Exception) {
             details.put("errorCode", oauth2Exception.getError().getErrorCode());

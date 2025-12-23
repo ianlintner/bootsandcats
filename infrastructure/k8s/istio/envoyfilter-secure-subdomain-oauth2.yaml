@@ -111,21 +111,7 @@ spec:
   # - We do NOT enable OAuth2 for all *.cat-herding.net by default because not every app/host
   #   should be protected automatically.
   # - Opt-in is achieved by routing/architecture (e.g., a dedicated gateway or host pattern).
-  - applyTo: VIRTUAL_HOST
-    match:
-      context: GATEWAY
-      routeConfiguration:
-        vhost:
-          name: "*:443"
-          route:
-            name: ""
-    patch:
-      operation: MERGE
-      value:
-        per_filter_config:
-          envoy.filters.http.oauth2:
-            "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2PerRoute
-            disabled: true
+  # 1) Disable OAuth2 everywhere by default (safe baseline).
   - applyTo: VIRTUAL_HOST
     match:
       context: GATEWAY
@@ -139,6 +125,23 @@ spec:
         typed_per_filter_config:
           envoy.filters.http.oauth2:
             "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2PerRoute
+            disabled: true
+  # 2) Enable OAuth2 only for the secure wildcard virtual host.
+  #
+  # NOTE: Envoy/Istio vhost names are typically of the form "<host>:<port>".
+  # For wildcard hosts, the wildcard is preserved in the vhost name.
+  - applyTo: VIRTUAL_HOST
+    match:
+      context: GATEWAY
+      routeConfiguration:
+        vhost:
+          name: "*.secure.cat-herding.net:443"
+          route:
+            name: ""
+    patch:
+      operation: MERGE
+      value:
+        typed_per_filter_config:
+          envoy.filters.http.oauth2:
+            "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2PerRoute
             disabled: false
-        domains:
-        - "*.secure.cat-herding.net"

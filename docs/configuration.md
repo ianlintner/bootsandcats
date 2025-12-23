@@ -84,6 +84,7 @@ oauth2.m2m-client-secret=${OAUTH2_M2M_CLIENT_SECRET}
 |----------|---------|-------------|
 | `oauth2.demo-user-password` | `password` | Demo user password |
 | `oauth2.admin-user-password` | `admin` | Admin user password |
+| `oauth2.form-login.demo-users-enabled` | `true` | Enable built-in demo form-login users (`user`, `admin`). Set `false` in prod/Kubernetes to disable local accounts while keeping `/login` available as a honeypot. |
 
 ```properties
 # User passwords - use environment variables in production
