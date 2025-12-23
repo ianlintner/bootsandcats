@@ -1,30 +1,32 @@
 # Secure Subdomain OAuth2 Configuration
 
-This configuration automatically protects any application deployed under `*.secure.cat-herding.net` with OAuth2 authentication and JWT validation, without requiring per-app configuration.
+This configuration provides gateway-level OAuth2 authentication and JWT validation.
+
+In the current MVP, **OAuth2 enforcement is opt-in per-host** (to avoid accidentally protecting every `*.cat-herding.net` hostname).
 
 ## Overview
 
-All traffic to `*.secure.cat-herding.net` is automatically protected by:
+Traffic to hosts you explicitly opt in is protected by:
 - **OAuth2 Authorization Code Flow** with PKCE
 - **JWT validation** and claim extraction
 - **Shared session cookies** across all secure subdomains
 
 ## How It Works
 
-1. **Gateway-Level Protection**: EnvoyFilters are applied at the Istio ingress gateway level, matching on the domain `*.secure.cat-herding.net`.
+1. **Gateway-Level Protection**: EnvoyFilters are applied at the Istio ingress gateway level.
 2. **Single OAuth2 Client**: One client (`secure-subdomain-client`) handles authentication for all subdomains.
 3. **Wildcard Redirect URIs**: The client supports `https://*.secure.cat-herding.net/_oauth2/callback`
 4. **Shared Cookies (apex)**: Session cookies are set with `domain: .cat-herding.net` so a successful login can be reused across *other* subdomains, if/when they opt-in to enforcement.
 
-### Opt-in for other `*.cat-herding.net` domains
+### Opt-in host allowlist (MVP)
 
 Not every `*.cat-herding.net` hostname should be protected by default.
 
-To protect selected apps on their normal hosts (e.g., `app.cat-herding.net`) while still using the same SSO session cookies, use the repo-managed allowlist EnvoyFilter:
+To protect selected apps (secure or non-secure) while still using the same SSO session cookies, use the repo-managed allowlist EnvoyFilter:
 
 - `infrastructure/k8s/istio/envoyfilter-oauth2-allowlist.yaml`
 
-Add one `configPatch` entry per host (matching `vhost.name` like `profile.cat-herding.net:443`). Only hosts you explicitly add here will be protected.
+Add one `configPatch` entry per host (matching `vhost.name` like `profile.cat-herding.net:443` or `myapp.secure.cat-herding.net:443`). Only hosts you explicitly add here will be protected.
 
 ## Setup Instructions
 
@@ -77,7 +79,7 @@ kubectl apply -k infrastructure/k8s/istio/
 
 ### 5. Verify the Setup
 
-Deploy any app under `*.secure.cat-herding.net`:
+Deploy an app and opt it in (example for a secure host):
 
 ```yaml
 apiVersion: networking.istio.io/v1beta1
@@ -99,6 +101,8 @@ spec:
 ```
 
 Access `https://myapp.secure.cat-herding.net` - you'll be automatically redirected to OAuth2 login!
+
+If you are not redirected, make sure you've added `myapp.secure.cat-herding.net:443` to the allowlist EnvoyFilter.
 
 ## Architecture
 

@@ -108,9 +108,10 @@ spec:
   #
   # IMPORTANT:
   # - We keep the cookie domain as ".cat-herding.net" so sessions can be shared at the apex.
-  # - We do NOT enable OAuth2 for all *.cat-herding.net by default because not every app/host
-  #   should be protected automatically.
-  # - Opt-in is achieved by routing/architecture (e.g., a dedicated gateway or host pattern).
+  # - OAuth2 enforcement is OPT-IN. By default it is disabled on all gateway virtual hosts.
+  # - To enable OAuth2 for specific hosts (secure or non-secure), add entries to:
+  #   infrastructure/k8s/istio/envoyfilter-oauth2-allowlist.yaml
+  -
   # 1) Disable OAuth2 everywhere by default (safe baseline).
   - applyTo: VIRTUAL_HOST
     match:
@@ -126,22 +127,3 @@ spec:
           envoy.filters.http.oauth2:
             "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2PerRoute
             disabled: true
-  # 2) Enable OAuth2 for the secure-subdomain allowlist.
-  #
-  # NOTE: We use `domains` to match the secure wildcard host pattern.
-  - applyTo: VIRTUAL_HOST
-    match:
-      context: GATEWAY
-      routeConfiguration:
-        vhost:
-          route:
-            name: ""
-    patch:
-      operation: MERGE
-      value:
-        typed_per_filter_config:
-          envoy.filters.http.oauth2:
-            "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2PerRoute
-            disabled: false
-        domains:
-        - "*.secure.cat-herding.net"
