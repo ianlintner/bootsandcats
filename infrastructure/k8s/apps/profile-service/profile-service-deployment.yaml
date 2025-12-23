@@ -19,52 +19,9 @@ spec:
     metadata:
       annotations:
         sidecar.istio.io/inject: "true"
-        sidecar.istio.io/userVolumeMount: >-
-          [{"name":"rendered-sds","mountPath":"/etc/istio/oauth2","readonly":true}]
       labels:
         app: profile-service
     spec:
-      initContainers:
-      - name: render-sds-config
-        image: python:3.11-alpine
-        command: ['/bin/sh', '-c']
-        args:
-        - |
-          python3 <<'EOFPYTHON'
-          import json
-          from pathlib import Path
-
-          client_secret = Path('/mnt/secrets-store/profile-service-client-secret').read_text().strip()
-          hmac_secret = Path('/mnt/secrets-store/profile-service-oauth-hmac-secret').read_text().strip()
-
-          # Render SDS secrets as YAML. Use json.dumps() to safely quote/escape strings.
-          token_config = f'''resources:
-          - "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret
-            name: profile-service-oauth-token
-            generic_secret:
-              secret:
-                inline_string: {json.dumps(client_secret)}
-          '''
-
-          hmac_config = f'''resources:
-          - "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret
-            name: profile-service-oauth-hmac
-            generic_secret:
-              secret:
-                inline_string: {json.dumps(hmac_secret)}
-          '''
-
-          Path('/etc/istio/oauth2').mkdir(parents=True, exist_ok=True)
-          Path('/etc/istio/oauth2/profile-service-oauth-token.yaml').write_text(token_config)
-          Path('/etc/istio/oauth2/profile-service-oauth-hmac.yaml').write_text(hmac_config)
-          print('SDS configs rendered successfully')
-          EOFPYTHON
-        volumeMounts:
-        - name: secrets-store
-          mountPath: /mnt/secrets-store
-          readOnly: true
-        - name: rendered-sds
-          mountPath: /etc/istio/oauth2
       containers:
       - name: profile-service
         image: gabby.azurecr.io/profile-service:latest
@@ -108,13 +65,6 @@ spec:
           value: "profile-service-1"
         - name: OAUTH2_ISSUER_URI
           value: "https://oauth2.cat-herding.net"
-        - name: OAUTH2_CLIENT_ID
-          value: "profile-service"
-        - name: OAUTH2_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: profile-service-secrets
-              key: profile-service-client-secret
         # OpenTelemetry
         - name: OTEL_EXPORTER_OTLP_ENDPOINT
           value: "http://otel-collector:4317"
@@ -135,9 +85,6 @@ spec:
         - name: secrets-store
           mountPath: "/mnt/secrets-store"
           readOnly: true
-        - name: rendered-sds
-          mountPath: /etc/istio/oauth2
-          readOnly: true
       volumes:
       - name: secrets-store
         csi:
@@ -145,8 +92,6 @@ spec:
           readOnly: true
           volumeAttributes:
             secretProviderClass: "profile-service-secrets-provider"
-      - name: rendered-sds
-        emptyDir: {}
       tolerations:
       - key: "kubernetes.azure.com/scalesetpriority"
         operator: "Equal"

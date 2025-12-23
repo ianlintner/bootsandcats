@@ -3,6 +3,3 @@ kind: Kustomization
 
 resources:
   - security-agency-deployment.yaml
-
-patchesStrategicMerge:
-  - security-agency-oauth2-patch.yaml

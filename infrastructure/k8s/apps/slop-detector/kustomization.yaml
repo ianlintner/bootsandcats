@@ -3,6 +3,3 @@ kind: Kustomization
 
 resources:
   - slop-detector-deployment.yaml
-
-patchesStrategicMerge:
-  - slop-detector-oauth2-patch.yaml
