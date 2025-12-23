@@ -32,7 +32,13 @@ spec:
                   socket_address:
                     address: oauth2-server.default.svc.cluster.local
                     port_value: 9000
-  # Add OAuth2 filter for *.secure.cat-herding.net
+  # Add OAuth2 filter (default-on) for *.cat-herding.net and subdomains.
+  #
+  # IMPORTANT:
+  # - This is intentionally gateway-wide (not per-virtual-host) so we do not rely on
+  #   virtual-host / route-specific OAuth2 configuration, which may be rejected depending
+  #   on the Envoy/Istio build.
+  # - Exclusions are handled via `pass_through_matcher`.
   - applyTo: HTTP_FILTER
     match:
       context: GATEWAY
@@ -102,24 +108,4 @@ spec:
               exact_match: "/healthz"
             - name: ":path"
               exact_match: "/ready"
-  # Apply OAuth2 filter only to opted-in domains.
-  #
-  # IMPORTANT:
-  # - We keep the cookie domain as ".cat-herding.net" so sessions can be shared at the apex.
-  # - OAuth2 enforcement is OPT-IN. By default it is disabled on all gateway virtual hosts.
-  # - To enable OAuth2 for specific hosts (secure or non-secure), add entries to:
-  #   infrastructure/k8s/istio/envoyfilter-oauth2-allowlist.yaml
-  # 1) Disable OAuth2 everywhere by default (safe baseline).
-  - applyTo: VIRTUAL_HOST
-    match:
-      context: GATEWAY
-      routeConfiguration:
-        vhost:
-          route:
-            name: ""
-    patch:
-      operation: MERGE
-      value:
-        typed_per_filter_config:
-          envoy.filters.http.oauth2:
-            "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2
+
