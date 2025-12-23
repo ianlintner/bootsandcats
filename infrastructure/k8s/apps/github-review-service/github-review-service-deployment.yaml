@@ -19,6 +19,10 @@ spec:
       - name: github-review-service
         image: gabby.azurecr.io/github-review-service:latest
         imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: "1000m"
+            memory: "1024Mi"
         ports:
         - containerPort: 8000
           name: http

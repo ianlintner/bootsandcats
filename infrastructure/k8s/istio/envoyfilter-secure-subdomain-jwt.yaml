@@ -10,7 +10,7 @@ spec:
   # Apply to the ingress gateway
   workloadSelector:
     labels:
-      istio: aks-istio-ingress-external
+      istio: aks-istio-ingressgateway-external
   configPatches:
   # Add JWT authentication filter for *.secure.cat-herding.net
   - applyTo: HTTP_FILTER

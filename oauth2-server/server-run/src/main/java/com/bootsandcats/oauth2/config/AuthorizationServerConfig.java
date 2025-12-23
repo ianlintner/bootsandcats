@@ -85,15 +85,15 @@ public class AuthorizationServerConfig {
     @Value("${oauth2.admin-user-password:admin}")
     private String adminUserPassword;
 
-        /**
-         * Controls whether the built-in demo form-login users ("user" and "admin") are created.
-         *
-         * <p>In production/Kubernetes this should typically be set to false to prevent any default
-         * credential-based access. Form login can remain enabled as a honeypot; failed attempts will be
-         * recorded by security audit logging.
-         */
-        @Value("${oauth2.form-login.demo-users-enabled:true}")
-        private boolean formLoginDemoUsersEnabled;
+    /**
+     * Controls whether the built-in demo form-login users ("user" and "admin") are created.
+     *
+     * <p>In production/Kubernetes this should typically be set to false to prevent any default
+     * credential-based access. Form login can remain enabled as a honeypot; failed attempts will be
+     * recorded by security audit logging.
+     */
+    @Value("${oauth2.form-login.demo-users-enabled:true}")
+    private boolean formLoginDemoUsersEnabled;
 
     /**
      * Security filter chain for OAuth2 Authorization Server endpoints.

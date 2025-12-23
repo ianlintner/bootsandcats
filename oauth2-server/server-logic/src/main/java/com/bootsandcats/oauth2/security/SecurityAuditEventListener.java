@@ -113,7 +113,8 @@ public class SecurityAuditEventListener {
         }
 
         // Add session/request details if available
-        if (authentication != null && authentication.getDetails() instanceof WebAuthenticationDetails webDetails) {
+        if (authentication != null
+                && authentication.getDetails() instanceof WebAuthenticationDetails webDetails) {
             details.put("remoteAddress", webDetails.getRemoteAddress());
             details.put("sessionId", webDetails.getSessionId());
         }

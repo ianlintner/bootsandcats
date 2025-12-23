@@ -26,6 +26,10 @@ spec:
       - name: profile-service
         image: gabby.azurecr.io/profile-service:latest
         imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
         ports:
         - containerPort: 8080
           name: http

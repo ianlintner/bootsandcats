@@ -73,9 +73,6 @@ spec:
               key: oauth2-client-secret
               optional: true
         resources:
-          requests:
-            memory: "256Mi"
-            cpu: "100m"
           limits:
             memory: "512Mi"
             cpu: "500m"
@@ -91,6 +88,10 @@ spec:
       - name: oauth2-server
         image: gabby.azurecr.io/oauth2-server:latest
         imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: "1000m"
+            memory: "1024Mi"
         ports:
         - containerPort: 9000
           name: http
