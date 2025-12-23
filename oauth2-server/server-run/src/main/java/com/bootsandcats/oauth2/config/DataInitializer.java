@@ -695,30 +695,25 @@ public class DataInitializer {
     private RegisteredClient buildSecureSubdomainClient(String encodedSecret, String id) {
         // NOTE: Spring Authorization Server requires redirect URIs to match exactly.
         // Wildcards such as https://*.cat-herding.net/... are not supported.
-        Set<String> redirectUris =
-                Set.of(
-                        "https://profile.cat-herding.net/_oauth2/callback",
-                        "https://gh-review.cat-herding.net/_oauth2/callback",
-                        "https://chat.cat-herding.net/_oauth2/callback",
-                        "https://security-agency.cat-herding.net/_oauth2/callback",
-                        "https://slop.cat-herding.net/_oauth2/callback",
-                        "https://slop-detector.cat-herding.net/_oauth2/callback",
-                        // Local dev (explicit ports; no wildcards).
-                        "http://localhost:3000/_oauth2/callback",
-                        "http://localhost:5001/_oauth2/callback",
-                        "http://localhost:8080/_oauth2/callback");
+        Set<String> redirectUris = new java.util.LinkedHashSet<>();
+        // Public hosts currently routed by the Istio Gateway (see infrastructure/k8s/istio/virtualservices.yaml)
+        redirectUris.add("https://profile.cat-herding.net/_oauth2/callback");
+        redirectUris.add("https://gh-review.cat-herding.net/_oauth2/callback");
+        redirectUris.add("https://slop-detector.cat-herding.net/_oauth2/callback");
+        redirectUris.add("https://security-agency.cat-herding.net/_oauth2/callback");
+        // Local dev (explicit ports; no wildcards).
+        redirectUris.add("http://localhost:3000/_oauth2/callback");
+        redirectUris.add("http://localhost:5001/_oauth2/callback");
+        redirectUris.add("http://localhost:8080/_oauth2/callback");
 
-        Set<String> postLogoutRedirectUris =
-                Set.of(
-                        "https://profile.cat-herding.net/_oauth2/logout",
-                        "https://gh-review.cat-herding.net/_oauth2/logout",
-                        "https://chat.cat-herding.net/_oauth2/logout",
-                        "https://security-agency.cat-herding.net/_oauth2/logout",
-                        "https://slop.cat-herding.net/_oauth2/logout",
-                        "https://slop-detector.cat-herding.net/_oauth2/logout",
-                        "http://localhost:3000/_oauth2/logout",
-                        "http://localhost:5001/_oauth2/logout",
-                        "http://localhost:8080/_oauth2/logout");
+        Set<String> postLogoutRedirectUris = new java.util.LinkedHashSet<>();
+        postLogoutRedirectUris.add("https://profile.cat-herding.net/_oauth2/logout");
+        postLogoutRedirectUris.add("https://gh-review.cat-herding.net/_oauth2/logout");
+        postLogoutRedirectUris.add("https://slop-detector.cat-herding.net/_oauth2/logout");
+        postLogoutRedirectUris.add("https://security-agency.cat-herding.net/_oauth2/logout");
+        postLogoutRedirectUris.add("http://localhost:3000/_oauth2/logout");
+        postLogoutRedirectUris.add("http://localhost:5001/_oauth2/logout");
+        postLogoutRedirectUris.add("http://localhost:8080/_oauth2/logout");
 
         return RegisteredClient.withId(id)
                 .clientId("secure-subdomain-client")

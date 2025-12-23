@@ -1,7 +1,10 @@
 #!/bin/bash
 
 # Script to add secure-subdomain client to the OAuth2 database
-# This creates a single client for all apps under *.secure.cat-herding.net
+# This creates a single client for gateway-wide OAuth2 protection on *.cat-herding.net.
+#
+# NOTE: Spring Authorization Server requires redirect URIs to match exactly.
+# Wildcards like https://*.cat-herding.net/_oauth2/callback are not supported.
 
 set -e
 
@@ -26,8 +29,8 @@ echo "Client ID: secure-subdomain-client"
 echo ""
 
 psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" <<EOF
--- Add secure-subdomain client for all apps under *.secure.cat-herding.net
--- This client uses wildcard redirect URIs to support any subdomain
+-- Add secure-subdomain client for gateway-wide OAuth2 on *.cat-herding.net
+-- Redirect URIs MUST be explicit (no wildcards).
 
 INSERT INTO oauth2_registered_client (
     id, 
@@ -52,8 +55,8 @@ INSERT INTO oauth2_registered_client (
     'Secure Subdomain - All Apps', 
     'client_secret_post',
     'authorization_code,refresh_token', 
-    'https://*.secure.cat-herding.net/_oauth2/callback,http://localhost:*/_oauth2/callback', 
-    'https://*.secure.cat-herding.net/_oauth2/logout,http://localhost:*/_oauth2/logout', 
+    'https://profile.cat-herding.net/_oauth2/callback,https://gh-review.cat-herding.net/_oauth2/callback,https://slop-detector.cat-herding.net/_oauth2/callback,https://security-agency.cat-herding.net/_oauth2/callback,http://localhost:3000/_oauth2/callback,http://localhost:5001/_oauth2/callback,http://localhost:8080/_oauth2/callback', 
+    'https://profile.cat-herding.net/_oauth2/logout,https://gh-review.cat-herding.net/_oauth2/logout,https://slop-detector.cat-herding.net/_oauth2/logout,https://security-agency.cat-herding.net/_oauth2/logout,http://localhost:3000/_oauth2/logout,http://localhost:5001/_oauth2/logout,http://localhost:8080/_oauth2/logout', 
     'openid,profile,email', 
     '{"@class":"java.util.Collections$UnmodifiableMap","settings.client.require-proof-key":true,"settings.client.require-authorization-consent":false}', 
     '{"@class":"java.util.Collections$UnmodifiableMap","settings.token.reuse-refresh-tokens":false,"settings.token.id-token-signature-algorithm":["org.springframework.security.oauth2.jose.jws.SignatureAlgorithm","ES256"],"settings.token.access-token-time-to-live":["java.time.Duration",900.000000000],"settings.token.access-token-format":{"@class":"org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat","value":"self-contained"},"settings.token.refresh-token-time-to-live":["java.time.Duration",3600.000000000],"settings.token.authorization-code-time-to-live":["java.time.Duration",300.000000000]}'
