@@ -14,5 +14,6 @@ spec:
   - issuer: "https://oauth2.cat-herding.net"
     jwksUri: "http://oauth2-server.default.svc.cluster.local:9000/oauth2/jwks"
     audiences:
+    - "secure-subdomain-client"
     - "github-review-service"
     - "m2m-client"

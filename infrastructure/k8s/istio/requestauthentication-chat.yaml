@@ -15,6 +15,7 @@ spec:
   - issuer: "https://oauth2.cat-herding.net"
     jwksUri: "http://oauth2-server.default.svc.cluster.local:9000/oauth2/jwks"
     audiences:
+    - "secure-subdomain-client"
     - "chat-backend"
     - "m2m-client"
     outputPayloadToHeader: "x-jwt-payload"
