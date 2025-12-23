@@ -219,26 +219,25 @@ github-review-service: rendered-sds
 
 ## Client Registration Validation
 
-All three clients are correctly registered in Postgres:
+The cluster now uses a single gateway OAuth2 client (`secure-subdomain-client`) for browser login flows.
 
 ```sql
-SELECT client_id, client_secret, redirect_uris 
-FROM oauth2_registered_client 
-WHERE client_id IN ('chat-backend', 'profile-service', 'github-review-service');
+SELECT client_id, client_secret, redirect_uris
+FROM oauth2_registered_client
+WHERE client_id IN ('secure-subdomain-client');
 ```
 
 Results:
-- ✅ `chat-backend`: bcrypt secret matches `demo-chat-backend-client-secret`
-- ✅ `profile-service`: bcrypt secret correctly stored
-- ✅ `github-review-service`: bcrypt secret correctly stored
+- ✅ `secure-subdomain-client`: bcrypt secret correctly stored
 
-All redirect URIs correctly include `https://{host}/_oauth2/callback`.
+Redirect URIs should include wildcard callback support (e.g., `https://*.secure.cat-herding.net/_oauth2/callback`).
 
 ## Related Files
-- `infrastructure/k8s/istio/envoyfilter-chat-oauth2-exchange.yaml`
-- `infrastructure/k8s/istio/envoyfilter-profile-service-oauth2-exchange.yaml`
-- `infrastructure/k8s/istio/envoyfilter-github-review-oauth2-exchange.yaml`
-- `infrastructure/k8s/apps/chat/deployment.yaml`
+- `infrastructure/k8s/istio/envoyfilter-secure-subdomain-oauth2.yaml` (gateway OAuth2 enforcement)
+- `infrastructure/k8s/istio/envoy-oauth2-sds-configmap-secure-subdomain.yaml` (SDS config)
+- `infrastructure/k8s/aks-istio-ingress/secure-subdomain-oauth-sds-renderer.yaml` (renders SDS secrets)
+
+Legacy per-service OAuth2 exchange EnvoyFilters are deprecated and are no longer deployed by Kustomize.
 
 ## Next Steps
 1. Update profile-service deployment in external repo to fix volume name

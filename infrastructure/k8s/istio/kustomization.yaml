@@ -3,18 +3,11 @@ kind: Kustomization
 resources:
   # - istio-proxy-config.yaml
   - istio-authz-policy.yaml
-  - requestauthentication-profile.yaml
-  - requestauthentication-github-review.yaml
-  - envoyfilter-github-review-jwt-to-headers.yaml
+  - requestauthentication-default.yaml
   - virtualservices.yaml
-  - envoyfilter-profile-service-jwt-to-headers.yaml
   - telemetry.yaml
   - postgres-mtls.yaml
   - postgres-peer-auth.yaml
-  - envoyfilter-slop-detector-jwt-to-headers.yaml
-  - requestauthentication-slop-detector.yaml
-  - envoyfilter-security-agency-jwt-to-headers.yaml
-  - requestauthentication-security-agency.yaml
   - envoyfilter-secure-subdomain-oauth2.yaml
   - envoyfilter-secure-subdomain-jwt.yaml
   - envoy-oauth2-sds-configmap-secure-subdomain.yaml

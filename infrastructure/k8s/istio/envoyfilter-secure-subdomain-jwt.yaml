@@ -12,7 +12,7 @@ spec:
     labels:
       istio: aks-istio-ingressgateway-external
   configPatches:
-  # Add JWT authentication filter for *.secure.cat-herding.net
+  # Add JWT authentication filter for *.cat-herding.net
   - applyTo: HTTP_FILTER
     match:
       context: GATEWAY
@@ -62,20 +62,3 @@ spec:
                 requirements:
                 - provider_name: oauth2_jwt_secure_subdomain
                 - allow_missing: {}
-  # Apply JWT filter only to *.secure.cat-herding.net domains
-  - applyTo: VIRTUAL_HOST
-    match:
-      context: GATEWAY
-      routeConfiguration:
-        vhost:
-          route:
-            name: ""
-    patch:
-      operation: MERGE
-      value:
-        typed_per_filter_config:
-          envoy.filters.http.jwt_authn:
-            "@type": type.googleapis.com/envoy.extensions.filters.http.jwt_authn.v3.PerRouteConfig
-            disabled: false
-        domains:
-        - "*.secure.cat-herding.net"

@@ -52,10 +52,11 @@ echo "2. Checking Istio configuration..."
 echo "-----------------------------------"
 
 # Check EnvoyFilters
-if kubectl get envoyfilter chat-oauth2-exchange -n default &>/dev/null; then
-    check_pass "EnvoyFilter chat-oauth2-exchange exists"
+# OAuth2 is enforced centrally at the ingress gateway (single unified client), not per-app.
+if kubectl get envoyfilter secure-subdomain-oauth2-exchange -n aks-istio-ingress &>/dev/null; then
+    check_pass "EnvoyFilter secure-subdomain-oauth2-exchange exists (gateway OAuth2)"
 else
-    check_fail "EnvoyFilter chat-oauth2-exchange not found"
+    check_fail "EnvoyFilter secure-subdomain-oauth2-exchange not found in aks-istio-ingress"
 fi
 
 if kubectl get envoyfilter chat-jwt-to-headers -n default &>/dev/null; then

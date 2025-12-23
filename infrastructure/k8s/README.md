@@ -18,10 +18,9 @@ This repo deploys via `kustomization.yaml` (see `infrastructure/k8s/kustomizatio
 - `secrets/secret-provider-class-oauth2-server.yaml`: Key Vault-backed secrets for the OAuth2 server.
 - `secrets/secret-provider-class-profile-service.yaml`: Key Vault-backed secrets for profile-service.
 - `secrets/secret-provider-class-redis.yaml`: Key Vault-backed secrets for Redis (password).
-- `secrets/secret-provider-class-chat.yaml`: Key Vault-backed secrets for the chat OAuth2 exchange filter.
 - `secrets/secret-provider-class-github-review.yaml`: Key Vault-backed secrets for the GitHub review service.
 - **Istio gateway OAuth2 SSO (shared cookies + filter)**: `istio/envoyfilter-secure-subdomain-oauth2.yaml` installs the gateway OAuth2 filter and sets cookies for the apex domain `.cat-herding.net` so sessions can be shared across subdomains.
-- **Istio gateway OAuth2 SSO (opt-in allowlist)**: `istio/envoyfilter-oauth2-allowlist.yaml` enables OAuth2 enforcement only for explicitly listed hosts (secure or non-secure) (see `docs/SECURE_SUBDOMAIN_OAUTH2.md`).
+- **Istio gateway OAuth2 SSO (default-on)**: OAuth2 enforcement is default-on at the gateway for `*.cat-herding.net` and subdomains (see `docs/SECURE_SUBDOMAIN_OAUTH2.md`).
 
 ### SecretProviderClass (Azure Key Vault)
 

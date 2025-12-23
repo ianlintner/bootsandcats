@@ -2,72 +2,47 @@
 
 ## Issues Identified
 
-### 1. **OAuth2 Client Secret Mismatch** ❌ → ✅ FIXED
+### 1. **OAuth2 Client Secret Mismatch** (unified gateway client)
 
-**Problem**: The `chat-backend` OAuth2 client in the database had an incorrect/placeholder client secret.
+Interactive browser login is enforced at the **Istio ingress gateway** using a single OAuth2 client:
 
-**Database State**:
-- **Before**: `{bcrypt}a2-chat-service-client-secret-placeholder`
-- **After**: `{noop}demo-chat-backend-client-secret`
+- Client ID: `secure-subdomain-client`
 
-**Root Cause**: The Flyway migration `V14__update_chat_service_client_secret.sql` did not run successfully or was overwritten.
+If login/token exchange fails with `invalid_client`, the common cause is a mismatch between:
 
-**Fix Applied**:
-```sql
-UPDATE oauth2_registered_client 
-SET client_secret = '{noop}demo-chat-backend-client-secret' 
-WHERE client_id = 'chat-backend';
-```
+- the `secure-subdomain-client` secret stored in the OAuth2 server database
+- the `secure-subdomain-client-secret` projected to the ingress gateway (via Key Vault → rendered SDS)
 
-### 2. **Incorrect Redirect URIs** ❌ → ✅ FIXED
+### 2. **Incorrect Redirect URIs**
 
-**Problem**: The redirect URIs included localhost URLs that are not appropriate for production.
+**Problem**: Redirect URIs must include the gateway-managed callback path.
 
-**Before**:
-- Redirect URIs: `https://chat.cat-herding.net/_oauth2/callback, http://localhost:5001/_oauth2/callback`
-- Post-logout: `https://chat.cat-herding.net/_oauth2/logout, http://localhost:5001/_oauth2/logout`
+**Expected**:
 
-**After**:
-- Redirect URIs: `https://chat.cat-herding.net/_oauth2/callback`
-- Post-logout: `https://chat.cat-herding.net/`
-
-**Fix Applied**:
-```sql
-UPDATE oauth2_registered_client 
-SET redirect_uris = 'https://chat.cat-herding.net/_oauth2/callback',
-    post_logout_redirect_uris = 'https://chat.cat-herding.net/' 
-WHERE client_id = 'chat-backend';
-```
+- Callback path: `/_oauth2/callback`
+- Redirect URIs should include wildcard support for subdomains when using the unified client (see `docs/SECURE_SUBDOMAIN_OAUTH2.md`).
 
 ## Configuration Validation ✅
 
-### Kubernetes Resources (All Properly Configured)
+### Kubernetes Resources (Unified gateway model)
 
 1. **✅ Deployment** ([deployment.yaml](../infrastructure/k8s/apps/chat/deployment.yaml))
    - Pod is running and healthy
-   - Init container properly renders OAuth2 SDS configs
-   - Secrets mounted correctly from Azure Key Vault
+   - No per-app OAuth2 exchange filter is required for browser login
 
-2. **✅ Azure Key Vault Secrets**
-   - `chat-client-secret`: `demo-chat-backend-client-secret` ✅
-   - `chat-oauth-hmac-secret`: `demo-chat-oauth-hmac-secret` ✅
+2. **✅ Azure Key Vault Secrets (gateway)**
+   - `secure-subdomain-client-secret` ✅
+   - `secure-subdomain-oauth-hmac-secret` ✅
 
-3. **✅ SecretProviderClass** ([secret-provider-oauth2.yaml](../infrastructure/k8s/apps/chat/secret-provider-oauth2.yaml))
-   - Properly configured to read from Key Vault: `inker-kv`
-   - Secrets successfully mounted to init container
+3. **✅ Gateway secret sync + SDS rendering**
+   - Managed under `infrastructure/k8s/aks-istio-ingress/`
 
-4. **✅ Istio EnvoyFilter - OAuth2** ([envoyfilter-chat-oauth2-exchange.yaml](../infrastructure/k8s/istio/envoyfilter-chat-oauth2-exchange.yaml))
-   - OAuth2 filter configured for authorization code flow
-   - Token endpoint: `http://oauth2-server.default.svc.cluster.local:9000/oauth2/token`
-   - Authorization endpoint: `https://oauth2.cat-herding.net/oauth2/authorize`
-   - Client ID: `chat-backend`
-   - Redirect path: `/_oauth2/callback`
-   - Signout path: `/_oauth2/logout`
+4. **✅ Istio EnvoyFilter - OAuth2 (gateway)**
+   - `infrastructure/k8s/istio/envoyfilter-secure-subdomain-oauth2.yaml`
+   - Client ID: `secure-subdomain-client`
 
-5. **✅ Istio EnvoyFilter - JWT** ([envoyfilter-chat-jwt-to-headers.yaml](../infrastructure/k8s/istio/envoyfilter-chat-jwt-to-headers.yaml))
-   - JWT validation configured
-   - JWKS URI: `http://oauth2-server.default.svc.cluster.local:9000/oauth2/jwks`
-   - Claims mapped to headers (sub, email, name, scope)
+5. **✅ Istio EnvoyFilter - JWT**
+   - JWT validation is done at the gateway (see `infrastructure/k8s/istio/envoyfilter-secure-subdomain-jwt.yaml`) and/or with RequestAuthentication policies depending on the app.
 
 6. **✅ Istio RequestAuthentication** ([requestauthentication-chat.yaml](../infrastructure/k8s/istio/requestauthentication-chat.yaml))
    - Issuer: `https://oauth2.cat-herding.net`

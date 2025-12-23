@@ -56,8 +56,8 @@ public class DataInitializer {
     @Value("${oauth2.security-agency-client-secret:demo-security-agency-client-secret}")
     private String securityAgencyClientSecret;
 
-        @Value("${oauth2.secure-subdomain-client-secret:demo-secure-subdomain-client-secret}")
-        private String secureSubdomainClientSecret;
+    @Value("${oauth2.secure-subdomain-client-secret:demo-secure-subdomain-client-secret}")
+    private String secureSubdomainClientSecret;
 
     @Value("${oauth2.preserve-client-secrets:true}")
     private boolean preserveClientSecrets;

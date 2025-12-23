@@ -24,7 +24,7 @@ spec:
 apiVersion: security.istio.io/v1
 kind: AuthorizationPolicy
 metadata:
-  name: allow-istio-ingress
+  name: allow-istio-ingress-authenticated
   namespace: default
   labels:
     app.kubernetes.io/managed-by: kustomize
@@ -36,6 +36,36 @@ spec:
     - source:
         namespaces:
         - aks-istio-ingress
+        requestPrincipals:
+        - "*"
+
+---
+# Allow unauthenticated ingress traffic to the OAuth2 server itself.
+#
+# The ingress gateway performs token exchange by calling /oauth2/token on oauth2-server.
+# Those calls (and the public OAuth2/OIDC endpoints) do not have an end-user JWT.
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-istio-ingress-to-oauth2-server
+  namespace: default
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    project: bootsandcats
+spec:
+  selector:
+    matchLabels:
+      app: oauth2-server
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        namespaces:
+        - aks-istio-ingress
+    to:
+    - operation:
+        ports:
+        - "9000"
 
 ---
 # Allow health checks and probes (unauthenticated)

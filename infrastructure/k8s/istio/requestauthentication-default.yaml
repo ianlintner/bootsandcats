@@ -1,19 +1,17 @@
 apiVersion: security.istio.io/v1
 kind: RequestAuthentication
 metadata:
-  name: security-agency-jwt-auth
+  name: default-jwt-auth
   namespace: default
   labels:
     app.kubernetes.io/managed-by: kustomize
     project: bootsandcats
 spec:
-  selector:
-    matchLabels:
-      app: security-agency
+  # Namespace-scoped JWT validation context.
+  #
+  # This enables AuthorizationPolicy rules like "require requestPrincipal".
+  # It does not enforce authentication by itself.
   jwtRules:
   - issuer: "https://oauth2.cat-herding.net"
     jwksUri: "http://oauth2-server.default.svc.cluster.local:9000/oauth2/jwks"
-    audiences:
-    - "secure-subdomain-client"
-    - "security-agency"
-    - "m2m-client"
+    outputPayloadToHeader: "x-jwt-payload"

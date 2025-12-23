@@ -2,7 +2,7 @@
 
 This configuration provides gateway-level OAuth2 authentication and JWT validation.
 
-In the current MVP, **OAuth2 enforcement is opt-in per-host** (to avoid accidentally protecting every `*.cat-herding.net` hostname).
+OAuth2 enforcement is **default-on** at the Istio ingress gateway for `*.cat-herding.net` and subdomains.
 
 ## Overview
 
@@ -16,17 +16,11 @@ Traffic to hosts you explicitly opt in is protected by:
 1. **Gateway-Level Protection**: EnvoyFilters are applied at the Istio ingress gateway level.
 2. **Single OAuth2 Client**: One client (`secure-subdomain-client`) handles authentication for all subdomains.
 3. **Wildcard Redirect URIs**: The client supports `https://*.secure.cat-herding.net/_oauth2/callback`
-4. **Shared Cookies (apex)**: Session cookies are set with `domain: .cat-herding.net` so a successful login can be reused across *other* subdomains, if/when they opt-in to enforcement.
+4. **Shared Cookies (apex)**: Session cookies are set with `domain: .cat-herding.net` so a successful login can be reused across other subdomains.
 
-### Opt-in host allowlist (MVP)
+### Exclusions
 
-Not every `*.cat-herding.net` hostname should be protected by default.
-
-To protect selected apps (secure or non-secure) while still using the same SSO session cookies, use the repo-managed allowlist EnvoyFilter:
-
-- `infrastructure/k8s/istio/envoyfilter-oauth2-allowlist.yaml`
-
-Add one `configPatch` entry per host (matching `vhost.name` like `profile.cat-herding.net:443` or `myapp.secure.cat-herding.net:443`). Only hosts you explicitly add here will be protected.
+If you need to allow unauthenticated access for specific endpoints (e.g., Kubernetes probes), exclusions are handled via `pass_through_matcher` in the gateway OAuth2 filter.
 
 ## Setup Instructions
 
@@ -113,8 +107,6 @@ spec:
 
 Access `https://myapp.secure.cat-herding.net` - you'll be automatically redirected to OAuth2 login!
 
-If you are not redirected, make sure you've added `myapp.secure.cat-herding.net:443` to the allowlist EnvoyFilter.
-
 ## Architecture
 
 ### EnvoyFilters
@@ -129,10 +121,7 @@ If you are not redirected, make sure you've added `myapp.secure.cat-herding.net:
    - Matches: `*.secure.cat-herding.net`
    - Provides: JWT validation, claim extraction to headers
 
-3. **envoyfilter-oauth2-allowlist.yaml**
-  - Applied to: Istio ingress gateway
-  - Matches: explicit `vhost.name` entries (e.g., `profile.cat-herding.net:443`)
-  - Provides: opt-in OAuth2 enforcement for non-secure hosts
+The previous opt-in allowlist EnvoyFilter has been removed in favor of default-on gateway enforcement.
 
 ### OAuth2 Flow
 

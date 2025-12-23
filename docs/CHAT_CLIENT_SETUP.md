@@ -7,61 +7,38 @@ The chat application itself lives in a different repository, but **it reuses the
 - Callback: `https://chat.cat-herding.net/_oauth2/callback`
 - Logout (Envoy-managed): `https://chat.cat-herding.net/_oauth2/logout`
 
-## 1) Authorization Server: register the chat client
+## 1) Authorization Server: register the browser SSO client
 
-The OAuth2 Authorization Server must have a confidential client registered.
+Interactive browser login is enforced at the **Istio ingress gateway** using a **single unified OAuth2 client**:
 
-In this repo, it’s seeded via Flyway migrations in `infrastructure/k8s/apps/configs/flyway-migrations-configmap.yaml`:
+- Client ID: `secure-subdomain-client`
+- Callback path (handled at gateway): `/_oauth2/callback`
+- Cookie domain: `.cat-herding.net`
 
-- `V13__add_chat_service_client.sql` seeds client `chat-backend`
-- `V14__update_chat_service_client_secret.sql` sets a dev/test secret (`demo-chat-backend-client-secret`)
+Client registration is covered in `docs/SECURE_SUBDOMAIN_OAUTH2.md`.
 
-Redirect URIs:
+## 2) Azure Key Vault: create secrets for the ingress gateway
 
-- `https://chat.cat-herding.net/_oauth2/callback`
+The ingress gateway’s Envoy OAuth2 filter needs:
 
-Post-logout redirect:
+- `secure-subdomain-client-secret` (OAuth2 confidential client secret)
+- `secure-subdomain-oauth-hmac-secret` (cookie-signing HMAC secret)
 
-- `https://chat.cat-herding.net/`
+These are pulled and rendered via the manifests under `infrastructure/k8s/aks-istio-ingress/`.
 
-## 2) Azure Key Vault: create secrets for the chat app
+## 3) Kubernetes: gateway Envoy filters
 
-The chat app’s Istio Envoy OAuth2 filter needs:
+Chat does not need a per-app OAuth2 exchange EnvoyFilter. Apply the centralized gateway configuration:
 
-- `chat-client-secret` (OAuth2 confidential client secret)
-- `chat-oauth-hmac-secret` (cookie-signing HMAC secret)
+- `kubectl apply -k infrastructure/k8s/aks-istio-ingress/`
+- `kubectl apply -k infrastructure/k8s/istio/`
 
-A helper script is provided:
-
-- `scripts/setup-chat-client-secrets.sh`
-
-By default it uploads the **demo values** that match Flyway V14.
-
-> Note: the migration filenames say `chat_service`, but the actual registered `client_id` is `chat-backend`.
-
-## 3) Kubernetes: SecretProviderClass + Envoy filters
-
-This repo provides the manifest templates you can apply (or copy into the chat repo) to match the existing profile/github-review pattern:
-
-- `infrastructure/k8s/secret-provider-class-chat.yaml`
-  - SecretProviderClass name: `azure-keyvault-chat-secrets`
-  - Reads Key Vault secrets: `chat-client-secret`, `chat-oauth-hmac-secret`
-
-- `infrastructure/k8s/istio/envoyfilter-chat-oauth2-exchange.yaml`
-  - Envoy OAuth2 filter (authorization_code exchange)
-
-- `infrastructure/k8s/istio/requestauthentication-chat.yaml`
-  - Istio JWT validation (JWKS from the auth server)
-
-- `infrastructure/k8s/istio/envoyfilter-chat-jwt-to-headers.yaml`
-  - Envoy JWT authn filter that forwards and maps claims to headers
-
-> IMPORTANT: In the chat repo, update the `workloadSelector` / `selector.matchLabels` to match the chat deployment labels.
+For JWT-to-headers mapping or RequestAuthentication, keep using the Istio resources under `infrastructure/k8s/istio/`.
 
 ## Secret naming summary
 
 | Purpose | Azure Key Vault secret name | Used by |
 |---|---|---|
-| OAuth2 client secret | `chat-client-secret` | Envoy OAuth2 filter token exchange |
-| Cookie HMAC secret | `chat-oauth-hmac-secret` | Envoy OAuth2 filter cookie signing |
+| OAuth2 client secret | `secure-subdomain-client-secret` | Ingress gateway Envoy OAuth2 filter token exchange |
+| Cookie HMAC secret | `secure-subdomain-oauth-hmac-secret` | Ingress gateway Envoy OAuth2 filter cookie signing |
 

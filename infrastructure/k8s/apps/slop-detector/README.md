@@ -23,7 +23,7 @@ What this means for the app:
 - `slop-detector-deployment.yaml` – Deployment + Service
 - `kustomization.yaml` – Kustomize wiring
 
-Istio OAuth2 configuration lives centrally under `infrastructure/k8s/istio/` (gateway filter + allowlist). This app directory should not need per-app OAuth2 exchange filters.
+Istio OAuth2 configuration lives centrally under `infrastructure/k8s/istio/` (gateway filter). This app directory should not need per-app OAuth2 exchange filters.
 
 ## Prerequisites
 
@@ -33,11 +33,9 @@ The ingress gateway must have the OAuth2 filter configured (unified client, cook
 
 - `docs/SECURE_SUBDOMAIN_OAUTH2.md`
 
-### 2. `slop-detector.cat-herding.net` is opted-in to enforcement
+### 2. `slop-detector.cat-herding.net` is protected
 
-OAuth2 enforcement is **opt-in**. Ensure the allowlist includes the `slop-detector` virtual host so requests to `slop-detector.cat-herding.net` are protected at the gateway.
-
-(In this repo, that allowlist is maintained in `infrastructure/k8s/istio/envoyfilter-oauth2-allowlist.yaml`.)
+OAuth2 enforcement is **default-on** at the gateway for `*.cat-herding.net` and subdomains.
 
 ### 3. DNS points at the ingress gateway
 
