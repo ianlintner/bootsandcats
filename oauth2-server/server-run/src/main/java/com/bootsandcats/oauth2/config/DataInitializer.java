@@ -246,7 +246,7 @@ public class DataInitializer {
                 auditClientEvent(securityAuditService, AuditEventType.CLIENT_UPDATED, updatedSecretOnly);
         }
 
-        private String resolveSecureSubdomainClientSecret() {
+        String resolveSecureSubdomainClientSecret() {
                 String fromFile = readSecretFromFile(secureSubdomainClientSecretFile);
                 if (StringUtils.hasText(fromFile)) {
                         return fromFile;
@@ -254,7 +254,7 @@ public class DataInitializer {
                 return secureSubdomainClientSecret;
         }
 
-        private String readSecretFromFile(String filePath) {
+        String readSecretFromFile(String filePath) {
                 if (!StringUtils.hasText(filePath)) {
                         return null;
                 }
