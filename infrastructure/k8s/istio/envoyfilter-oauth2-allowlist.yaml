@@ -6,7 +6,7 @@ metadata:
 spec:
   workloadSelector:
     labels:
-      istio: aks-istio-ingress-external
+      istio: aks-istio-ingressgateway-external
 
   # Opt-in OAuth2 enforcement for non-secure hosts.
   #
@@ -34,9 +34,8 @@ spec:
       patch:
         operation: MERGE
         value:
-          typed_per_filter_config:
+          per_filter_config:
             envoy.filters.http.oauth2:
-              "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2PerRoute
               disabled: false
 
     # Explicit allowlist for normal hosts
@@ -51,9 +50,8 @@ spec:
       patch:
         operation: MERGE
         value:
-          typed_per_filter_config:
+          per_filter_config:
             envoy.filters.http.oauth2:
-              "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2PerRoute
               disabled: false
 
     - applyTo: VIRTUAL_HOST
@@ -67,9 +65,8 @@ spec:
       patch:
         operation: MERGE
         value:
-          typed_per_filter_config:
+          per_filter_config:
             envoy.filters.http.oauth2:
-              "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2PerRoute
               disabled: false
 
     - applyTo: VIRTUAL_HOST
@@ -83,9 +80,8 @@ spec:
       patch:
         operation: MERGE
         value:
-          typed_per_filter_config:
+          per_filter_config:
             envoy.filters.http.oauth2:
-              "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2PerRoute
               disabled: false
 
     - applyTo: VIRTUAL_HOST
@@ -99,7 +95,6 @@ spec:
       patch:
         operation: MERGE
         value:
-          typed_per_filter_config:
+          per_filter_config:
             envoy.filters.http.oauth2:
-              "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2PerRoute
               disabled: false

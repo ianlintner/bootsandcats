@@ -10,7 +10,7 @@ spec:
   # Apply to the ingress gateway, not individual workloads
   workloadSelector:
     labels:
-      istio: aks-istio-ingress-external
+      istio: aks-istio-ingressgateway-external
   configPatches:
   # Add OAuth2 token cluster
   - applyTo: CLUSTER
@@ -111,7 +111,6 @@ spec:
   # - OAuth2 enforcement is OPT-IN. By default it is disabled on all gateway virtual hosts.
   # - To enable OAuth2 for specific hosts (secure or non-secure), add entries to:
   #   infrastructure/k8s/istio/envoyfilter-oauth2-allowlist.yaml
-  -
   # 1) Disable OAuth2 everywhere by default (safe baseline).
   - applyTo: VIRTUAL_HOST
     match:
@@ -123,7 +122,6 @@ spec:
     patch:
       operation: MERGE
       value:
-        typed_per_filter_config:
+        per_filter_config:
           envoy.filters.http.oauth2:
-            "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2PerRoute
             disabled: true
