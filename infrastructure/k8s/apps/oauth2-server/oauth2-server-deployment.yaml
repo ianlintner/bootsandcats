@@ -86,7 +86,7 @@ spec:
             - ALL
       containers:
       - name: oauth2-server
-        image: gabby.azurecr.io/oauth2-server:latest
+        image: gabby.azurecr.io/oauth2-server:v2025-12-22-01
         imagePullPolicy: Always
         ports:
         - containerPort: 9000
