@@ -34,9 +34,63 @@ spec:
       patch:
         operation: MERGE
         value:
-          per_filter_config:
+          typed_per_filter_config:
             envoy.filters.http.oauth2:
-              disabled: false
+              "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2
+              config:
+                stat_prefix: secure_subdomain_oauth
+                authorization_endpoint: https://oauth2.cat-herding.net/oauth2/authorize
+                token_endpoint:
+                  cluster: oauth2_token_cluster_secure_subdomain
+                  uri: https://oauth2-server.default.svc.cluster.local:9000/oauth2/token
+                  timeout: 5s
+                redirect_uri: "%REQ(x-forwarded-proto)%://%REQ(:authority)%/_oauth2/callback"
+                redirect_path_matcher:
+                  path:
+                    prefix: /_oauth2/callback
+                signout_path:
+                  path:
+                    prefix: /_oauth2/logout
+                forward_bearer_token: true
+                default_expires_in: 900s
+                csrf_token_expires_in: 600s
+                credentials:
+                  client_id: secure-subdomain-client
+                  token_secret:
+                    name: secure-subdomain-oauth-token
+                    sds_config:
+                      path: /etc/istio/oauth2/secure-subdomain-oauth-token.yaml
+                  hmac_secret:
+                    name: secure-subdomain-oauth-hmac
+                    sds_config:
+                      path: /etc/istio/oauth2/secure-subdomain-oauth-hmac.yaml
+                  cookie_domain: ".cat-herding.net"
+                  cookie_names:
+                    bearer_token: "_secure_session"
+                    oauth_hmac: "_secure_oauth_hmac"
+                    oauth_expires: "_secure_oauth_expires"
+                cookie_configs:
+                  bearer_token_cookie_config:
+                    same_site: LAX
+                  oauth_hmac_cookie_config:
+                    same_site: LAX
+                  oauth_expires_cookie_config:
+                    same_site: LAX
+                auth_scopes:
+                - openid
+                - profile
+                - email
+                pass_through_matcher:
+                - name: ":authority"
+                  exact_match: "oauth2.cat-herding.net"
+                - name: ":path"
+                  prefix_match: "/actuator"
+                - name: ":path"
+                  exact_match: "/health"
+                - name: ":path"
+                  exact_match: "/healthz"
+                - name: ":path"
+                  exact_match: "/ready"
 
     # Explicit allowlist for normal hosts
     - applyTo: VIRTUAL_HOST
@@ -50,9 +104,63 @@ spec:
       patch:
         operation: MERGE
         value:
-          per_filter_config:
+          typed_per_filter_config:
             envoy.filters.http.oauth2:
-              disabled: false
+              "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2
+              config:
+                stat_prefix: secure_subdomain_oauth
+                authorization_endpoint: https://oauth2.cat-herding.net/oauth2/authorize
+                token_endpoint:
+                  cluster: oauth2_token_cluster_secure_subdomain
+                  uri: https://oauth2-server.default.svc.cluster.local:9000/oauth2/token
+                  timeout: 5s
+                redirect_uri: "%REQ(x-forwarded-proto)%://%REQ(:authority)%/_oauth2/callback"
+                redirect_path_matcher:
+                  path:
+                    prefix: /_oauth2/callback
+                signout_path:
+                  path:
+                    prefix: /_oauth2/logout
+                forward_bearer_token: true
+                default_expires_in: 900s
+                csrf_token_expires_in: 600s
+                credentials:
+                  client_id: secure-subdomain-client
+                  token_secret:
+                    name: secure-subdomain-oauth-token
+                    sds_config:
+                      path: /etc/istio/oauth2/secure-subdomain-oauth-token.yaml
+                  hmac_secret:
+                    name: secure-subdomain-oauth-hmac
+                    sds_config:
+                      path: /etc/istio/oauth2/secure-subdomain-oauth-hmac.yaml
+                  cookie_domain: ".cat-herding.net"
+                  cookie_names:
+                    bearer_token: "_secure_session"
+                    oauth_hmac: "_secure_oauth_hmac"
+                    oauth_expires: "_secure_oauth_expires"
+                cookie_configs:
+                  bearer_token_cookie_config:
+                    same_site: LAX
+                  oauth_hmac_cookie_config:
+                    same_site: LAX
+                  oauth_expires_cookie_config:
+                    same_site: LAX
+                auth_scopes:
+                - openid
+                - profile
+                - email
+                pass_through_matcher:
+                - name: ":authority"
+                  exact_match: "oauth2.cat-herding.net"
+                - name: ":path"
+                  prefix_match: "/actuator"
+                - name: ":path"
+                  exact_match: "/health"
+                - name: ":path"
+                  exact_match: "/healthz"
+                - name: ":path"
+                  exact_match: "/ready"
 
     - applyTo: VIRTUAL_HOST
       match:
@@ -65,9 +173,63 @@ spec:
       patch:
         operation: MERGE
         value:
-          per_filter_config:
+          typed_per_filter_config:
             envoy.filters.http.oauth2:
-              disabled: false
+              "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2
+              config:
+                stat_prefix: secure_subdomain_oauth
+                authorization_endpoint: https://oauth2.cat-herding.net/oauth2/authorize
+                token_endpoint:
+                  cluster: oauth2_token_cluster_secure_subdomain
+                  uri: https://oauth2-server.default.svc.cluster.local:9000/oauth2/token
+                  timeout: 5s
+                redirect_uri: "%REQ(x-forwarded-proto)%://%REQ(:authority)%/_oauth2/callback"
+                redirect_path_matcher:
+                  path:
+                    prefix: /_oauth2/callback
+                signout_path:
+                  path:
+                    prefix: /_oauth2/logout
+                forward_bearer_token: true
+                default_expires_in: 900s
+                csrf_token_expires_in: 600s
+                credentials:
+                  client_id: secure-subdomain-client
+                  token_secret:
+                    name: secure-subdomain-oauth-token
+                    sds_config:
+                      path: /etc/istio/oauth2/secure-subdomain-oauth-token.yaml
+                  hmac_secret:
+                    name: secure-subdomain-oauth-hmac
+                    sds_config:
+                      path: /etc/istio/oauth2/secure-subdomain-oauth-hmac.yaml
+                  cookie_domain: ".cat-herding.net"
+                  cookie_names:
+                    bearer_token: "_secure_session"
+                    oauth_hmac: "_secure_oauth_hmac"
+                    oauth_expires: "_secure_oauth_expires"
+                cookie_configs:
+                  bearer_token_cookie_config:
+                    same_site: LAX
+                  oauth_hmac_cookie_config:
+                    same_site: LAX
+                  oauth_expires_cookie_config:
+                    same_site: LAX
+                auth_scopes:
+                - openid
+                - profile
+                - email
+                pass_through_matcher:
+                - name: ":authority"
+                  exact_match: "oauth2.cat-herding.net"
+                - name: ":path"
+                  prefix_match: "/actuator"
+                - name: ":path"
+                  exact_match: "/health"
+                - name: ":path"
+                  exact_match: "/healthz"
+                - name: ":path"
+                  exact_match: "/ready"
 
     - applyTo: VIRTUAL_HOST
       match:
@@ -80,9 +242,63 @@ spec:
       patch:
         operation: MERGE
         value:
-          per_filter_config:
+          typed_per_filter_config:
             envoy.filters.http.oauth2:
-              disabled: false
+              "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2
+              config:
+                stat_prefix: secure_subdomain_oauth
+                authorization_endpoint: https://oauth2.cat-herding.net/oauth2/authorize
+                token_endpoint:
+                  cluster: oauth2_token_cluster_secure_subdomain
+                  uri: https://oauth2-server.default.svc.cluster.local:9000/oauth2/token
+                  timeout: 5s
+                redirect_uri: "%REQ(x-forwarded-proto)%://%REQ(:authority)%/_oauth2/callback"
+                redirect_path_matcher:
+                  path:
+                    prefix: /_oauth2/callback
+                signout_path:
+                  path:
+                    prefix: /_oauth2/logout
+                forward_bearer_token: true
+                default_expires_in: 900s
+                csrf_token_expires_in: 600s
+                credentials:
+                  client_id: secure-subdomain-client
+                  token_secret:
+                    name: secure-subdomain-oauth-token
+                    sds_config:
+                      path: /etc/istio/oauth2/secure-subdomain-oauth-token.yaml
+                  hmac_secret:
+                    name: secure-subdomain-oauth-hmac
+                    sds_config:
+                      path: /etc/istio/oauth2/secure-subdomain-oauth-hmac.yaml
+                  cookie_domain: ".cat-herding.net"
+                  cookie_names:
+                    bearer_token: "_secure_session"
+                    oauth_hmac: "_secure_oauth_hmac"
+                    oauth_expires: "_secure_oauth_expires"
+                cookie_configs:
+                  bearer_token_cookie_config:
+                    same_site: LAX
+                  oauth_hmac_cookie_config:
+                    same_site: LAX
+                  oauth_expires_cookie_config:
+                    same_site: LAX
+                auth_scopes:
+                - openid
+                - profile
+                - email
+                pass_through_matcher:
+                - name: ":authority"
+                  exact_match: "oauth2.cat-herding.net"
+                - name: ":path"
+                  prefix_match: "/actuator"
+                - name: ":path"
+                  exact_match: "/health"
+                - name: ":path"
+                  exact_match: "/healthz"
+                - name: ":path"
+                  exact_match: "/ready"
 
     - applyTo: VIRTUAL_HOST
       match:
@@ -95,6 +311,60 @@ spec:
       patch:
         operation: MERGE
         value:
-          per_filter_config:
+          typed_per_filter_config:
             envoy.filters.http.oauth2:
-              disabled: false
+              "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2
+              config:
+                stat_prefix: secure_subdomain_oauth
+                authorization_endpoint: https://oauth2.cat-herding.net/oauth2/authorize
+                token_endpoint:
+                  cluster: oauth2_token_cluster_secure_subdomain
+                  uri: https://oauth2-server.default.svc.cluster.local:9000/oauth2/token
+                  timeout: 5s
+                redirect_uri: "%REQ(x-forwarded-proto)%://%REQ(:authority)%/_oauth2/callback"
+                redirect_path_matcher:
+                  path:
+                    prefix: /_oauth2/callback
+                signout_path:
+                  path:
+                    prefix: /_oauth2/logout
+                forward_bearer_token: true
+                default_expires_in: 900s
+                csrf_token_expires_in: 600s
+                credentials:
+                  client_id: secure-subdomain-client
+                  token_secret:
+                    name: secure-subdomain-oauth-token
+                    sds_config:
+                      path: /etc/istio/oauth2/secure-subdomain-oauth-token.yaml
+                  hmac_secret:
+                    name: secure-subdomain-oauth-hmac
+                    sds_config:
+                      path: /etc/istio/oauth2/secure-subdomain-oauth-hmac.yaml
+                  cookie_domain: ".cat-herding.net"
+                  cookie_names:
+                    bearer_token: "_secure_session"
+                    oauth_hmac: "_secure_oauth_hmac"
+                    oauth_expires: "_secure_oauth_expires"
+                cookie_configs:
+                  bearer_token_cookie_config:
+                    same_site: LAX
+                  oauth_hmac_cookie_config:
+                    same_site: LAX
+                  oauth_expires_cookie_config:
+                    same_site: LAX
+                auth_scopes:
+                - openid
+                - profile
+                - email
+                pass_through_matcher:
+                - name: ":authority"
+                  exact_match: "oauth2.cat-herding.net"
+                - name: ":path"
+                  prefix_match: "/actuator"
+                - name: ":path"
+                  exact_match: "/health"
+                - name: ":path"
+                  exact_match: "/healthz"
+                - name: ":path"
+                  exact_match: "/ready"

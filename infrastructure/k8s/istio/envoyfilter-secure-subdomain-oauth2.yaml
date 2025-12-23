@@ -75,6 +75,7 @@ spec:
                 name: secure-subdomain-oauth-hmac
                 sds_config:
                   path: /etc/istio/oauth2/secure-subdomain-oauth-hmac.yaml
+              cookie_domain: ".cat-herding.net"
               cookie_names:
                 bearer_token: "_secure_session"
                 oauth_hmac: "_secure_oauth_hmac"
@@ -82,13 +83,10 @@ spec:
             cookie_configs:
               bearer_token_cookie_config:
                 same_site: LAX
-                domain: ".cat-herding.net"
               oauth_hmac_cookie_config:
                 same_site: LAX
-                domain: ".cat-herding.net"
               oauth_expires_cookie_config:
                 same_site: LAX
-                domain: ".cat-herding.net"
             auth_scopes:
             - openid
             - profile
@@ -122,6 +120,6 @@ spec:
     patch:
       operation: MERGE
       value:
-        per_filter_config:
+        typed_per_filter_config:
           envoy.filters.http.oauth2:
-            disabled: true
+            "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2
