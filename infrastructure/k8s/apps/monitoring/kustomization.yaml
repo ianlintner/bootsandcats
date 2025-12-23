@@ -21,7 +21,7 @@ generatorOptions:
 configMapGenerator:
   - name: prometheus-config
     files:
-      - ../../../prometheus.yml
+      - prometheus.yml
   - name: grafana-datasources
     files:
       - grafana/provisioning/datasources/datasources.yaml
@@ -37,4 +37,4 @@ configMapGenerator:
       - tempo/tempo.yaml
   - name: otel-collector-config
     files:
-      - ../../../otel-collector-config.yaml
+      - otel-collector-config.yaml
