@@ -48,13 +48,6 @@ spec:
           value: "false"
         - name: FLYWAY_CLEAN_DISABLED
           value: "true"
-        # Flyway placeholders for secret values in migrations
-        - name: FLYWAY_PLACEHOLDERS_PROFILE_SERVICE_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: profile-service-secrets
-              key: profile-service-client-secret
-              optional: false
         - name: FLYWAY_PLACEHOLDERS_CHAT_SERVICE_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
@@ -138,11 +131,6 @@ spec:
             secretKeyRef:
               name: oauth2-app-secrets
               key: m2m-client-secret
-        - name: OAUTH2_PROFILE_SERVICE_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: profile-service-secrets
-              key: profile-service-client-secret
         - name: OAUTH2_DEMO_USER_PASSWORD
           valueFrom:
             secretKeyRef:

@@ -72,14 +72,6 @@ spec:
           value: "false"
         - name: FLYWAY_CLEAN_DISABLED
           value: "true"
-        # Optional: Add placeholders for secret values
-        # These can be used in migration scripts like ${profile_service_client_secret}
-        - name: FLYWAY_PLACEHOLDERS_PROFILE_SERVICE_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: profile-service-secrets
-              key: profile-service-client-secret
-              optional: false
         - name: FLYWAY_PLACEHOLDERS_CHAT_SERVICE_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
