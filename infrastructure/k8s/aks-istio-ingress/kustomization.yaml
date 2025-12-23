@@ -4,3 +4,6 @@ kind: Kustomization
 resources:
   - secret-provider-class-secure-subdomain-oauth.yaml
   - secure-subdomain-oauth-sds-renderer.yaml
+
+patchesStrategicMerge:
+  - patch-ingressgateway-mount-secure-subdomain-oauth-sds.yaml

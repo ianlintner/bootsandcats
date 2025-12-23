@@ -23,10 +23,10 @@ Those two keys are the files Envoy loads from:
 
 ## Mounting into the ingress gateway
 
-You must mount `secure-subdomain-oauth-sds` into the ingress gateway at `/etc/istio/oauth2`.
+`secure-subdomain-oauth-sds` is mounted into the ingress gateway at `/etc/istio/oauth2` via the
+`patch-ingressgateway-mount-secure-subdomain-oauth-sds.yaml` strategic-merge patch. This patch is
+referenced directly from `kustomization.yaml`, so applying the `aks-istio-ingress` overlay will
+automatically wire the volume/volumeMount into the `aks-istio-ingressgateway-external` Deployment.
 
-A template strategic-merge patch is provided in:
-
-- `patch-ingressgateway-mount-secure-subdomain-oauth-sds.yaml`
-
-If your AKS-managed gateway Deployment name is not `aks-istio-ingressgateway-external`, update `metadata.name` accordingly.
+If your AKS-managed gateway Deployment name differs, update `metadata.name` inside the patch before
+running `kustomize build`.
