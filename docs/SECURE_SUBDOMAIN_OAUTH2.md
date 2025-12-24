@@ -212,6 +212,12 @@ To add a new app under `*.cat-herding.net`:
 2. **Create a VirtualService** pointing to `<yourapp>.cat-herding.net`
 3. **Register the redirect URI** for the unified gateway client:
   - Add `https://<yourapp>.cat-herding.net/_oauth2/callback` (and optionally `/_oauth2/logout`) to the `secure-subdomain-client` in the OAuth2 database.
+
+   If you're running the `oauth2-server` from this repo, the application will reconcile the
+   `secure-subdomain-client` configuration on startup (including redirect and post-logout URIs)
+   even when `oauth2.preserve-client-secrets=true`. After updating the allowlist of hosts,
+   restart the oauth2-server deployment and confirm you see a log like:
+   - `Reconciling OAuth client 'secure-subdomain-client' configuration in database ...`
 4. **That's it!** No per-service EnvoyFilter is required.
 
 The gateway-level filters will automatically protect your app.

@@ -230,7 +230,22 @@ WHERE client_id IN ('secure-subdomain-client');
 Results:
 - ✅ `secure-subdomain-client`: bcrypt secret correctly stored
 
-Redirect URIs should include wildcard callback support (e.g., `https://*.secure.cat-herding.net/_oauth2/callback`).
+Redirect URIs must be an **exact match** (no wildcards).
+
+The Istio ingress gateway computes the callback as:
+- `https://<public-host>.cat-herding.net/_oauth2/callback`
+
+Spring Authorization Server does **not** support wildcard redirect URIs like:
+- `https://*.secure.cat-herding.net/_oauth2/callback`
+- `http://localhost:*/_oauth2/callback`
+
+Instead, register each protected host explicitly for the unified client (`secure-subdomain-client`), for example:
+- `https://profile.cat-herding.net/_oauth2/callback`
+- `https://gh-review.cat-herding.net/_oauth2/callback`
+- `https://slop-detector.cat-herding.net/_oauth2/callback`
+- `https://security-agency.cat-herding.net/_oauth2/callback`
+
+See `docs/SECURE_SUBDOMAIN_OAUTH2.md` for the current authoritative setup.
 
 ## Related Files
 - `infrastructure/k8s/istio/envoyfilter-secure-subdomain-oauth2.yaml` (gateway OAuth2 enforcement)

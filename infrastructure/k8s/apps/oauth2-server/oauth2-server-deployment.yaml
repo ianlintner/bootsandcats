@@ -86,7 +86,7 @@ spec:
             - ALL
       containers:
       - name: oauth2-server
-        image: gabby.azurecr.io/oauth2-server:v2025-12-22-01
+        image: gabby.azurecr.io/oauth2-server:v2025-12-23-01
         imagePullPolicy: Always
         ports:
         - containerPort: 9000
@@ -95,8 +95,14 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "prod,prod-no-flyway"
+        - name: OAUTH2_PRESERVE_CLIENT_SECRETS
+          value: "true"
         - name: OAUTH2_SYNC_CLIENT_SECRETS
           value: "true"
+        - name: OAUTH2_CLIENT_SECRET_SYNC_INTERVAL_MS
+          value: "300000"
+        - name: OAUTH2_SECURE_SUBDOMAIN_CLIENT_SECRET_FILE
+          value: "/mnt/secrets-store/secure-subdomain-client-secret"
         - name: OTEL_SDK_DISABLED
           value: "true"
         - name: OTEL_EXPORTER_OTLP_ENDPOINT

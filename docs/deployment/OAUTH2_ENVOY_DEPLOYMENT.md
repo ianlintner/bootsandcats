@@ -8,8 +8,12 @@
 OAuth2 login is enforced at the **Istio ingress gateway** (not per-service) using Envoy's `envoy.filters.http.oauth2`.
 
 - **Single client**: `secure-subdomain-client`
-- **Callback**: `https://{any-host}.cat-herding.net/_oauth2/callback`
+- **Callback** (computed from the incoming request host): `https://<public-host>.cat-herding.net/_oauth2/callback`
 - **Shared cookies (apex domain)**: `_secure_session`, `_secure_oauth_hmac`, `_secure_oauth_expires`
+
+> Note: Spring Authorization Server requires **exact** redirect URI matches. That means the
+> `secure-subdomain-client` must have each protected host registered explicitly (no wildcards like
+> `https://*.cat-herding.net/...` or `http://localhost:*/...`). See `docs/SECURE_SUBDOMAIN_OAUTH2.md`.
 
 **Features**:
 - Full OAuth2 authorization code flow
