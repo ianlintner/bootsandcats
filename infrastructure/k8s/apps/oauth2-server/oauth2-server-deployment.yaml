@@ -86,7 +86,7 @@ spec:
             - ALL
       containers:
       - name: oauth2-server
-        image: gabby.azurecr.io/oauth2-server:v2025-12-23-01
+        image: gabby.azurecr.io/oauth2-server:v2025-12-24-01
         imagePullPolicy: Always
         ports:
         - containerPort: 9000
@@ -95,6 +95,16 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "prod,prod-no-flyway"
+        # Safe OAuth2 diagnostics (masked): enable targeted DEBUG logs without printing raw secrets.
+        - name: OAUTH2_DIAGNOSTICS_ENABLED
+          value: "true"
+        - name: OAUTH2_DIAGNOSTICS_MASK_KEEP_FIRST
+          value: "3"
+        - name: OAUTH2_DIAGNOSTICS_MASK_KEEP_LAST
+          value: "4"
+        # Ensure the diagnostics filters (com.bootsandcats.oauth2.log.*) actually emit DEBUG lines.
+        - name: LOGGING_LEVEL_COM_BOOTANDCATS_OAUTH2_LOG
+          value: "DEBUG"
         - name: OAUTH2_PRESERVE_CLIENT_SECRETS
           value: "true"
         - name: OAUTH2_SYNC_CLIENT_SECRETS
