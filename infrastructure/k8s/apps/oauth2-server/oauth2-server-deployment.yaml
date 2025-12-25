@@ -20,74 +20,9 @@ spec:
         proxy.istio.io/config: '{ "holdApplicationUntilProxyStarts": true }'
     spec:
       serviceAccountName: oauth2-server
-      initContainers:
-      # Run Flyway migrations before starting the application
-      - name: flyway-migrate
-        image: gabby.azurecr.io/flyway-migrate:latest
-        imagePullPolicy: Always
-        command: ["flyway", "migrate"]
-        env:
-        - name: FLYWAY_URL
-          value: "jdbc:postgresql://postgres.default.svc.cluster.local:5432/oauth2db?sslmode=disable"
-        - name: FLYWAY_USER
-          valueFrom:
-            secretKeyRef:
-              name: oauth2-app-secrets
-              key: database-username
-        - name: FLYWAY_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: oauth2-app-secrets
-              key: database-password
-        - name: FLYWAY_LOCATIONS
-          value: "filesystem:/flyway/sql"
-        - name: FLYWAY_BASELINE_ON_MIGRATE
-          value: "false"
-        - name: FLYWAY_VALIDATE_ON_MIGRATE
-          value: "true"
-        - name: FLYWAY_OUT_OF_ORDER
-          value: "false"
-        - name: FLYWAY_CLEAN_DISABLED
-          value: "true"
-        - name: FLYWAY_PLACEHOLDERS_CHAT_SERVICE_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: chat-service-secrets
-              key: oauth2-client-secret
-              optional: true
-        - name: FLYWAY_PLACEHOLDERS_GITHUB_REVIEW_SERVICE_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: github-review-service-secrets
-              key: oauth2-client-secret
-              optional: true
-        - name: FLYWAY_PLACEHOLDERS_SLOP_DETECTOR_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: slop-detector-secrets
-              key: oauth2-client-secret
-              optional: true
-        - name: FLYWAY_PLACEHOLDERS_SECURITY_AGENCY_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: security-agency-secrets
-              key: oauth2-client-secret
-              optional: true
-        resources:
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        securityContext:
-          runAsNonRoot: true
-          runAsUser: 1001
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
-          capabilities:
-            drop:
-            - ALL
       containers:
       - name: oauth2-server
-        image: gabby.azurecr.io/oauth2-server:v2025-12-24-01
+        image: gabby.azurecr.io/oauth2-server:63470347d6f423339825d2eb3fc251d147f486ba
         imagePullPolicy: Always
         ports:
         - containerPort: 9000
@@ -104,7 +39,7 @@ spec:
             fieldRef:
               fieldPath: metadata.name
         - name: SPRING_PROFILES_ACTIVE
-          value: "prod,prod-no-flyway"
+          value: "prod,prod-no-flyway,prod-no-db"
         # Store registered OAuth2 clients in the OAuth2Client CRD.
         - name: OAUTH2_CLIENTS_STORE
           value: "kubernetes"
@@ -141,18 +76,6 @@ spec:
             secretKeyRef:
               name: oauth2-app-secrets
               key: issuer-url
-        - name: DATABASE_URL
-          value: "jdbc:postgresql://postgres.default.svc.cluster.local:5432/oauth2db?sslmode=disable"
-        - name: DATABASE_USERNAME
-          valueFrom:
-            secretKeyRef:
-              name: oauth2-app-secrets
-              key: database-username
-        - name: DATABASE_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: oauth2-app-secrets
-              key: database-password
         - name: OAUTH2_DEMO_CLIENT_SECRET
           valueFrom:
             secretKeyRef:

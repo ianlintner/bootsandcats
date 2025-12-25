@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -36,13 +37,13 @@ public class SecurityAuditService {
 
     private static final Logger log = LoggerFactory.getLogger(SecurityAuditService.class);
 
-    private final SecurityAuditEventRepository auditEventRepository;
+    private final ObjectProvider<SecurityAuditEventRepository> auditEventRepository;
     private final ObjectMapper objectMapper;
     private final AuthEventPublisher authEventPublisher;
     private final ObjectProvider<KubernetesAuditEventEmitter> kubernetesAuditEventEmitter;
 
     public SecurityAuditService(
-            SecurityAuditEventRepository auditEventRepository,
+            ObjectProvider<SecurityAuditEventRepository> auditEventRepository,
             ObjectMapper objectMapper,
             AuthEventPublisher authEventPublisher,
             ObjectProvider<KubernetesAuditEventEmitter> kubernetesAuditEventEmitter) {
@@ -78,8 +79,13 @@ public class SecurityAuditService {
     }
 
     private SecurityAuditEvent persistEvent(SecurityAuditEvent event) {
+        SecurityAuditEventRepository repo = auditEventRepository.getIfAvailable();
+        if (repo == null) {
+            // No database configured (e.g., prod-no-db). Still publish to Redis/K8s sinks.
+            return event;
+        }
         try {
-            SecurityAuditEvent saved = auditEventRepository.save(event);
+            SecurityAuditEvent saved = repo.save(event);
             log.debug(
                     "Recorded audit event: type={}, principal={}, result={}",
                     event.getEventType(),
@@ -631,7 +637,11 @@ public class SecurityAuditService {
      */
     @Transactional(readOnly = true)
     public Page<SecurityAuditEvent> findByPrincipal(String principal, Pageable pageable) {
-        return auditEventRepository.findByPrincipalOrderByEventTimestampDesc(principal, pageable);
+        SecurityAuditEventRepository repo = auditEventRepository.getIfAvailable();
+        if (repo == null) {
+            return emptyPage(pageable);
+        }
+        return repo.findByPrincipalOrderByEventTimestampDesc(principal, pageable);
     }
 
     /**
@@ -643,7 +653,11 @@ public class SecurityAuditService {
      */
     @Transactional(readOnly = true)
     public Page<SecurityAuditEvent> findByClientId(String clientId, Pageable pageable) {
-        return auditEventRepository.findByClientIdOrderByEventTimestampDesc(clientId, pageable);
+        SecurityAuditEventRepository repo = auditEventRepository.getIfAvailable();
+        if (repo == null) {
+            return emptyPage(pageable);
+        }
+        return repo.findByClientIdOrderByEventTimestampDesc(clientId, pageable);
     }
 
     /**
@@ -657,8 +671,11 @@ public class SecurityAuditService {
     @Transactional(readOnly = true)
     public Page<SecurityAuditEvent> findByTimeRange(
             Instant startTime, Instant endTime, Pageable pageable) {
-        return auditEventRepository.findByEventTimestampBetweenOrderByEventTimestampDesc(
-                startTime, endTime, pageable);
+        SecurityAuditEventRepository repo = auditEventRepository.getIfAvailable();
+        if (repo == null) {
+            return emptyPage(pageable);
+        }
+        return repo.findByEventTimestampBetweenOrderByEventTimestampDesc(startTime, endTime, pageable);
     }
 
     /**
@@ -669,7 +686,11 @@ public class SecurityAuditService {
      */
     @Transactional(readOnly = true)
     public Page<SecurityAuditEvent> findRecentEvents(Pageable pageable) {
-        return auditEventRepository.findAllByOrderByEventTimestampDesc(pageable);
+        SecurityAuditEventRepository repo = auditEventRepository.getIfAvailable();
+        if (repo == null) {
+            return emptyPage(pageable);
+        }
+        return repo.findAllByOrderByEventTimestampDesc(pageable);
     }
 
     /**
@@ -693,8 +714,18 @@ public class SecurityAuditService {
             Instant startTime,
             Instant endTime,
             Pageable pageable) {
-        return auditEventRepository.searchAuditEvents(
-                principal, clientId, eventCategory, result, startTime, endTime, pageable);
+        SecurityAuditEventRepository repo = auditEventRepository.getIfAvailable();
+        if (repo == null) {
+            return emptyPage(pageable);
+        }
+        return repo.searchAuditEvents(principal, clientId, eventCategory, result, startTime, endTime, pageable);
+    }
+
+    private static Page<SecurityAuditEvent> emptyPage(Pageable pageable) {
+        if (pageable == null || pageable.isUnpaged()) {
+            return new PageImpl<>(java.util.List.of());
+        }
+        return new PageImpl<>(java.util.List.of(), pageable, 0);
     }
 
     // Helper methods

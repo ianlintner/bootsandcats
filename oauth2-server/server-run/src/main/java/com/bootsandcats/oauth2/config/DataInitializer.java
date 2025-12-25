@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -38,6 +39,11 @@ import com.bootsandcats.oauth2.service.SecurityAuditService;
 
 @Configuration
 @EnableScheduling
+@ConditionalOnProperty(
+        prefix = "oauth2.clients",
+        name = "store",
+        havingValue = "jpa",
+        matchIfMissing = true)
 public class DataInitializer {
 
     private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);
