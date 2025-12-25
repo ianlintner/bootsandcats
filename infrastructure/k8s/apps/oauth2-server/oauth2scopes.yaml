@@ -1,0 +1,115 @@
+# GitOps-managed OAuth2 scopes (durable config for admin UI / policy).
+#
+# Note: runtime token issuance uses scopes attached to OAuth2Client resources.
+# This list is for discovery/documentation/admin enable/disable workflows.
+
+apiVersion: oauth.bootsandcats.com/v1alpha1
+kind: OAuth2Scope
+metadata:
+  name: openid
+  namespace: default
+spec:
+  scope: openid
+  description: OpenID Connect scope
+  enabled: true
+  system: true
+---
+apiVersion: oauth.bootsandcats.com/v1alpha1
+kind: OAuth2Scope
+metadata:
+  name: profile
+  namespace: default
+spec:
+  scope: profile
+  description: OpenID Connect profile scope
+  enabled: true
+  system: true
+---
+apiVersion: oauth.bootsandcats.com/v1alpha1
+kind: OAuth2Scope
+metadata:
+  name: email
+  namespace: default
+spec:
+  scope: email
+  description: OpenID Connect email scope
+  enabled: true
+  system: true
+---
+apiVersion: oauth.bootsandcats.com/v1alpha1
+kind: OAuth2Scope
+metadata:
+  name: read
+  namespace: default
+spec:
+  scope: read
+  description: Demo read scope
+  enabled: true
+  system: true
+---
+apiVersion: oauth.bootsandcats.com/v1alpha1
+kind: OAuth2Scope
+metadata:
+  name: write
+  namespace: default
+spec:
+  scope: write
+  description: Demo write scope
+  enabled: true
+  system: true
+---
+apiVersion: oauth.bootsandcats.com/v1alpha1
+kind: OAuth2Scope
+metadata:
+  name: api-read
+  namespace: default
+spec:
+  scope: api:read
+  description: Service API read scope
+  enabled: true
+  system: true
+---
+apiVersion: oauth.bootsandcats.com/v1alpha1
+kind: OAuth2Scope
+metadata:
+  name: api-write
+  namespace: default
+spec:
+  scope: api:write
+  description: Service API write scope
+  enabled: true
+  system: true
+---
+apiVersion: oauth.bootsandcats.com/v1alpha1
+kind: OAuth2Scope
+metadata:
+  name: profile-read
+  namespace: default
+spec:
+  scope: profile:read
+  description: Profile service read scope
+  enabled: true
+  system: true
+---
+apiVersion: oauth.bootsandcats.com/v1alpha1
+kind: OAuth2Scope
+metadata:
+  name: profile-write
+  namespace: default
+spec:
+  scope: profile:write
+  description: Profile service write scope
+  enabled: true
+  system: true
+
+---
+apiVersion: oauth.bootsandcats.com/v1alpha1
+kind: OAuth2Scope
+metadata:
+  name: profile-admin
+  namespace: default
+spec:
+  scope: profile:admin
+  description: Profile service admin scope
+  enabled: true
+  system: true

@@ -1,5 +1,7 @@
 package com.bootsandcats.oauth2.k8s;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -12,10 +14,12 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import com.bootsandcats.oauth2.service.ClientStore;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
@@ -31,12 +35,14 @@ public class KubernetesRegisteredClientRepository implements ClientStore {
 
     private final MixedOperation<OAuth2Client, OAuth2ClientList, Resource<OAuth2Client>> crdClient;
     private final KubernetesRegisteredClientMapper mapper = new KubernetesRegisteredClientMapper();
+    private final KubernetesClient kubernetesClient;
     private final String namespace;
 
     public KubernetesRegisteredClientRepository(
             KubernetesClient kubernetesClient,
             @Value("${oauth2.clients.kubernetes.namespace:}") String configuredNamespace) {
         this.namespace = resolveNamespace(configuredNamespace);
+        this.kubernetesClient = kubernetesClient;
         this.crdClient = kubernetesClient.resources(OAuth2Client.class, OAuth2ClientList.class);
         log.info("Using Kubernetes client store in namespace={}", this.namespace);
     }
@@ -130,7 +136,66 @@ public class KubernetesRegisteredClientRepository implements ClientStore {
         if (spec != null && Boolean.TRUE.equals(spec.getSystem())) {
             // System flag is handled by admin code; for runtime lookups we still return it.
         }
-        return mapper.toRegisteredClient(resource);
+        RegisteredClient rc = mapper.toRegisteredClient(resource);
+        if (rc == null) {
+            return null;
+        }
+
+        String encodedSecretOverride = resolveEncodedSecretFromRef(spec);
+        if (StringUtils.hasText(encodedSecretOverride)) {
+            return RegisteredClient.from(rc).clientSecret(encodedSecretOverride).build();
+        }
+
+        return rc;
+    }
+
+    private String resolveEncodedSecretFromRef(OAuth2ClientSpec spec) {
+        if (spec == null) {
+            return null;
+        }
+        OAuth2ClientSecretRef ref = spec.getSecretRef();
+        if (ref == null) {
+            return null;
+        }
+        if (!StringUtils.hasText(ref.getName()) || !StringUtils.hasText(ref.getKey())) {
+            return null;
+        }
+
+        try {
+            Secret secret =
+                    kubernetesClient
+                            .secrets()
+                            .inNamespace(namespace)
+                            .withName(ref.getName())
+                            .get();
+            if (secret == null) {
+                return null;
+            }
+
+            // Prefer stringData when present (typically only during creation), otherwise decode data.
+            if (secret.getStringData() != null) {
+                String v = secret.getStringData().get(ref.getKey());
+                if (StringUtils.hasText(v)) {
+                    return v;
+                }
+            }
+            if (secret.getData() != null) {
+                String b64 = secret.getData().get(ref.getKey());
+                if (StringUtils.hasText(b64)) {
+                    return new String(Base64.getDecoder().decode(b64), StandardCharsets.UTF_8);
+                }
+            }
+            return null;
+        } catch (Exception e) {
+            // Best-effort: if secret lookup fails, fall back to spec.encodedSecret.
+            log.debug(
+                    "Failed to resolve OAuth2 client secret from Secret {}/{} key {}: {}",
+                    namespace,
+                    ref.getName(),
+                    ref.getKey(),
+                    e.getMessage());
+            return null;
+        }
     }
 
     private static String resolveNamespace(String configuredNamespace) {

@@ -5,3 +5,6 @@ resources:
   - oauth2-server-deployment.yaml
   - flyway-migration-job.yaml
   - oauth2-server-serviceaccount-rbac.yaml
+  - oauth2clients.yaml
+  - oauth2client-secrets.yaml
+  - oauth2scopes.yaml

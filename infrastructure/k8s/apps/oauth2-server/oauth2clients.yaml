@@ -1,0 +1,443 @@
+# GitOps-managed OAuth2Client resources.
+#
+# Notes:
+# - These are Namespaced resources. They are created in the same namespace as the oauth2-server.
+# - The server locates clients by label oauth.bootsandcats.com/client-id, so keep that label.
+# - Secrets are referenced via spec.secretRef (see oauth2client-secrets.yaml).
+# - TTL strings use java.time.Duration format (e.g., PT15M, PT1H).
+
+apiVersion: oauth.bootsandcats.com/v1alpha1
+kind: OAuth2Client
+metadata:
+  name: demo-client
+  namespace: default
+  labels:
+    oauth.bootsandcats.com/client-id: demo-client
+    oauth.bootsandcats.com/registered-client-id: demo-client-001
+spec:
+  registeredClientId: demo-client-001
+  clientId: demo-client
+  clientName: Demo Client
+  enabled: true
+  system: true
+  secretRef:
+    name: oauth2-client-demo-client-secret
+    key: encodedSecret
+  clientAuthenticationMethods:
+    - client_secret_basic
+    - client_secret_post
+  authorizationGrantTypes:
+    - authorization_code
+    - refresh_token
+    - client_credentials
+  redirectUris:
+    - http://localhost:8080/callback
+    - http://127.0.0.1:8080/callback
+  postLogoutRedirectUris:
+    - http://localhost:8080/
+  scopes:
+    - openid
+    - profile
+    - email
+    - read
+    - write
+  clientSettings:
+    requireProofKey: false
+    requireAuthorizationConsent: false
+  tokenSettings:
+    accessTokenTtl: PT15M
+    refreshTokenTtl: PT168H
+    reuseRefreshTokens: false
+---
+apiVersion: oauth.bootsandcats.com/v1alpha1
+kind: OAuth2Client
+metadata:
+  name: public-client
+  namespace: default
+  labels:
+    oauth.bootsandcats.com/client-id: public-client
+    oauth.bootsandcats.com/registered-client-id: public-client-001
+spec:
+  registeredClientId: public-client-001
+  clientId: public-client
+  clientName: Public Client
+  enabled: true
+  system: true
+  clientAuthenticationMethods:
+    - none
+  authorizationGrantTypes:
+    - authorization_code
+    - refresh_token
+  redirectUris:
+    - http://localhost:3000/callback
+    - http://127.0.0.1:3000/callback
+  postLogoutRedirectUris:
+    - http://localhost:3000/
+  scopes:
+    - openid
+    - profile
+    - email
+    - read
+  clientSettings:
+    requireProofKey: true
+    requireAuthorizationConsent: false
+  tokenSettings:
+    accessTokenTtl: PT15M
+    refreshTokenTtl: PT24H
+    reuseRefreshTokens: false
+---
+apiVersion: oauth.bootsandcats.com/v1alpha1
+kind: OAuth2Client
+metadata:
+  name: m2m-client
+  namespace: default
+  labels:
+    oauth.bootsandcats.com/client-id: m2m-client
+    oauth.bootsandcats.com/registered-client-id: m2m-client-001
+spec:
+  registeredClientId: m2m-client-001
+  clientId: m2m-client
+  clientName: Machine-to-Machine Client
+  enabled: true
+  system: true
+  secretRef:
+    name: oauth2-client-m2m-client-secret
+    key: encodedSecret
+  clientAuthenticationMethods:
+    - client_secret_basic
+  authorizationGrantTypes:
+    - client_credentials
+  scopes:
+    - api:read
+    - api:write
+  clientSettings:
+    requireProofKey: false
+    requireAuthorizationConsent: false
+  tokenSettings:
+    accessTokenTtl: PT5M
+---
+apiVersion: oauth.bootsandcats.com/v1alpha1
+kind: OAuth2Client
+metadata:
+  name: profile-ui
+  namespace: default
+  labels:
+    oauth.bootsandcats.com/client-id: profile-ui
+    oauth.bootsandcats.com/registered-client-id: profile-ui-client-001
+spec:
+  registeredClientId: profile-ui-client-001
+  clientId: profile-ui
+  clientName: Profile UI Application
+  enabled: true
+  system: true
+  clientAuthenticationMethods:
+    - none
+  authorizationGrantTypes:
+    - authorization_code
+    - refresh_token
+  redirectUris:
+    - http://localhost:8082/oauth/callback
+    - http://localhost:8082/
+    - https://profile-ui.example.com/oauth/callback
+  postLogoutRedirectUris:
+    - http://localhost:8082/
+    - https://profile-ui.example.com/
+  scopes:
+    - openid
+    - profile
+    - email
+    - profile:read
+    - profile:write
+  clientSettings:
+    requireProofKey: true
+    requireAuthorizationConsent: true
+  tokenSettings:
+    accessTokenTtl: PT1H
+    refreshTokenTtl: PT24H
+    authorizationCodeTtl: PT5M
+    reuseRefreshTokens: true
+---
+apiVersion: oauth.bootsandcats.com/v1alpha1
+kind: OAuth2Client
+metadata:
+  name: profile-admin
+  namespace: default
+  labels:
+    oauth.bootsandcats.com/client-id: profile-admin
+    oauth.bootsandcats.com/registered-client-id: profile-admin-client-001
+spec:
+  registeredClientId: profile-admin-client-001
+  clientId: profile-admin
+  clientName: Profile Admin Application
+  enabled: true
+  system: true
+  clientAuthenticationMethods:
+    - none
+  authorizationGrantTypes:
+    - authorization_code
+    - refresh_token
+  redirectUris:
+    - http://localhost:8082/oauth/callback
+    - http://localhost:8082/
+    - https://profile-admin.example.com/oauth/callback
+  postLogoutRedirectUris:
+    - http://localhost:8082/
+    - https://profile-admin.example.com/
+  scopes:
+    - openid
+    - profile
+    - email
+    - profile:read
+    - profile:write
+    - profile:admin
+  clientSettings:
+    requireProofKey: true
+    requireAuthorizationConsent: true
+  tokenSettings:
+    accessTokenTtl: PT1H
+    refreshTokenTtl: PT24H
+    authorizationCodeTtl: PT5M
+    reuseRefreshTokens: true
+---
+apiVersion: oauth.bootsandcats.com/v1alpha1
+kind: OAuth2Client
+metadata:
+  name: profile-service
+  namespace: default
+  labels:
+    oauth.bootsandcats.com/client-id: profile-service
+    oauth.bootsandcats.com/registered-client-id: profile-service-client-001
+spec:
+  registeredClientId: profile-service-client-001
+  clientId: profile-service
+  clientName: Profile Service
+  enabled: true
+  system: true
+  secretRef:
+    name: oauth2-client-profile-service-secret
+    key: encodedSecret
+  clientAuthenticationMethods:
+    - client_secret_basic
+    - client_secret_post
+  authorizationGrantTypes:
+    - authorization_code
+    - refresh_token
+  redirectUris:
+    - https://profile.cat-herding.net/
+  postLogoutRedirectUris:
+    - https://profile.cat-herding.net/
+  scopes:
+    - openid
+    - profile
+    - email
+    - profile:read
+    - profile:write
+---
+apiVersion: oauth.bootsandcats.com/v1alpha1
+kind: OAuth2Client
+metadata:
+  name: github-review-service
+  namespace: default
+  labels:
+    oauth.bootsandcats.com/client-id: github-review-service
+    oauth.bootsandcats.com/registered-client-id: github-review-service-client-001
+spec:
+  registeredClientId: github-review-service-client-001
+  clientId: github-review-service
+  clientName: GitHub Review Service
+  enabled: true
+  system: true
+  secretRef:
+    name: oauth2-client-github-review-service-secret
+    key: encodedSecret
+  clientAuthenticationMethods:
+    - client_secret_post
+  authorizationGrantTypes:
+    - authorization_code
+    - refresh_token
+  redirectUris:
+    - https://gh-review.cat-herding.net/
+  postLogoutRedirectUris:
+    - https://gh-review.cat-herding.net/
+  scopes:
+    - openid
+    - profile
+    - email
+  clientSettings:
+    requireProofKey: false
+    requireAuthorizationConsent: false
+  tokenSettings:
+    accessTokenTtl: PT1H
+    refreshTokenTtl: PT24H
+    authorizationCodeTtl: PT5M
+    reuseRefreshTokens: true
+---
+apiVersion: oauth.bootsandcats.com/v1alpha1
+kind: OAuth2Client
+metadata:
+  name: chat-backend
+  namespace: default
+  labels:
+    oauth.bootsandcats.com/client-id: chat-backend
+    oauth.bootsandcats.com/registered-client-id: chat-backend-client-001
+spec:
+  registeredClientId: chat-backend-client-001
+  clientId: chat-backend
+  clientName: Chat Service
+  enabled: true
+  system: true
+  secretRef:
+    name: oauth2-client-chat-backend-secret
+    key: encodedSecret
+  clientAuthenticationMethods:
+    - client_secret_post
+  authorizationGrantTypes:
+    - authorization_code
+    - refresh_token
+  redirectUris:
+    - https://chat.cat-herding.net/_oauth2/callback
+  postLogoutRedirectUris:
+    - https://chat.cat-herding.net/
+  scopes:
+    - openid
+    - profile
+    - email
+  clientSettings:
+    requireProofKey: false
+    requireAuthorizationConsent: false
+  tokenSettings:
+    accessTokenTtl: PT1H
+    refreshTokenTtl: PT24H
+    authorizationCodeTtl: PT5M
+    reuseRefreshTokens: true
+---
+apiVersion: oauth.bootsandcats.com/v1alpha1
+kind: OAuth2Client
+metadata:
+  name: slop-detector
+  namespace: default
+  labels:
+    oauth.bootsandcats.com/client-id: slop-detector
+    oauth.bootsandcats.com/registered-client-id: slop-detector-client-001
+spec:
+  registeredClientId: slop-detector-client-001
+  clientId: slop-detector
+  clientName: Slop Detector Service
+  enabled: true
+  system: true
+  secretRef:
+    name: oauth2-client-slop-detector-secret
+    key: encodedSecret
+  clientAuthenticationMethods:
+    - client_secret_post
+  authorizationGrantTypes:
+    - authorization_code
+    - refresh_token
+  redirectUris:
+    - https://slop.cat-herding.net/_oauth2/callback
+  postLogoutRedirectUris:
+    - https://slop.cat-herding.net/
+  scopes:
+    - openid
+    - profile
+    - email
+  clientSettings:
+    requireProofKey: false
+    requireAuthorizationConsent: false
+  tokenSettings:
+    accessTokenTtl: PT1H
+    refreshTokenTtl: PT24H
+    authorizationCodeTtl: PT5M
+    reuseRefreshTokens: true
+---
+apiVersion: oauth.bootsandcats.com/v1alpha1
+kind: OAuth2Client
+metadata:
+  name: security-agency
+  namespace: default
+  labels:
+    oauth.bootsandcats.com/client-id: security-agency
+    oauth.bootsandcats.com/registered-client-id: security-agency-client-001
+spec:
+  registeredClientId: security-agency-client-001
+  clientId: security-agency
+  clientName: Security Agency Service
+  enabled: true
+  system: true
+  secretRef:
+    name: oauth2-client-security-agency-secret
+    key: encodedSecret
+  clientAuthenticationMethods:
+    - client_secret_post
+  authorizationGrantTypes:
+    - authorization_code
+    - refresh_token
+  redirectUris:
+    - https://security-agency.cat-herding.net/_oauth2/callback
+  postLogoutRedirectUris:
+    - https://security-agency.cat-herding.net/
+  scopes:
+    - openid
+    - profile
+    - email
+  clientSettings:
+    requireProofKey: false
+    requireAuthorizationConsent: false
+  tokenSettings:
+    accessTokenTtl: PT1H
+    refreshTokenTtl: PT24H
+    authorizationCodeTtl: PT5M
+    reuseRefreshTokens: true
+---
+apiVersion: oauth.bootsandcats.com/v1alpha1
+kind: OAuth2Client
+metadata:
+  name: secure-subdomain-client
+  namespace: default
+  labels:
+    oauth.bootsandcats.com/client-id: secure-subdomain-client
+    oauth.bootsandcats.com/registered-client-id: secure-subdomain-client-001
+spec:
+  registeredClientId: secure-subdomain-client-001
+  clientId: secure-subdomain-client
+  clientName: Secure Subdomain Client
+  enabled: true
+  system: true
+  secretRef:
+    name: oauth2-client-secure-subdomain-client-secret
+    key: encodedSecret
+  clientAuthenticationMethods:
+    - client_secret_post
+  authorizationGrantTypes:
+    - authorization_code
+    - refresh_token
+  redirectUris:
+    - https://oauth2.cat-herding.net/_oauth2/callback
+    - https://profile.cat-herding.net/_oauth2/callback
+    - https://gh-review.cat-herding.net/_oauth2/callback
+    - https://slop-detector.cat-herding.net/_oauth2/callback
+    - https://security-agency.cat-herding.net/_oauth2/callback
+    - http://localhost:3000/_oauth2/callback
+    - http://localhost:5001/_oauth2/callback
+    - http://localhost:8080/_oauth2/callback
+  postLogoutRedirectUris:
+    - https://oauth2.cat-herding.net/_oauth2/logout
+    - https://profile.cat-herding.net/_oauth2/logout
+    - https://gh-review.cat-herding.net/_oauth2/logout
+    - https://slop-detector.cat-herding.net/_oauth2/logout
+    - https://security-agency.cat-herding.net/_oauth2/logout
+    - http://localhost:3000/_oauth2/logout
+    - http://localhost:5001/_oauth2/logout
+    - http://localhost:8080/_oauth2/logout
+  scopes:
+    - openid
+    - profile
+    - email
+  clientSettings:
+    requireProofKey: true
+    requireAuthorizationConsent: false
+  tokenSettings:
+    accessTokenTtl: PT15M
+    refreshTokenTtl: PT1H
+    authorizationCodeTtl: PT5M
+    reuseRefreshTokens: false

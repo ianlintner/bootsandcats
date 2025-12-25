@@ -5,3 +5,4 @@ kind: Kustomization
 resources:
   - oauth2client-crd.yaml
   - oauth2denyrule-crd.yaml
+  - oauth2scope-crd.yaml
