@@ -40,6 +40,11 @@ spec:
             local OAUTH2_AUTH_PATH = OAUTH2_PREFIX .. "/auth"
             local METADATA_NAMESPACE = "oauth2_proxy_auth"
             local METADATA_SET_COOKIE_KEY = "set-cookie"
+            local METADATA_ORIGINAL_URL_KEY = "original_url"
+            local METADATA_AUTHORITY_KEY = "authority"
+            local METADATA_PROTO_KEY = "proto"
+            local METADATA_PATH_KEY = "path"
+            local METADATA_IS_BROWSER_KEY = "is_browser"
 
             local function starts_with(str, prefix)
               return str ~= nil and string.sub(str, 1, string.len(prefix)) == prefix
@@ -63,6 +68,37 @@ spec:
                 end
               end
               return nil
+            end
+
+            local function contains(haystack, needle)
+              if haystack == nil or needle == nil then
+                return false
+              end
+              return string.find(haystack, needle, 1, true) ~= nil
+            end
+
+            local function is_browser_request(headers)
+              -- Heuristic: only browser navigations should be redirected to login.
+              -- For APIs (Accept: application/json, XHR/fetch, or explicit Authorization usage)
+              -- we prefer a plain 401 so callers can handle it.
+              local accept = headers:get("accept") or ""
+              local sec_fetch_dest = headers:get("sec-fetch-dest") or ""
+              local sec_fetch_mode = headers:get("sec-fetch-mode") or ""
+              local xrw = headers:get("x-requested-with") or ""
+
+              if contains(accept, "text/html") then
+                return true
+              end
+
+              if sec_fetch_dest == "document" or sec_fetch_mode == "navigate" then
+                return true
+              end
+
+              if xrw == "XMLHttpRequest" then
+                return false
+              end
+
+              return false
             end
 
             local function should_skip(headers)
@@ -101,8 +137,17 @@ spec:
               local proto = req_headers:get(":scheme") or req_headers:get("x-forwarded-proto") or "https"
               local cookie = req_headers:get("cookie")
               local inbound_authorization = req_headers:get("authorization")
+              local browser = is_browser_request(req_headers)
 
               local original_url = proto .. "://" .. authority .. path
+
+              -- Persist original request details for envoy_on_response() so we can
+              -- translate downstream 401 invalid/expired token responses into a login redirect.
+              request_handle:streamInfo():dynamicMetadata():set(METADATA_NAMESPACE, METADATA_ORIGINAL_URL_KEY, original_url)
+              request_handle:streamInfo():dynamicMetadata():set(METADATA_NAMESPACE, METADATA_AUTHORITY_KEY, authority)
+              request_handle:streamInfo():dynamicMetadata():set(METADATA_NAMESPACE, METADATA_PROTO_KEY, proto)
+              request_handle:streamInfo():dynamicMetadata():set(METADATA_NAMESPACE, METADATA_PATH_KEY, path)
+              request_handle:streamInfo():dynamicMetadata():set(METADATA_NAMESPACE, METADATA_IS_BROWSER_KEY, browser and "true" or "false")
 
               local auth_headers = {
                 [":method"] = "GET",
@@ -213,13 +258,26 @@ spec:
               end
 
               if status == "401" then
-                -- Unauthorized -> redirect to oauth2-proxy sign-in.
-                local rd = url_encode(original_url)
-                local location = proto .. "://" .. authority .. OAUTH2_PREFIX .. "/start?rd=" .. rd
-                request_handle:respond({
-                  [":status"] = "302",
-                  ["location"] = location,
-                }, "")
+                if browser then
+                  -- Browser navigation -> redirect to oauth2-proxy sign-in.
+                  local rd = url_encode(original_url)
+                  local location = proto .. "://" .. authority .. OAUTH2_PREFIX .. "/start?rd=" .. rd
+                  request_handle:respond({
+                    [":status"] = "302",
+                    ["location"] = location,
+                  }, "")
+                  return
+                end
+
+                -- API callers (or non-browser requests) -> pass through a 401.
+                local www_authenticate = resp_headers["www-authenticate"] or resp_headers["WWW-Authenticate"]
+                local out_headers = {
+                  [":status"] = "401",
+                }
+                if www_authenticate ~= nil then
+                  out_headers["www-authenticate"] = www_authenticate
+                end
+                request_handle:respond(out_headers, "")
                 return
               end
 
@@ -236,14 +294,44 @@ spec:
             end
 
             function envoy_on_response(response_handle)
+              local headers = response_handle:headers()
+              local status = headers:get(":status") or ""
+
               local md = response_handle:streamInfo():dynamicMetadata():get(METADATA_NAMESPACE)
+              if md ~= nil and status == "401" then
+                local browser = md[METADATA_IS_BROWSER_KEY]
+                local www_authenticate = headers:get("www-authenticate") or headers:get("WWW-Authenticate")
+                if browser == "true" and www_authenticate ~= nil then
+                  local www_lower = string.lower(www_authenticate)
+                  -- Only redirect on likely token failures (expired/invalid), not on generic app-level 401s.
+                  if contains(www_lower, "invalid_token") or contains(www_lower, "expired") then
+                    local proto = md[METADATA_PROTO_KEY] or "https"
+                    local authority = md[METADATA_AUTHORITY_KEY] or ""
+                    local original_url = md[METADATA_ORIGINAL_URL_KEY]
+                    if original_url == nil or original_url == "" then
+                      local path = md[METADATA_PATH_KEY] or "/"
+                      original_url = proto .. "://" .. authority .. path
+                    end
+
+                    local rd = url_encode(original_url)
+                    local location = proto .. "://" .. authority .. OAUTH2_PREFIX .. "/start?rd=" .. rd
+
+                    headers:replace(":status", "302")
+                    headers:replace("location", location)
+                    -- Avoid confusing the browser with a Bearer challenge when we redirect.
+                    headers:remove("www-authenticate")
+                    headers:remove("WWW-Authenticate")
+                  end
+                end
+              end
+
               if md == nil then
                 return
               end
 
               local set_cookie = md[METADATA_SET_COOKIE_KEY]
               if set_cookie ~= nil then
-                response_handle:headers():add("set-cookie", set_cookie)
+                headers:add("set-cookie", set_cookie)
               end
             end
 
