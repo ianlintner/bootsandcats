@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.bootsandcats.oauth2.model.SecurityAuditEvent;
+import com.bootsandcats.oauth2.model.AuditEventResult;
+import com.bootsandcats.oauth2.model.AuditEventType;
 
 import io.fabric8.kubernetes.api.model.Event;
 import io.fabric8.kubernetes.api.model.EventBuilder;
@@ -71,9 +73,9 @@ public class KubernetesAuditEventEmitter {
     private Event toKubernetesEvent(SecurityAuditEvent e) {
         String reason = toReason(e.getEventType());
         String type =
-                e.getResult() != null
-                                && ("FAILURE".equalsIgnoreCase(e.getResult())
-                                        || "DENIED".equalsIgnoreCase(e.getResult()))
+            e.getResult() != null
+                    && (e.getResult() == AuditEventResult.FAILURE
+                        || e.getResult() == AuditEventResult.DENIED)
                         ? "Warning"
                         : "Normal";
 
@@ -112,9 +114,9 @@ public class KubernetesAuditEventEmitter {
 
     private static String buildMessage(SecurityAuditEvent e) {
         StringBuilder sb = new StringBuilder();
-        sb.append(e.getEventType() != null ? e.getEventType() : "AUDIT_EVENT");
-        if (StringUtils.hasText(e.getResult())) {
-            sb.append(" result=").append(e.getResult());
+        sb.append(e.getEventType() != null ? e.getEventType().name() : "AUDIT_EVENT");
+        if (e.getResult() != null) {
+            sb.append(" result=").append(e.getResult().name());
         }
         if (StringUtils.hasText(e.getPrincipal())) {
             sb.append(" principal=").append(e.getPrincipal());
@@ -141,12 +143,13 @@ public class KubernetesAuditEventEmitter {
         return s.substring(0, Math.max(0, maxLen - 3)) + "...";
     }
 
-    private static String toReason(String eventType) {
-        if (!StringUtils.hasText(eventType)) {
+    private static String toReason(AuditEventType eventType) {
+        if (eventType == null) {
             return "AuditEvent";
         }
+        String eventTypeName = eventType.name();
         // Convert e.g. LOGIN_SUCCESS -> LoginSuccess
-        String[] parts = eventType.trim().toLowerCase(Locale.ROOT).split("[_\\s]+");
+        String[] parts = eventTypeName.trim().toLowerCase(Locale.ROOT).split("[_\\s]+");
         StringBuilder sb = new StringBuilder();
         for (String p : parts) {
             if (p.isEmpty()) {
