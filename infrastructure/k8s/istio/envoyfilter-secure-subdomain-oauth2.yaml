@@ -148,6 +148,21 @@ spec:
                   headers:replace("x-auth-request-email", x_email)
                 end
 
+                -- Back-compat: many upstream services expect JWT-derived headers set by the gateway.
+                -- Normally the jwt_authn filter maps claims -> x-jwt-* headers, but that depends on
+                -- a Bearer token being present and validated.
+                --
+                -- To avoid hard failures (e.g. profile-service requires x-jwt-sub), synthesize
+                -- x-jwt-sub from oauth2-proxy's auth response when available.
+                --
+                -- NOTE: In our oauth2-proxy deployment we set --oidc-email-claim=sub, so the
+                -- x-auth-request-email header is stable and aligns to an OIDC subject identifier.
+                if x_email ~= nil and x_email ~= "" then
+                  headers:replace("x-jwt-sub", x_email)
+                elseif x_user ~= nil and x_user ~= "" then
+                  headers:replace("x-jwt-sub", x_user)
+                end
+
                 local x_preferred = resp_headers["x-auth-request-preferred-username"]
                 if x_preferred ~= nil then
                   headers:replace("x-auth-request-preferred-username", x_preferred)

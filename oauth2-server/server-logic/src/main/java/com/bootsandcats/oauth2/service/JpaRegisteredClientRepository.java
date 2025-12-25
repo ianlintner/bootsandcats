@@ -9,7 +9,6 @@ import org.springframework.security.jackson2.SecurityJackson2Modules;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.jackson2.OAuth2AuthorizationServerJackson2Module;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
@@ -17,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.bootsandcats.oauth2.model.RegisteredClientEntity;
+import com.bootsandcats.oauth2.service.ClientStore;
 import com.bootsandcats.oauth2.repository.RegisteredClientJpaRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.Module;
@@ -24,7 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 @Service
-public class JpaRegisteredClientRepository implements RegisteredClientRepository {
+public class JpaRegisteredClientRepository implements ClientStore {
 
     private final RegisteredClientJpaRepository registeredClientJpaRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -56,6 +56,18 @@ public class JpaRegisteredClientRepository implements RegisteredClientRepository
                 .findByClientId(clientId)
                 .map(this::toObject)
                 .orElse(null);
+    }
+
+    @Override
+    public List<RegisteredClient> findAllClients() {
+        return this.registeredClientJpaRepository.findAll().stream()
+                .map(this::toObject)
+                .toList();
+    }
+
+    @Override
+    public void deleteByClientId(String clientId) {
+        this.registeredClientJpaRepository.deleteByClientId(clientId);
     }
 
     private RegisteredClientEntity toEntity(RegisteredClient registeredClient) {
