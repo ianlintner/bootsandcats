@@ -38,6 +38,8 @@ spec:
             local OAUTH2_PROXY_CLUSTER = "outbound|4180||oauth2-proxy.aks-istio-ingress.svc.cluster.local"
             local OAUTH2_PREFIX = "/_oauth2"
             local OAUTH2_AUTH_PATH = OAUTH2_PREFIX .. "/auth"
+            local METADATA_NAMESPACE = "oauth2_proxy_auth"
+            local METADATA_SET_COOKIE_KEY = "set-cookie"
 
             local function starts_with(str, prefix)
               return str ~= nil and string.sub(str, 1, string.len(prefix)) == prefix
@@ -83,8 +85,9 @@ spec:
 
               local authority = headers:get(":authority") or ""
               local path = headers:get(":path") or "/"
-              local proto = headers:get("x-forwarded-proto") or "https"
+              local proto = headers:get(":scheme") or headers:get("x-forwarded-proto") or "https"
               local cookie = headers:get("cookie")
+              local inbound_authorization = headers:get("authorization")
 
               local original_url = proto .. "://" .. authority .. path
 
@@ -104,14 +107,31 @@ spec:
                 auth_headers["cookie"] = cookie
               end
 
+              if inbound_authorization ~= nil then
+                auth_headers["authorization"] = inbound_authorization
+              end
+
               local resp_headers, _ = request_handle:httpCall(
                 OAUTH2_PROXY_CLUSTER,
                 auth_headers,
                 nil,
                 5000)
 
+              if resp_headers == nil then
+                request_handle:respond({
+                  [":status"] = "503",
+                }, "")
+                return
+              end
+
               local status = resp_headers[":status"] or ""
               if status == "202" then
+                -- If oauth2-proxy refreshed the session cookie during /auth, forward it.
+                local set_cookie = resp_headers["set-cookie"]
+                if set_cookie ~= nil then
+                  request_handle:streamInfo():dynamicMetadata():set(METADATA_NAMESPACE, METADATA_SET_COOKIE_KEY, set_cookie)
+                end
+
                 -- On success, copy selected auth headers from oauth2-proxy into the upstream request.
                 local authorization = resp_headers["authorization"]
                 if authorization ~= nil then
@@ -136,12 +156,38 @@ spec:
                 return
               end
 
-              -- Unauthorized -> redirect to oauth2-proxy sign-in.
-              local rd = url_encode(original_url)
-              local location = proto .. "://" .. authority .. OAUTH2_PREFIX .. "/start?rd=" .. rd
-              request_handle:respond({
-                [":status"] = "302",
-                ["location"] = location,
-              }, "")
+              if status == "401" then
+                -- Unauthorized -> redirect to oauth2-proxy sign-in.
+                local rd = url_encode(original_url)
+                local location = proto .. "://" .. authority .. OAUTH2_PREFIX .. "/start?rd=" .. rd
+                request_handle:respond({
+                  [":status"] = "302",
+                  ["location"] = location,
+                }, "")
+                return
+              end
+
+              -- For anything else (e.g., 403, 5xx), return the status from oauth2-proxy.
+              local www_authenticate = resp_headers["www-authenticate"]
+              local out_headers = {
+                [":status"] = status,
+              }
+              if www_authenticate ~= nil then
+                out_headers["www-authenticate"] = www_authenticate
+              end
+
+              request_handle:respond(out_headers, "")
+            end
+
+            function envoy_on_response(response_handle)
+              local md = response_handle:streamInfo():dynamicMetadata():get(METADATA_NAMESPACE)
+              if md == nil then
+                return
+              end
+
+              local set_cookie = md[METADATA_SET_COOKIE_KEY]
+              if set_cookie ~= nil then
+                response_handle:headers():add("set-cookie", set_cookie)
+              end
             end
 

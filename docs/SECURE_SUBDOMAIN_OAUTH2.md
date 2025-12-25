@@ -1,27 +1,30 @@
 # Secure Subdomain OAuth2 Configuration
 
-This configuration provides gateway-level OAuth2 authentication and JWT validation.
+This configuration provides gateway-level OAuth2 authentication (via `oauth2-proxy`) and JWT validation.
 
 OAuth2 enforcement is **default-on** at the Istio ingress gateway for `*.cat-herding.net` and subdomains.
 
 ## Overview
 
 Traffic to hosts you explicitly opt in is protected by:
-- **OAuth2 Authorization Code Flow** with PKCE
+
+- **OAuth2 Authorization Code Flow** with PKCE (handled by `oauth2-proxy`)
 - **JWT validation** and claim extraction
 - **Shared session cookies** across all secure subdomains
 
 ## How It Works
 
 1. **Gateway-Level Protection**: EnvoyFilters are applied at the Istio ingress gateway level.
-2. **Single OAuth2 Client**: One client (`secure-subdomain-client`) handles authentication for all subdomains.
-3. **Redirect URIs must be registered**: Spring Authorization Server requires redirect URIs to match exactly.
-  - Because the gateway computes the callback as `https://<public-host>/_oauth2/callback`, each protected host must be listed as an allowed redirect URI for `secure-subdomain-client`.
-4. **Shared Cookies (apex)**: Session cookies are set with `domain: .cat-herding.net` so a successful login can be reused across other subdomains.
+1. **Single OAuth2 Client**: One client (`secure-subdomain-client`) handles authentication for all subdomains.
+1. **Redirect URIs must be registered**: Spring Authorization Server requires redirect URIs to match exactly.
+
+    - With `oauth2-proxy` the callback is configured explicitly (currently: `https://oauth2.cat-herding.net/_oauth2/callback`), so that exact redirect URI must be allowlisted for `secure-subdomain-client`.
+
+1. **Shared Cookies (apex)**: Session cookies are set with `domain: .cat-herding.net` so a successful login can be reused across other subdomains.
 
 ### Exclusions
 
-If you need to allow unauthenticated access for specific endpoints (e.g., Kubernetes probes), exclusions are handled via `pass_through_matcher` in the gateway OAuth2 filter.
+If you need to allow unauthenticated access for specific endpoints (e.g., Kubernetes probes), exclusions are handled in the gateway Lua filter (see `should_skip(...)` in `infrastructure/k8s/istio/envoyfilter-secure-subdomain-oauth2.yaml`).
 
 ## Setup Instructions
 
@@ -40,6 +43,7 @@ export PGPASSWORD="your-password"
 ```
 
 This script will:
+
 - Create the `secure-subdomain-client` in the OAuth2 database
 - Generate secure random secrets for client authentication and HMAC
 - Display the secrets you need to save
@@ -54,36 +58,19 @@ This script will:
 Apply the manifests that:
 
 - Pull `secure-subdomain-client-secret` and `secure-subdomain-oauth-hmac-secret` from Key Vault `inker-kv`
-- Render the Envoy SDS files into a Kubernetes Secret `secure-subdomain-oauth-sds`
+- Deploy `oauth2-proxy` in the ingress namespace and mount the secrets via CSI
 
 ```bash
 kubectl apply -k infrastructure/k8s/aks-istio-ingress/
 ```
 
-### 3. Mount the rendered SDS secret into the ingress gateway
-
-Envoy is configured to read these files:
-
-- `/etc/istio/oauth2/secure-subdomain-oauth-token.yaml`
-- `/etc/istio/oauth2/secure-subdomain-oauth-hmac.yaml`
-
-Mount the Secret `secure-subdomain-oauth-sds` into the ingress gateway at `/etc/istio/oauth2`.
-
-A template patch is provided:
-
-- `infrastructure/k8s/aks-istio-ingress/patch-ingressgateway-mount-secure-subdomain-oauth-sds.yaml`
-
-If your AKS-managed ingress gateway Deployment name differs, update `metadata.name` in the patch.
-
-After patching, restart the ingress gateway pods so Envoy re-reads the SDS files.
-
-### 4. Apply the configuration
+### 3. Apply the configuration
 
 ```bash
 kubectl apply -k infrastructure/k8s/istio/
 ```
 
-### 5. Verify the setup
+### 4. Verify the setup
 
 Deploy an app and opt it in (example for a secure host):
 
@@ -112,28 +99,22 @@ Access `https://myapp.cat-herding.net` - you'll be automatically redirected to O
 
 ### EnvoyFilters
 
-1. **envoyfilter-secure-subdomain-oauth2.yaml**
-   - Applied to: Istio ingress gateway
-  - Matches: `*.cat-herding.net` (default-on, with explicit pass-through exclusions)
-   - Provides: OAuth2 authorization code flow, session management
+- `envoyfilter-secure-subdomain-oauth2.yaml`: Gateway-wide auth enforcement (Lua `auth_request` to `oauth2-proxy` via `/_oauth2/auth`, redirects to `/_oauth2/start` on 401).
 
-2. **envoyfilter-secure-subdomain-jwt.yaml**
-   - Applied to: Istio ingress gateway
-  - Matches: `*.cat-herding.net` (default-on, with explicit pass-through exclusions)
-   - Provides: JWT validation, claim extraction to headers
+- `envoyfilter-secure-subdomain-jwt.yaml`: Gateway-wide JWT validation + claim extraction to headers.
 
 The previous opt-in allowlist EnvoyFilter has been removed in favor of default-on gateway enforcement.
 
 ### OAuth2 Flow
 
 1. User accesses `https://myapp.cat-herding.net/some-path`
-2. Envoy OAuth2 filter checks for valid session cookie
-3. If no valid session, redirects to `https://oauth2.cat-herding.net/oauth2/authorize`
-4. User authenticates and is redirected back to `https://myapp.cat-herding.net/_oauth2/callback`
-5. Envoy exchanges authorization code for access token
-6. Envoy sets session cookies (shared across all `*.cat-herding.net`)
-7. User is redirected to original path with Bearer token in header
-8. JWT filter validates token and extracts claims to headers:
+1. Gateway Lua filter calls `https://<host>/_oauth2/auth` (routed to `oauth2-proxy`)
+1. If unauthenticated, gateway redirects to `https://<host>/_oauth2/start?rd=<original_url>`
+1. `oauth2-proxy` initiates login at `https://oauth2.cat-herding.net/oauth2/authorize`
+1. After login, `oauth2-proxy` handles the callback at `https://oauth2.cat-herding.net/_oauth2/callback`
+1. `oauth2-proxy` sets session cookies (shared across all `*.cat-herding.net`) and redirects to the original URL
+1. On subsequent requests, `oauth2-proxy` returns `202` for `/_oauth2/auth` and supplies `Authorization: Bearer <access_token>` to the gateway
+1. JWT filter validates token and extracts claims to headers:
    - `x-jwt-sub`: User ID
    - `x-jwt-username`: Username
    - `x-jwt-email`: Email
@@ -145,15 +126,14 @@ The previous opt-in allowlist EnvoyFilter has been removed in favor of default-o
 
 - **Cookie Domain**: `.cat-herding.net` (note the leading dot for subdomain sharing)
 - **Cookie Names**:
-  - `_secure_session`: Bearer token
-  - `_secure_oauth_hmac`: HMAC for token validation
-  - `_secure_oauth_expires`: Expiration timestamp
+  - `_secure_session`: oauth2-proxy session cookie (and an additional CSRF cookie may be set during login)
 - **Session Duration**: 15 minutes (900s)
 - **Same-Site Policy**: LAX
 
 ## Health Check Exemptions
 
 The following paths bypass OAuth2 authentication:
+
 - `/actuator/*`
 - `/health`
 - `/healthz`
@@ -162,11 +142,8 @@ The following paths bypass OAuth2 authentication:
 ## Logout
 
 Users can logout from any secure subdomain by visiting:
-```
-https://<any-subdomain>.cat-herding.net/_oauth2/logout
-```
 
-This will clear all session cookies and redirect to the OAuth2 server logout endpoint.
+`https://<any-subdomain>.cat-herding.net/_oauth2/sign_out`
 
 ## Troubleshooting
 
@@ -192,6 +169,7 @@ psql -h $DB_HOST -U oauth2user -d oauth2db -c \
 ### Debug JWT Validation
 
 Use the diagnostic script:
+
 ```bash
 ./scripts/diagnose-jwt-validation.sh
 ```
@@ -209,15 +187,16 @@ Use the diagnostic script:
 To add a new app under `*.cat-herding.net`:
 
 1. **Deploy your application** to Kubernetes
-2. **Create a VirtualService** pointing to `<yourapp>.cat-herding.net`
-3. **Register the redirect URI** for the unified gateway client:
-  - Add `https://<yourapp>.cat-herding.net/_oauth2/callback` (and optionally `/_oauth2/logout`) to the `secure-subdomain-client` in the OAuth2 database.
+1. **Create a VirtualService** pointing to `<yourapp>.cat-herding.net`
+1. Ensure the host routes `/_oauth2/*` to `oauth2-proxy` (this repo’s `infrastructure/k8s/istio/virtualservices.yaml` already does this for the built-in apps).
 
-   If you're running the `oauth2-server` from this repo, the application will reconcile the
-   `secure-subdomain-client` configuration on startup (including redirect and post-logout URIs)
-   even when `oauth2.preserve-client-secrets=true`. After updating the allowlist of hosts,
-   restart the oauth2-server deployment and confirm you see a log like:
-   - `Reconciling OAuth client 'secure-subdomain-client' configuration in database ...`
-4. **That's it!** No per-service EnvoyFilter is required.
+If you're running the `oauth2-server` from this repo, the application will reconcile the
+`secure-subdomain-client` configuration on startup (including redirect and post-logout URIs)
+even when `oauth2.preserve-client-secrets=true`. After updating redirect/callback settings,
+restart the oauth2-server deployment and confirm you see a log like:
+
+- `Reconciling OAuth client 'secure-subdomain-client' configuration in database ...`
+
+1. **That's it!** No per-service EnvoyFilter is required.
 
 The gateway-level filters will automatically protect your app.
