@@ -68,6 +68,10 @@ spec:
         - --cookie-name=_secure_session
         - --cookie-secure=true
         - --cookie-samesite=lax
+        # Access tokens for secure-subdomain-client are short-lived. Refresh the oauth2-proxy
+        # session periodically so it can use the refresh token to mint a fresh access token
+        # before the upstream sees an expired JWT.
+        - --cookie-refresh=10m
         # Our Authorization Server's /userinfo currently returns 401 for oauth2-proxy's bearer call.
         # Avoid the profile/userinfo fetch entirely and use the stable OIDC `sub` claim instead.
         # (We allow any domain anyway via --email-domain=*.)
