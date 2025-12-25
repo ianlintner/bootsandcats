@@ -88,16 +88,19 @@ spec:
             end
 
             function envoy_on_request(request_handle)
-              local headers = request_handle:headers()
-              if should_skip(headers) then
+              -- IMPORTANT: do not hold on to the request headers handle across httpCall().
+              -- Envoy's Lua filter yields during httpCall, and using previously captured
+              -- HeaderMap objects after that can trigger "object used outside of proper scope".
+              local req_headers = request_handle:headers()
+              if should_skip(req_headers) then
                 return
               end
 
-              local authority = headers:get(":authority") or ""
-              local path = headers:get(":path") or "/"
-              local proto = headers:get(":scheme") or headers:get("x-forwarded-proto") or "https"
-              local cookie = headers:get("cookie")
-              local inbound_authorization = headers:get("authorization")
+              local authority = req_headers:get(":authority") or ""
+              local path = req_headers:get(":path") or "/"
+              local proto = req_headers:get(":scheme") or req_headers:get("x-forwarded-proto") or "https"
+              local cookie = req_headers:get("cookie")
+              local inbound_authorization = req_headers:get("authorization")
 
               local original_url = proto .. "://" .. authority .. path
 
@@ -136,6 +139,9 @@ spec:
 
               local status = resp_headers[":status"] or ""
               if status == "202" then
+                -- Re-acquire the request headers handle after httpCall().
+                local headers = request_handle:headers()
+
                 -- If oauth2-proxy refreshed the session cookie during /auth, forward it.
                 local set_cookie = resp_headers["set-cookie"] or resp_headers["Set-Cookie"]
                 if set_cookie ~= nil then
