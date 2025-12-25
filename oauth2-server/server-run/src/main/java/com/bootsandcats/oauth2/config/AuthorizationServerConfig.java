@@ -440,23 +440,26 @@ public class AuthorizationServerConfig {
                 try {
                     requestedRedirect =
                             UriComponentsBuilder.fromUriString(requestedRedirectUri).build();
-                                } catch (IllegalArgumentException ex) {
+                } catch (IllegalArgumentException ex) {
                     log.debug("Failed to parse requested redirect URI", ex);
                 }
 
                 if (requestedRedirect == null || requestedRedirect.getFragment() != null) {
-                                        if (diagnosticsEnabled) {
-                                                log.warn(
-                                                                "[diag] invalid redirect_uri: parse/fragment failure clientId={} redirectUri={} fragmentPresent={}",
-                                                                registeredClient != null ? registeredClient.getClientId() : "(unknown)",
-                                                                requestedRedirectUri,
-                                                                requestedRedirect != null && requestedRedirect.getFragment() != null);
-                                        }
+                    if (diagnosticsEnabled) {
+                        log.warn(
+                                "[diag] invalid redirect_uri: parse/fragment failure clientId={} redirectUri={} fragmentPresent={}",
+                                registeredClient != null
+                                        ? registeredClient.getClientId()
+                                        : "(unknown)",
+                                requestedRedirectUri,
+                                requestedRedirect != null
+                                        && requestedRedirect.getFragment() != null);
+                    }
                     throwRedirectError(
                             OAuth2ErrorCodes.INVALID_REQUEST,
                             OAuth2ParameterNames.REDIRECT_URI,
                             authorizationCodeRequestAuthentication);
-                                        return;
+                    return;
                 }
 
                 UriComponents requestedWithoutQuery =
@@ -490,69 +493,84 @@ public class AuthorizationServerConfig {
                 }
 
                 if (!validRedirect) {
-                                        if (diagnosticsEnabled) {
-                                                // redirect_uri is not a secret, but it often contains query parameters (e.g. rd=...)
-                                                // which can be noisy. Log without query/fragment so we can compare apples-to-apples.
-                                                String requestedNoQuery = requestedWithoutQuery.toUriString();
-                                                String requestedScheme = requestedWithoutQuery.getScheme();
-                                                String requestedHost = requestedWithoutQuery.getHost();
-                                                Integer requestedPortNoQuery = requestedWithoutQuery.getPort();
-                                                String requestedPath = normalizePath(requestedWithoutQuery.getPath());
+                    if (diagnosticsEnabled) {
+                        // redirect_uri is not a secret, but it often contains query parameters
+                        // (e.g. rd=...)
+                        // which can be noisy. Log without query/fragment so we can compare
+                        // apples-to-apples.
+                        String requestedNoQuery = requestedWithoutQuery.toUriString();
+                        String requestedScheme = requestedWithoutQuery.getScheme();
+                        String requestedHost = requestedWithoutQuery.getHost();
+                        Integer requestedPortNoQuery = requestedWithoutQuery.getPort();
+                        String requestedPath = normalizePath(requestedWithoutQuery.getPath());
 
-                                                log.warn(
-                                                                "[diag] invalid redirect_uri (no match) clientId={} requested={} (scheme={}, host={}, port={}, path={}) registeredRedirectUris={}",
-                                                                registeredClient != null ? registeredClient.getClientId() : "(unknown)",
-                                                                requestedNoQuery,
-                                                                requestedScheme,
-                                                                requestedHost,
-                                                                requestedPortNoQuery,
-                                                                requestedPath,
-                                                                registeredClient != null
-                                                                                ? registeredClient.getRedirectUris().stream()
-                                                                                                .map(
-                                                                                                                uri -> {
-                                                                                                                        try {
-                                                                                                                                return UriComponentsBuilder
-                                                                                                                                                .fromUriString(uri)
-                                                                                                                                                .replaceQuery(null)
-                                                                                                                                                .fragment(null)
-                                                                                                                                                .build()
-                                                                                                                                                .toUriString();
-                                                                                                                        } catch (IllegalArgumentException ex) {
-                                                                                                                                return "(unparseable):" + uri;
-                                                                                                                        }
-                                                                                                                })
-                                                                                                .collect(java.util.stream.Collectors.toList())
-                                                                                : java.util.Collections.emptyList());
+                        log.warn(
+                                "[diag] invalid redirect_uri (no match) clientId={} requested={} (scheme={}, host={}, port={}, path={}) registeredRedirectUris={}",
+                                registeredClient != null
+                                        ? registeredClient.getClientId()
+                                        : "(unknown)",
+                                requestedNoQuery,
+                                requestedScheme,
+                                requestedHost,
+                                requestedPortNoQuery,
+                                requestedPath,
+                                registeredClient != null
+                                        ? registeredClient.getRedirectUris().stream()
+                                                .map(
+                                                        uri -> {
+                                                            try {
+                                                                return UriComponentsBuilder
+                                                                        .fromUriString(uri)
+                                                                        .replaceQuery(null)
+                                                                        .fragment(null)
+                                                                        .build()
+                                                                        .toUriString();
+                                                            } catch (IllegalArgumentException ex) {
+                                                                return "(unparseable):" + uri;
+                                                            }
+                                                        })
+                                                .collect(java.util.stream.Collectors.toList())
+                                        : java.util.Collections.emptyList());
 
-                                                if (registeredClient != null) {
-                                                        registeredClient.getRedirectUris().forEach(
-                                                                        registeredUri -> {
-                                                                                try {
-                                                                                        UriComponents reg =
-                                                                                                        UriComponentsBuilder.fromUriString(registeredUri)
-                                                                                                                        .replaceQuery(null)
-                                                                                                                        .fragment(null)
-                                                                                                                        .build();
-                                                                                        log.debug(
-                                                                                                        "[diag] redirect_uri candidate clientId={} registered={} match?{} schemeOk?{} hostOk?{} portOk?{} pathOk?{}",
-                                                                                                        registeredClient.getClientId(),
-                                                                                                        reg.toUriString(),
-                                                                                                        redirectWithoutQueryMatches(reg, requestedWithoutQuery),
-                                                                                                        Objects.equals(reg.getScheme(), requestedScheme),
-                                                                                                        Objects.equals(reg.getHost(), requestedHost),
-                                                                                                        Objects.equals(reg.getPort(), requestedPortNoQuery),
-                                                                                                        Objects.equals(normalizePath(reg.getPath()), requestedPath));
-                                                                                } catch (IllegalArgumentException ex) {
-                                                                                        log.debug(
-                                                                                                        "[diag] redirect_uri candidate clientId={} registered={} (unparseable)",
-                                                                                                        registeredClient.getClientId(),
-                                                                                                        registeredUri,
-                                                                                                        ex);
-                                                                                }
-                                                                        });
+                        if (registeredClient != null) {
+                            registeredClient
+                                    .getRedirectUris()
+                                    .forEach(
+                                            registeredUri -> {
+                                                try {
+                                                    UriComponents reg =
+                                                            UriComponentsBuilder.fromUriString(
+                                                                            registeredUri)
+                                                                    .replaceQuery(null)
+                                                                    .fragment(null)
+                                                                    .build();
+                                                    log.debug(
+                                                            "[diag] redirect_uri candidate clientId={} registered={} match?{} schemeOk?{} hostOk?{} portOk?{} pathOk?{}",
+                                                            registeredClient.getClientId(),
+                                                            reg.toUriString(),
+                                                            redirectWithoutQueryMatches(
+                                                                    reg, requestedWithoutQuery),
+                                                            Objects.equals(
+                                                                    reg.getScheme(),
+                                                                    requestedScheme),
+                                                            Objects.equals(
+                                                                    reg.getHost(), requestedHost),
+                                                            Objects.equals(
+                                                                    reg.getPort(),
+                                                                    requestedPortNoQuery),
+                                                            Objects.equals(
+                                                                    normalizePath(reg.getPath()),
+                                                                    requestedPath));
+                                                } catch (IllegalArgumentException ex) {
+                                                    log.debug(
+                                                            "[diag] redirect_uri candidate clientId={} registered={} (unparseable)",
+                                                            registeredClient.getClientId(),
+                                                            registeredUri,
+                                                            ex);
                                                 }
-                                        }
+                                            });
+                        }
+                    }
                     throwRedirectError(
                             OAuth2ErrorCodes.INVALID_REQUEST,
                             OAuth2ParameterNames.REDIRECT_URI,
