@@ -84,33 +84,39 @@ public class TokenDiagnosticsFilter extends OncePerRequestFilter {
                         ? basicCredentials.clientId
                         : safeParam(request, "client_id");
 
-        String maskedSecret =
-                basicCredentials != null
-                        ? MaskingUtils.maskKeepEnds(
-                                basicCredentials.secret, maskKeepFirst, maskKeepLast)
-                        : null;
+        String bodyClientSecret = safeParam(request, "client_secret");
+        String effectiveSecret =
+            basicCredentials != null
+                ? basicCredentials.secret
+                : (StringUtils.hasText(bodyClientSecret) ? bodyClientSecret : null);
+        String secretSource =
+            basicCredentials != null
+                ? "basic"
+                : (StringUtils.hasText(bodyClientSecret) ? "body" : "none");
 
-        Integer secretLen =
-            basicCredentials != null && basicCredentials.secret != null
-                ? basicCredentials.secret.length()
+        String maskedSecret =
+            StringUtils.hasText(effectiveSecret)
+                ? MaskingUtils.maskKeepEnds(effectiveSecret, maskKeepFirst, maskKeepLast)
                 : null;
+
+        Integer secretLen = StringUtils.hasText(effectiveSecret) ? effectiveSecret.length() : null;
         String secretSha256 =
-            basicCredentials != null && basicCredentials.secret != null
-                ? MaskingUtils.sha256Hex(basicCredentials.secret)
-                : null;
+            StringUtils.hasText(effectiveSecret) ? MaskingUtils.sha256Hex(effectiveSecret) : null;
 
         String grantType = safeParam(request, "grant_type");
 
         log.debug(
-            "[token] method={} uri={} clientId={} grantType={} auth=basic?{} secret={} secretLen={} secretSha256={} params={} remote={} xff={} ua={} reqId={} traceparent={}",
+                "[token] method={} uri={} contentType={} clientId={} grantType={} auth=basic?{} secretSource={} secret={} secretLen={} secretSha256={} params={} remote={} xff={} ua={} reqId={} traceparent={}",
                 request.getMethod(),
                 request.getRequestURI(),
+                headerOrDash(request, "Content-Type"),
                 StringUtils.hasText(clientId) ? clientId : "(unknown)",
                 StringUtils.hasText(grantType) ? grantType : "(n/a)",
                 basicCredentials != null,
+                secretSource,
                 maskedSecret != null ? maskedSecret : "(n/a)",
-            secretLen != null ? secretLen : -1,
-            StringUtils.hasText(secretSha256) ? secretSha256 : "-",
+                secretLen != null ? secretLen : -1,
+                StringUtils.hasText(secretSha256) ? secretSha256 : "-",
                 flattenedParams,
                 request.getRemoteAddr(),
                 headerOrDash(request, "X-Forwarded-For"),
