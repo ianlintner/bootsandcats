@@ -1,0 +1,58 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: oauth2denyrules.oauth.bootsandcats.com
+spec:
+  group: oauth.bootsandcats.com
+  scope: Namespaced
+  names:
+    kind: OAuth2DenyRule
+    plural: oauth2denyrules
+    singular: oauth2denyrule
+    shortNames:
+      - odr
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - matchField
+                - matchType
+                - pattern
+              properties:
+                enabled:
+                  type: boolean
+                provider:
+                  type: string
+                matchField:
+                  type: string
+                  enum: ["EMAIL", "USERNAME", "PROVIDER_ID"]
+                matchType:
+                  type: string
+                  enum: ["EXACT", "REGEX"]
+                pattern:
+                  type: string
+                normalizedValue:
+                  type: string
+                reason:
+                  type: string
+                createdBy:
+                  type: string
+                createdAt:
+                  type: string
+                  format: date-time
+                updatedAt:
+                  type: string
+                  format: date-time
+            status:
+              type: object
+              properties:
+                observedGeneration:
+                  type: integer
+                  format: int64

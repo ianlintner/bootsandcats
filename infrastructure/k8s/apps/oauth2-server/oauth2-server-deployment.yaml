@@ -99,11 +99,21 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
         - name: SPRING_PROFILES_ACTIVE
           value: "prod,prod-no-flyway"
         # Store registered OAuth2 clients in the OAuth2Client CRD.
         - name: OAUTH2_CLIENTS_STORE
           value: "kubernetes"
+        # Store deny rules in the OAuth2DenyRule CRD.
+        - name: OAUTH2_DENY_STORE
+          value: "kubernetes"
+        # Emit security audit events as Kubernetes Events (best-effort).
+        - name: OAUTH2_AUDIT_KUBERNETES_EVENTS_ENABLED
+          value: "true"
         # Safe OAuth2 diagnostics (masked): enable targeted DEBUG logs without printing raw secrets.
         - name: OAUTH2_DIAGNOSTICS_ENABLED
           value: "true"

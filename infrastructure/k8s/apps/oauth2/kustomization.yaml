@@ -4,3 +4,4 @@ kind: Kustomization
 # Cluster-wide custom resource definitions and related primitives.
 resources:
   - oauth2client-crd.yaml
+  - oauth2denyrule-crd.yaml

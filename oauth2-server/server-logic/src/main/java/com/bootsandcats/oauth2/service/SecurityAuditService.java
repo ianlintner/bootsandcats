@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.bootsandcats.oauth2.events.AuthEventPublisher;
+import com.bootsandcats.oauth2.k8s.KubernetesAuditEventEmitter;
 import com.bootsandcats.oauth2.model.AuditEventResult;
 import com.bootsandcats.oauth2.model.AuditEventType;
 import com.bootsandcats.oauth2.model.SecurityAuditEvent;
@@ -37,14 +39,17 @@ public class SecurityAuditService {
     private final SecurityAuditEventRepository auditEventRepository;
     private final ObjectMapper objectMapper;
     private final AuthEventPublisher authEventPublisher;
+    private final ObjectProvider<KubernetesAuditEventEmitter> kubernetesAuditEventEmitter;
 
     public SecurityAuditService(
             SecurityAuditEventRepository auditEventRepository,
             ObjectMapper objectMapper,
-            AuthEventPublisher authEventPublisher) {
+            AuthEventPublisher authEventPublisher,
+            ObjectProvider<KubernetesAuditEventEmitter> kubernetesAuditEventEmitter) {
         this.auditEventRepository = auditEventRepository;
         this.objectMapper = objectMapper;
         this.authEventPublisher = authEventPublisher;
+        this.kubernetesAuditEventEmitter = kubernetesAuditEventEmitter;
     }
 
     /**
@@ -94,6 +99,20 @@ public class SecurityAuditService {
             // Publishing failures should not interrupt auth flows
             log.warn(
                     "Auth event publishing failed for event {} of type {}",
+                    event.getEventId(),
+                    event.getEventType(),
+                    e);
+        }
+
+        try {
+            KubernetesAuditEventEmitter emitter = kubernetesAuditEventEmitter.getIfAvailable();
+            if (emitter != null) {
+                emitter.publish(event);
+            }
+        } catch (Exception e) {
+            // Best-effort: Kubernetes Events are an optional sink.
+            log.debug(
+                    "Kubernetes audit event emission failed for event {} of type {}",
                     event.getEventId(),
                     event.getEventType(),
                     e);
