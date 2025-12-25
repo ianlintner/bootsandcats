@@ -203,20 +203,6 @@ spec:
                   headers:replace("x-auth-request-preferred-username", x_preferred)
                 end
 
-                -- Debugging aid: log what oauth2-proxy returned for /api/profile.
-                -- (This helps validate we are actually getting an access token and/or x-auth-request-* headers.)
-                if starts_with(path, "/api/profile") then
-                  request_handle:logInfo(
-                    "oauth2-proxy /auth 202: authz="
-                      .. tostring(authorization ~= nil and authorization ~= "")
-                      .. " access_token="
-                      .. tostring(access_token ~= nil and access_token ~= "")
-                      .. " x_user="
-                      .. tostring(x_user ~= nil and x_user ~= "")
-                      .. " x_email="
-                      .. tostring(x_email ~= nil and x_email ~= ""))
-                end
-
                 return
               end
 
