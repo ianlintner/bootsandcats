@@ -251,6 +251,15 @@ public class DataInitializer {
             return;
         }
 
+        if (diagnosticsEnabled) {
+            log.warn(
+                    "[diag] secure-subdomain-client secret mismatch: newSecret(masked)={} newSecret(sha256)={} storedSecret(masked)={}",
+                    MaskingUtils.maskKeepEnds(
+                            rawSecret, diagnosticsMaskKeepFirst, diagnosticsMaskKeepLast),
+                    MaskingUtils.sha256Hex(rawSecret),
+                    MaskingUtils.maskKeepEnds(existing.getClientSecret(), 12, 6));
+        }
+
         RegisteredClient updatedSecretOnly =
                 RegisteredClient.from(existing)
                         .clientSecret(passwordEncoder.encode(rawSecret))
