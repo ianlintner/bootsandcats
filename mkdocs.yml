@@ -37,7 +37,11 @@ theme:
 
 plugins:
   - search
-  - mermaid2
+
+extra_javascript:
+  # Mermaid is client-rendered; this enables ```mermaid fences to render as diagrams.
+  - https://unpkg.com/mermaid@10.9.1/dist/mermaid.min.js
+  - javascripts/mermaid-init.js
 
 markdown_extensions:
   - abbr
@@ -71,7 +75,8 @@ markdown_extensions:
       custom_fences:
         - name: mermaid
           class: mermaid
-          format: !!python/name:pymdownx.superfences.fence_code_format
+          # Render as <div class="mermaid">...</div> so Mermaid can transform it.
+          format: !!python/name:pymdownx.superfences.fence_div_format
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.tasklist:

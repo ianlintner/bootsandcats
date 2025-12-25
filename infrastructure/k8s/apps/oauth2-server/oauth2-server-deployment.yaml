@@ -19,6 +19,7 @@ spec:
       annotations:
         proxy.istio.io/config: '{ "holdApplicationUntilProxyStarts": true }'
     spec:
+      serviceAccountName: oauth2-server
       initContainers:
       # Run Flyway migrations before starting the application
       - name: flyway-migrate
@@ -93,8 +94,16 @@ spec:
           name: http
           protocol: TCP
         env:
+        # Used by the Kubernetes client store to default the namespace in-cluster.
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
         - name: SPRING_PROFILES_ACTIVE
           value: "prod,prod-no-flyway"
+        # Store registered OAuth2 clients in the OAuth2Client CRD.
+        - name: OAUTH2_CLIENTS_STORE
+          value: "kubernetes"
         # Safe OAuth2 diagnostics (masked): enable targeted DEBUG logs without printing raw secrets.
         - name: OAUTH2_DIAGNOSTICS_ENABLED
           value: "true"

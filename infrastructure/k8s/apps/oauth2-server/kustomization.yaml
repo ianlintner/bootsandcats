@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - oauth2-server-deployment.yaml
   - flyway-migration-job.yaml
+  - oauth2-server-serviceaccount-rbac.yaml
