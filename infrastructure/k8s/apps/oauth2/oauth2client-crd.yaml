@@ -1,0 +1,104 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: oauth2clients.oauth.bootsandcats.com
+spec:
+  group: oauth.bootsandcats.com
+  scope: Namespaced
+  names:
+    kind: OAuth2Client
+    plural: oauth2clients
+    singular: oauth2client
+    shortNames:
+      - oac
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - clientId
+                - registeredClientId
+              properties:
+                registeredClientId:
+                  type: string
+                clientId:
+                  type: string
+                clientName:
+                  type: string
+                clientIdIssuedAt:
+                  type: string
+                  format: date-time
+                clientSecretExpiresAt:
+                  type: string
+                  format: date-time
+                enabled:
+                  type: boolean
+                system:
+                  type: boolean
+                notes:
+                  type: string
+                encodedSecret:
+                  type: string
+                secretRef:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    key:
+                      type: string
+                clientAuthenticationMethods:
+                  type: array
+                  items:
+                    type: string
+                authorizationGrantTypes:
+                  type: array
+                  items:
+                    type: string
+                redirectUris:
+                  type: array
+                  items:
+                    type: string
+                postLogoutRedirectUris:
+                  type: array
+                  items:
+                    type: string
+                scopes:
+                  type: array
+                  items:
+                    type: string
+                clientSettings:
+                  type: object
+                  properties:
+                    requireProofKey:
+                      type: boolean
+                    requireAuthorizationConsent:
+                      type: boolean
+                tokenSettings:
+                  type: object
+                  properties:
+                    accessTokenTtl:
+                      type: string
+                    refreshTokenTtl:
+                      type: string
+                    authorizationCodeTtl:
+                      type: string
+                    reuseRefreshTokens:
+                      type: boolean
+            status:
+              type: object
+              properties:
+                observedGeneration:
+                  type: integer
+                  format: int64
+                secretHash:
+                  type: string
+                conditions:
+                  type: array
+                  items:
+                    type: string
