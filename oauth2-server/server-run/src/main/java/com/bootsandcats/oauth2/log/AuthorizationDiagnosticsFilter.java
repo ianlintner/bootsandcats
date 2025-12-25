@@ -25,8 +25,25 @@ public class AuthorizationDiagnosticsFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(AuthorizationDiagnosticsFilter.class);
 
+    private final boolean enabled;
+    private final int maskKeepFirst;
+    private final int maskKeepLast;
+
+    public AuthorizationDiagnosticsFilter(boolean enabled, int maskKeepFirst, int maskKeepLast) {
+        this.enabled = enabled;
+        this.maskKeepFirst = maskKeepFirst;
+        this.maskKeepLast = maskKeepLast;
+    }
+
+    public AuthorizationDiagnosticsFilter() {
+        this(false, 0, 0);
+    }
+
     @Override
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
+        if (!enabled) {
+            return true;
+        }
         String path = request.getRequestURI();
         return path == null || !path.startsWith("/oauth2/authorize");
     }
@@ -44,7 +61,7 @@ public class AuthorizationDiagnosticsFilter extends OncePerRequestFilter {
                         .collect(
                                 Collectors.toMap(
                                         Map.Entry::getKey,
-                                        e -> maskSensitive(String.join(",", e.getValue()))));
+                        e -> maskParam(e.getKey(), String.join(",", e.getValue()))));
 
         log.info(
                 "[authorize] method={} uri={} status(presend)=? principal={} params={} sessionId={}",
@@ -71,15 +88,26 @@ public class AuthorizationDiagnosticsFilter extends OncePerRequestFilter {
                 request.getRequestedSessionId());
     }
 
-    private String maskSensitive(String value) {
-        if (value == null) {
-            return null;
+    private String maskParam(String name, String value) {
+        if (name == null) {
+            return value;
         }
-        if (value.toLowerCase().contains("secret")
-                || value.toLowerCase().contains("token")
-                || value.toLowerCase().contains("assertion")) {
-            return "***";
+
+        String lower = name.toLowerCase();
+        // Parameters that are commonly sensitive even though they aren't called "secret".
+        boolean sensitive =
+                lower.contains("secret")
+                        || lower.contains("token")
+                        || lower.contains("assertion")
+                        || lower.equals("state")
+                        || lower.equals("nonce")
+                        || lower.equals("code")
+                        || lower.equals("code_verifier")
+                        || lower.equals("id_token_hint");
+        if (!sensitive) {
+            return value;
         }
-        return value;
+
+        return MaskingUtils.maskKeepEnds(value, maskKeepFirst, maskKeepLast);
     }
 }
