@@ -18,7 +18,11 @@ Traffic to hosts you explicitly opt in is protected by:
 1. **Single OAuth2 Client**: One client (`secure-subdomain-client`) handles authentication for all subdomains.
 1. **Redirect URIs must be registered**: Spring Authorization Server requires redirect URIs to match exactly.
 
-    - With `oauth2-proxy` the callback is configured explicitly (currently: `https://oauth2.cat-herding.net/_oauth2/callback`), so that exact redirect URI must be allowlisted for `secure-subdomain-client`.
+    - With `oauth2-proxy` (and no explicit `--redirect-url` set), the callback is computed from the incoming request host.
+    - This means `secure-subdomain-client` must allowlist every protected host's callback:
+      - `https://profile.cat-herding.net/_oauth2/callback`
+      - `https://chat.cat-herding.net/_oauth2/callback`
+      - etc.
 
 1. **Shared Cookies (apex)**: Session cookies are set with `domain: .cat-herding.net` so a successful login can be reused across other subdomains.
 
@@ -111,7 +115,7 @@ The previous opt-in allowlist EnvoyFilter has been removed in favor of default-o
 1. Gateway Lua filter calls `https://<host>/_oauth2/auth` (routed to `oauth2-proxy`)
 1. If unauthenticated, gateway redirects to `https://<host>/_oauth2/start?rd=<original_url>`
 1. `oauth2-proxy` initiates login at `https://oauth2.cat-herding.net/oauth2/authorize`
-1. After login, `oauth2-proxy` handles the callback at `https://oauth2.cat-herding.net/_oauth2/callback`
+1. After login, `oauth2-proxy` handles the callback at `https://<host>/_oauth2/callback`
 1. `oauth2-proxy` sets session cookies (shared across all `*.cat-herding.net`) and redirects to the original URL
 1. On subsequent requests, `oauth2-proxy` returns `202` for `/_oauth2/auth` and supplies `Authorization: Bearer <access_token>` to the gateway
 1. JWT filter validates token and extracts claims to headers:

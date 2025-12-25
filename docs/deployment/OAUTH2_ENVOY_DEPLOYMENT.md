@@ -1,41 +1,40 @@
-# OAuth2 Envoy Filter Deployment Summary
+# Gateway OAuth2 Deployment Summary (oauth2-proxy + Lua)
 
 **Status**: ✅ **CURRENT** (Unified gateway OAuth2; single client)
 
 ## What Was Implemented
 
-### 1. **Unified gateway Envoy OAuth2 filter**
-OAuth2 login is enforced at the **Istio ingress gateway** (not per-service) using Envoy's `envoy.filters.http.oauth2`.
+### 1. **Unified gateway OAuth2 enforcement**
+OAuth2 login is enforced at the **Istio ingress gateway** (not per-service) using a Lua `auth_request` pattern to `oauth2-proxy`.
 
 - **Single client**: `secure-subdomain-client`
 - **Callback** (computed from the incoming request host): `https://<public-host>.cat-herding.net/_oauth2/callback`
-- **Shared cookies (apex domain)**: `_secure_session`, `_secure_oauth_hmac`, `_secure_oauth_expires`
+- **Shared cookies (apex domain)**: `_secure_session`
 
 > Note: Spring Authorization Server requires **exact** redirect URI matches. That means the
 > `secure-subdomain-client` must have each protected host registered explicitly (no wildcards like
 > `https://*.cat-herding.net/...` or `http://localhost:*/...`). See `docs/SECURE_SUBDOMAIN_OAUTH2.md`.
 
 **Features**:
-- Full OAuth2 authorization code flow
-- JWT token exchange with backend server
-- Automatic cookie-based session management
-- HMAC-based token validation (SDS-mounted secrets)
-- Public path pass-through (health checks, static assets, API endpoints)
-- Logout support via `/_oauth2/logout`
+- Full OAuth2 authorization code flow (PKCE handled by `oauth2-proxy`)
+- Automatic cookie-based session management via `oauth2-proxy`
+- Public path pass-through (health checks, etc.)
+- Centralized auth enforcement for all protected `*.cat-herding.net` hosts
 
 ### 2. **Secrets Management**
-The gateway uses a single OAuth2 client secret + HMAC secret (for the unified client) delivered via SDS.
+OAuth2 secrets are handled by `oauth2-proxy` (not Envoy SDS):
 
-**Delivery**: SecretStore CSI Driver → gateway pod volume → SDS-rendered files under `/etc/istio/oauth2/*`.
+- `secure-subdomain-client-secret` is mounted from Azure Key Vault via SecretStore CSI.
+- `oauth2-proxy-cookie-secret` is a Kubernetes Secret (used to encrypt/sign the session cookie).
 
-### 3. **Database Migrations**
-Flyway migration `V12__align_oauth2_clients_for_envoy_filter.sql`:
-```sql
--- Updated redirect URIs to match Envoy callback path
-UPDATE oauth2_registered_client
-SET redirect_uris = 'https://profile.cat-herding.net/_oauth2/callback,...'
-WHERE client_id = 'profile-service';
-```
+### 3. **Redirect URI Management**
+Spring Authorization Server requires **exact** redirect URI matches.
+
+For the unified client (`secure-subdomain-client`), you must register each protected host's callback explicitly:
+
+- `https://profile.cat-herding.net/_oauth2/callback`
+- `https://chat.cat-herding.net/_oauth2/callback`
+- etc.
 
 ### 4. **Health Check Exemptions**
 Public endpoints that **bypass OAuth**:
@@ -66,10 +65,10 @@ kubectl apply -k infrastructure/k8s
 ## Key Files Modified
 
 ### Infrastructure
-- `infrastructure/k8s/istio/envoyfilter-secure-subdomain-oauth2.yaml` ← unified gateway OAuth2 enforcement
-- `infrastructure/k8s/istio/envoy-oauth2-sds-configmap-secure-subdomain.yaml` ← SDS config for the unified client
+- `infrastructure/k8s/istio/envoyfilter-secure-subdomain-oauth2.yaml` ← gateway Lua auth_request enforcement
+- `infrastructure/k8s/aks-istio-ingress/oauth2-proxy.yaml` ← oauth2-proxy Deployment/Service
 - `infrastructure/k8s/aks-istio-ingress/secret-provider-class-secure-subdomain-oauth.yaml` ← Key Vault integration
-- `infrastructure/k8s/aks-istio-ingress/secure-subdomain-oauth-sds-renderer.yaml` ← renders SDS secrets for the gateway
+- `infrastructure/k8s/istio/virtualservices.yaml` ← routes `/_oauth2/*` to oauth2-proxy per host
 
 ### Database
 - `oauth2-server/server-dao/.../V12__align_oauth2_clients_for_envoy_filter.sql` ← NEW migration
@@ -85,17 +84,17 @@ kubectl apply -k infrastructure/k8s
    ↓
 2. Azure Key Vault (secrets stored)
    ↓
-3. CSI Driver mounts /mnt/secrets-store in pods
+3. CSI Driver mounts /mnt/secrets-store into oauth2-proxy
    ↓
-4. SDS ConfigMap references mounted secret files
+4. Gateway Lua filter calls oauth2-proxy /_oauth2/auth (auth_request)
    ↓
-5. Envoy OAuth2 filter reads token/hmac via SDS
+5. oauth2-proxy redirects to the Authorization Server when unauthenticated
    ↓
-6. User login → Envoy exchanges code for JWT
+6. oauth2-proxy sets the session cookie on success
    ↓
-7. JWT stored in cookie, used for downstream requests
+7. Gateway forwards Authorization and x-auth-request-* headers upstream
    ↓
-8. RequestAuthentication validates JWT claims
+8. (Optional) jwt_authn validates Bearer token and maps claims to x-jwt-* headers
 ```
 
 ## Testing Results
