@@ -70,9 +70,7 @@ public class TokenDiagnosticsFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain)
+            HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
         Map<String, String> flattenedParams = flattenAndMask(request.getParameterMap());
@@ -86,22 +84,24 @@ public class TokenDiagnosticsFilter extends OncePerRequestFilter {
 
         String bodyClientSecret = safeParam(request, "client_secret");
         String effectiveSecret =
-            basicCredentials != null
-                ? basicCredentials.secret
-                : (StringUtils.hasText(bodyClientSecret) ? bodyClientSecret : null);
+                basicCredentials != null
+                        ? basicCredentials.secret
+                        : (StringUtils.hasText(bodyClientSecret) ? bodyClientSecret : null);
         String secretSource =
-            basicCredentials != null
-                ? "basic"
-                : (StringUtils.hasText(bodyClientSecret) ? "body" : "none");
+                basicCredentials != null
+                        ? "basic"
+                        : (StringUtils.hasText(bodyClientSecret) ? "body" : "none");
 
         String maskedSecret =
-            StringUtils.hasText(effectiveSecret)
-                ? MaskingUtils.maskKeepEnds(effectiveSecret, maskKeepFirst, maskKeepLast)
-                : null;
+                StringUtils.hasText(effectiveSecret)
+                        ? MaskingUtils.maskKeepEnds(effectiveSecret, maskKeepFirst, maskKeepLast)
+                        : null;
 
         Integer secretLen = StringUtils.hasText(effectiveSecret) ? effectiveSecret.length() : null;
         String secretSha256 =
-            StringUtils.hasText(effectiveSecret) ? MaskingUtils.sha256Hex(effectiveSecret) : null;
+                StringUtils.hasText(effectiveSecret)
+                        ? MaskingUtils.sha256Hex(effectiveSecret)
+                        : null;
 
         String grantType = safeParam(request, "grant_type");
 

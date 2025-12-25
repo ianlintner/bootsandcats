@@ -1,0 +1,105 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: oauth2-proxy
+  namespace: aks-istio-ingress
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oauth2-proxy
+  namespace: aks-istio-ingress
+  labels:
+    app: oauth2-proxy
+spec:
+  selector:
+    app: oauth2-proxy
+  ports:
+  - name: http
+    port: 4180
+    targetPort: 4180
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oauth2-proxy
+  namespace: aks-istio-ingress
+  labels:
+    app: oauth2-proxy
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: oauth2-proxy
+  template:
+    metadata:
+      labels:
+        app: oauth2-proxy
+    spec:
+      serviceAccountName: oauth2-proxy
+      containers:
+      - name: oauth2-proxy
+        image: quay.io/oauth2-proxy/oauth2-proxy:v7.13.0
+        imagePullPolicy: IfNotPresent
+        args:
+        - --http-address=0.0.0.0:4180
+        - --provider=oidc
+        - --oidc-issuer-url=https://oauth2.cat-herding.net
+        - --client-id=secure-subdomain-client
+        - --client-secret-file=/mnt/secrets-store/secure-subdomain-client-secret
+        - --cookie-secret-file=/mnt/secrets-store/secure-subdomain-oauth-hmac-secret
+        - --proxy-prefix=/_oauth2
+        - --redirect-url=https://oauth2.cat-herding.net/_oauth2/callback
+        - --reverse-proxy=true
+        - --upstream=static://202
+        - --email-domain=*
+        - --scope=openid
+        - --scope=profile
+        - --scope=email
+        - --cookie-domain=.cat-herding.net
+        - --whitelist-domain=.cat-herding.net
+        - --cookie-name=_secure_session
+        - --cookie-secure=true
+        - --cookie-samesite=lax
+        - --set-xauthrequest=true
+        - --pass-user-headers=true
+        - --pass-access-token=true
+        - --set-authorization-header=true
+        - --pass-authorization-header=true
+        - --skip-provider-button=true
+        - --ping-path=/ping
+        ports:
+        - name: http
+          containerPort: 4180
+        readinessProbe:
+          httpGet:
+            path: /ping
+            port: 4180
+          initialDelaySeconds: 3
+          periodSeconds: 10
+          timeoutSeconds: 2
+        livenessProbe:
+          httpGet:
+            path: /ping
+            port: 4180
+          initialDelaySeconds: 10
+          periodSeconds: 20
+          timeoutSeconds: 2
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        volumeMounts:
+        - name: secrets-store
+          mountPath: /mnt/secrets-store
+          readOnly: true
+      volumes:
+      - name: secrets-store
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: secure-subdomain-oauth-secrets-provider

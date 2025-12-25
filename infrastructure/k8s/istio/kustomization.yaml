@@ -10,5 +10,5 @@ resources:
   - postgres-peer-auth.yaml
   - envoyfilter-secure-subdomain-oauth2.yaml
   - envoyfilter-secure-subdomain-jwt.yaml
-  - envoy-oauth2-sds-configmap-secure-subdomain.yaml
+
 

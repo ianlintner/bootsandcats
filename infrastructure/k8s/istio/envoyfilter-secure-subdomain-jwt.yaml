@@ -21,7 +21,7 @@ spec:
           filter:
             name: envoy.filters.network.http_connection_manager
             subFilter:
-              name: envoy.filters.http.oauth2
+              name: envoy.filters.http.lua
     patch:
       operation: INSERT_AFTER
       value:

@@ -12,33 +12,13 @@ spec:
     labels:
       istio: aks-istio-ingressgateway-external
   configPatches:
-  # Add OAuth2 token cluster
-  - applyTo: CLUSTER
-    match:
-      context: GATEWAY
-    patch:
-      operation: ADD
-      value:
-        name: oauth2_token_cluster_secure_subdomain
-        type: STRICT_DNS
-        connect_timeout: 5s
-        lb_policy: ROUND_ROBIN
-        load_assignment:
-          cluster_name: oauth2_token_cluster_secure_subdomain
-          endpoints:
-          - lb_endpoints:
-            - endpoint:
-                address:
-                  socket_address:
-                    address: oauth2-server.default.svc.cluster.local
-                    port_value: 9000
-  # Add OAuth2 filter (default-on) for *.cat-herding.net and subdomains.
+  # Enforce login for *.cat-herding.net via oauth2-proxy using the auth_request pattern.
   #
-  # IMPORTANT:
-  # - This is intentionally gateway-wide (not per-virtual-host) so we do not rely on
-  #   virtual-host / route-specific OAuth2 configuration, which may be rejected depending
-  #   on the Envoy/Istio build.
-  # - Exclusions are handled via `pass_through_matcher`.
+  # Design notes:
+  # - We call oauth2-proxy's `/_oauth2/auth` endpoint for each request.
+  # - oauth2-proxy returns 202 (authorized) or 401 (unauthorized).
+  # - On 401 we redirect the browser to `/_oauth2/start?rd=<original_url>`.
+  # - oauth2-proxy holds the client secret; Envoy no longer reads client secrets via SDS.
   - applyTo: HTTP_FILTER
     match:
       context: GATEWAY
@@ -51,61 +31,117 @@ spec:
     patch:
       operation: INSERT_BEFORE
       value:
-        name: envoy.filters.http.oauth2
+        name: envoy.filters.http.lua
         typed_config:
-          "@type": type.googleapis.com/envoy.extensions.filters.http.oauth2.v3.OAuth2
-          config:
-            stat_prefix: secure_subdomain_oauth
-            authorization_endpoint: https://oauth2.cat-herding.net/oauth2/authorize
-            token_endpoint:
-              cluster: oauth2_token_cluster_secure_subdomain
-              uri: https://oauth2-server.default.svc.cluster.local:9000/oauth2/token
-              timeout: 5s
-            redirect_uri: "%REQ(x-forwarded-proto)%://%REQ(:authority)%/_oauth2/callback"
-            redirect_path_matcher:
-              path:
-                prefix: /_oauth2/callback
-            signout_path:
-              path:
-                prefix: /_oauth2/logout
-            forward_bearer_token: true
-            default_expires_in: 900s
-            csrf_token_expires_in: 600s
-            credentials:
-              client_id: secure-subdomain-client
-              token_secret:
-                name: secure-subdomain-oauth-token
-                sds_config:
-                  path: /etc/istio/oauth2/secure-subdomain-oauth-token.yaml
-              hmac_secret:
-                name: secure-subdomain-oauth-hmac
-                sds_config:
-                  path: /etc/istio/oauth2/secure-subdomain-oauth-hmac.yaml
-              cookie_domain: ".cat-herding.net"
-              cookie_names:
-                bearer_token: "_secure_session"
-                oauth_hmac: "_secure_oauth_hmac"
-                oauth_expires: "_secure_oauth_expires"
-            cookie_configs:
-              bearer_token_cookie_config:
-                same_site: LAX
-              oauth_hmac_cookie_config:
-                same_site: LAX
-              oauth_expires_cookie_config:
-                same_site: LAX
-            auth_scopes:
-            - openid
-            - profile
-            - email
-            pass_through_matcher:
-            - name: ":authority"
-              exact_match: "oauth2.cat-herding.net"
-            - name: ":path"
-              prefix_match: "/actuator"
-            - name: ":path"
-              exact_match: "/health"
-            - name: ":path"
-              exact_match: "/healthz"
-            - name: ":path"
-              exact_match: "/ready"
+          "@type": type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua
+          inline_code: |
+            local OAUTH2_PROXY_CLUSTER = "outbound|4180||oauth2-proxy.aks-istio-ingress.svc.cluster.local"
+            local OAUTH2_PREFIX = "/_oauth2"
+            local OAUTH2_AUTH_PATH = OAUTH2_PREFIX .. "/auth"
+
+            local function starts_with(str, prefix)
+              return str ~= nil and string.sub(str, 1, string.len(prefix)) == prefix
+            end
+
+            local function url_encode(str)
+              if str == nil then
+                return ""
+              end
+              -- RFC 3986-ish percent encoding.
+              return (string.gsub(str, "([^%w%-_%.~])", function(c)
+                return string.format("%%%02X", string.byte(c))
+              end))
+            end
+
+            local function should_skip(headers)
+              local authority = headers:get(":authority") or ""
+              local path = headers:get(":path") or ""
+
+              -- Don't protect the authorization server host itself.
+              if authority == "oauth2.cat-herding.net" then
+                return true
+              end
+
+              -- Don't protect oauth2-proxy endpoints.
+              if starts_with(path, OAUTH2_PREFIX .. "/") then
+                return true
+              end
+
+              -- Basic health/ops endpoints.
+              if starts_with(path, "/actuator") or path == "/health" or path == "/healthz" or path == "/ready" then
+                return true
+              end
+
+              return false
+            end
+
+            function envoy_on_request(request_handle)
+              local headers = request_handle:headers()
+              if should_skip(headers) then
+                return
+              end
+
+              local authority = headers:get(":authority") or ""
+              local path = headers:get(":path") or "/"
+              local proto = headers:get("x-forwarded-proto") or "https"
+              local cookie = headers:get("cookie")
+
+              local original_url = proto .. "://" .. authority .. path
+
+              local auth_headers = {
+                [":method"] = "GET",
+                [":path"] = OAUTH2_AUTH_PATH,
+                -- oauth2-proxy expects the original host in Host/:authority.
+                [":authority"] = authority,
+                ["host"] = authority,
+                ["x-forwarded-proto"] = proto,
+                ["x-forwarded-host"] = authority,
+                ["x-forwarded-uri"] = path,
+                ["x-auth-request-redirect"] = original_url,
+              }
+
+              if cookie ~= nil then
+                auth_headers["cookie"] = cookie
+              end
+
+              local resp_headers, _ = request_handle:httpCall(
+                OAUTH2_PROXY_CLUSTER,
+                auth_headers,
+                nil,
+                5000)
+
+              local status = resp_headers[":status"] or ""
+              if status == "202" then
+                -- On success, copy selected auth headers from oauth2-proxy into the upstream request.
+                local authorization = resp_headers["authorization"]
+                if authorization ~= nil then
+                  headers:replace("authorization", authorization)
+                end
+
+                local x_user = resp_headers["x-auth-request-user"]
+                if x_user ~= nil then
+                  headers:replace("x-auth-request-user", x_user)
+                end
+
+                local x_email = resp_headers["x-auth-request-email"]
+                if x_email ~= nil then
+                  headers:replace("x-auth-request-email", x_email)
+                end
+
+                local x_preferred = resp_headers["x-auth-request-preferred-username"]
+                if x_preferred ~= nil then
+                  headers:replace("x-auth-request-preferred-username", x_preferred)
+                end
+
+                return
+              end
+
+              -- Unauthorized -> redirect to oauth2-proxy sign-in.
+              local rd = url_encode(original_url)
+              local location = proto .. "://" .. authority .. OAUTH2_PREFIX .. "/start?rd=" .. rd
+              request_handle:respond({
+                [":status"] = "302",
+                ["location"] = location,
+              }, "")
+            end
 

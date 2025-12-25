@@ -13,6 +13,14 @@ spec:
   http:
   - match:
     - uri:
+        prefix: /_oauth2/
+    route:
+    - destination:
+        host: oauth2-proxy.aks-istio-ingress.svc.cluster.local
+        port:
+          number: 4180
+  - match:
+    - uri:
         prefix: /
     route:
     - destination:
@@ -31,6 +39,14 @@ spec:
   gateways:
   - aks-istio-ingress/cat-herding-gateway
   http:
+  - match:
+    - uri:
+        prefix: /_oauth2/
+    route:
+    - destination:
+        host: oauth2-proxy.aks-istio-ingress.svc.cluster.local
+        port:
+          number: 4180
   - match:
     - uri:
         prefix: /
@@ -54,6 +70,14 @@ spec:
   http:
   - match:
     - uri:
+        prefix: /_oauth2/
+    route:
+    - destination:
+        host: oauth2-proxy.aks-istio-ingress.svc.cluster.local
+        port:
+          number: 4180
+  - match:
+    - uri:
         prefix: /
     route:
     - destination:
@@ -75,6 +99,14 @@ spec:
   http:
   - match:
     - uri:
+        prefix: /_oauth2/
+    route:
+    - destination:
+        host: oauth2-proxy.aks-istio-ingress.svc.cluster.local
+        port:
+          number: 4180
+  - match:
+    - uri:
         prefix: /
     route:
     - destination:
@@ -94,6 +126,14 @@ spec:
   gateways:
   - aks-istio-ingress/cat-herding-gateway
   http:
+  - match:
+    - uri:
+        prefix: /_oauth2/
+    route:
+    - destination:
+        host: oauth2-proxy.aks-istio-ingress.svc.cluster.local
+        port:
+          number: 4180
   - match:
     - uri:
         prefix: /
