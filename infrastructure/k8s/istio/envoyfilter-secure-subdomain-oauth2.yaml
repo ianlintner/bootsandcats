@@ -55,6 +55,16 @@ spec:
               end))
             end
 
+            local function get_any(headers, keys)
+              for _, k in ipairs(keys) do
+                local v = headers[k]
+                if v ~= nil and v ~= "" then
+                  return v
+                end
+              end
+              return nil
+            end
+
             local function should_skip(headers)
               local authority = headers:get(":authority") or ""
               local path = headers:get(":path") or ""
@@ -127,23 +137,45 @@ spec:
               local status = resp_headers[":status"] or ""
               if status == "202" then
                 -- If oauth2-proxy refreshed the session cookie during /auth, forward it.
-                local set_cookie = resp_headers["set-cookie"]
+                local set_cookie = resp_headers["set-cookie"] or resp_headers["Set-Cookie"]
                 if set_cookie ~= nil then
                   request_handle:streamInfo():dynamicMetadata():set(METADATA_NAMESPACE, METADATA_SET_COOKIE_KEY, set_cookie)
                 end
 
                 -- On success, copy selected auth headers from oauth2-proxy into the upstream request.
-                local authorization = resp_headers["authorization"]
-                if authorization ~= nil then
+                -- IMPORTANT: the jwt_authn filter runs after this Lua filter and will populate
+                -- x-jwt-* headers (including x-jwt-sub) only if it sees a Bearer token.
+                --
+                -- For auth_request-style deployments, oauth2-proxy typically returns the access token
+                -- in X-Auth-Request-Access-Token rather than in an Authorization header.
+                local authorization = get_any(resp_headers, {
+                  "authorization",
+                  "Authorization",
+                })
+                local access_token = get_any(resp_headers, {
+                  "x-auth-request-access-token",
+                  "X-Auth-Request-Access-Token",
+                })
+
+                if authorization ~= nil and authorization ~= "" then
                   headers:replace("authorization", authorization)
+                elseif access_token ~= nil and access_token ~= "" then
+                  headers:replace("authorization", "Bearer " .. access_token)
+                  headers:replace("x-auth-request-access-token", access_token)
                 end
 
-                local x_user = resp_headers["x-auth-request-user"]
+                local x_user = get_any(resp_headers, {
+                  "x-auth-request-user",
+                  "X-Auth-Request-User",
+                })
                 if x_user ~= nil then
                   headers:replace("x-auth-request-user", x_user)
                 end
 
-                local x_email = resp_headers["x-auth-request-email"]
+                local x_email = get_any(resp_headers, {
+                  "x-auth-request-email",
+                  "X-Auth-Request-Email",
+                })
                 if x_email ~= nil then
                   headers:replace("x-auth-request-email", x_email)
                 end
@@ -163,9 +195,26 @@ spec:
                   headers:replace("x-jwt-sub", x_user)
                 end
 
-                local x_preferred = resp_headers["x-auth-request-preferred-username"]
+                local x_preferred = get_any(resp_headers, {
+                  "x-auth-request-preferred-username",
+                  "X-Auth-Request-Preferred-Username",
+                })
                 if x_preferred ~= nil then
                   headers:replace("x-auth-request-preferred-username", x_preferred)
+                end
+
+                -- Debugging aid: log what oauth2-proxy returned for /api/profile.
+                -- (This helps validate we are actually getting an access token and/or x-auth-request-* headers.)
+                if starts_with(path, "/api/profile") then
+                  request_handle:logInfo(
+                    "oauth2-proxy /auth 202: authz="
+                      .. tostring(authorization ~= nil and authorization ~= "")
+                      .. " access_token="
+                      .. tostring(access_token ~= nil and access_token ~= "")
+                      .. " x_user="
+                      .. tostring(x_user ~= nil and x_user ~= "")
+                      .. " x_email="
+                      .. tostring(x_email ~= nil and x_email ~= ""))
                 end
 
                 return

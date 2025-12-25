@@ -54,7 +54,7 @@ public class ProfileController {
      * @return the profile or 404 if not found
      */
     @Get(value = "/profile", produces = MediaType.APPLICATION_JSON)
-    HttpResponse<?> getProfile(@Header("x-jwt-sub") String subject) {
+    HttpResponse<?> getProfile(@Header(value = "x-jwt-sub", defaultValue = "") String subject) {
         if (subject == null || subject.isBlank()) {
             return HttpResponse.unauthorized();
         }
@@ -83,7 +83,7 @@ public class ProfileController {
      */
     @Post(value = "/profile", produces = MediaType.APPLICATION_JSON)
     HttpResponse<?> createProfile(
-            @Header("x-jwt-sub") String subject,
+            @Header(value = "x-jwt-sub", defaultValue = "") String subject,
             @Header(value = "x-jwt-email", defaultValue = "") String email,
             @Body @Valid ProfileRequest request) {
         if (subject == null || subject.isBlank()) {
@@ -116,7 +116,8 @@ public class ProfileController {
      */
     @Put(value = "/profile", produces = MediaType.APPLICATION_JSON)
     HttpResponse<?> updateProfile(
-            @Header("x-jwt-sub") String subject, @Body @Valid ProfileRequest request) {
+            @Header(value = "x-jwt-sub", defaultValue = "") String subject,
+            @Body @Valid ProfileRequest request) {
         if (subject == null || subject.isBlank()) {
             return HttpResponse.unauthorized();
         }
@@ -142,7 +143,7 @@ public class ProfileController {
      * @return success or not found
      */
     @Delete(value = "/profile", produces = MediaType.APPLICATION_JSON)
-    HttpResponse<?> deleteProfile(@Header("x-jwt-sub") String subject) {
+    HttpResponse<?> deleteProfile(@Header(value = "x-jwt-sub", defaultValue = "") String subject) {
         if (subject == null || subject.isBlank()) {
             return HttpResponse.unauthorized();
         }
