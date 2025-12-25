@@ -78,7 +78,8 @@ public class TokenDiagnosticsFilter extends OncePerRequestFilter {
 
         Map<String, String> flattenedParams = flattenAndMask(request.getParameterMap());
 
-        BasicCredentials basicCredentials = parseBasicAuthorization(request.getHeader("Authorization"));
+        BasicCredentials basicCredentials =
+                parseBasicAuthorization(request.getHeader("Authorization"));
         String clientId =
                 basicCredentials != null
                         ? basicCredentials.clientId
@@ -153,7 +154,9 @@ public class TokenDiagnosticsFilter extends OncePerRequestFilter {
             return value;
         }
         String lower = name.toLowerCase();
-        if (SENSITIVE_PARAM_NAMES.contains(lower) || lower.contains("secret") || lower.contains("token")) {
+        if (SENSITIVE_PARAM_NAMES.contains(lower)
+                || lower.contains("secret")
+                || lower.contains("token")) {
             return MaskingUtils.maskKeepEnds(value, maskKeepFirst, maskKeepLast);
         }
         return value;

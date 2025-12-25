@@ -32,7 +32,6 @@ import org.springframework.security.oauth2.server.authorization.settings.TokenSe
 import org.springframework.util.StringUtils;
 
 import com.bootsandcats.oauth2.log.MaskingUtils;
-
 import com.bootsandcats.oauth2.model.AuditEventResult;
 import com.bootsandcats.oauth2.model.AuditEventType;
 import com.bootsandcats.oauth2.service.SecurityAuditService;
@@ -102,14 +101,14 @@ public class DataInitializer {
     @Value("${oauth2.sync-client-secrets:false}")
     private boolean syncClientSecrets;
 
-        @Value("${oauth2.diagnostics.enabled:false}")
-        private boolean diagnosticsEnabled;
+    @Value("${oauth2.diagnostics.enabled:false}")
+    private boolean diagnosticsEnabled;
 
-        @Value("${oauth2.diagnostics.mask.keep-first:3}")
-        private int diagnosticsMaskKeepFirst;
+    @Value("${oauth2.diagnostics.mask.keep-first:3}")
+    private int diagnosticsMaskKeepFirst;
 
-        @Value("${oauth2.diagnostics.mask.keep-last:4}")
-        private int diagnosticsMaskKeepLast;
+    @Value("${oauth2.diagnostics.mask.keep-last:4}")
+    private int diagnosticsMaskKeepLast;
 
     @Bean
     public CommandLineRunner initializeClients() {
@@ -273,11 +272,11 @@ public class DataInitializer {
     String resolveSecureSubdomainClientSecret() {
         String fromFile = readSecretFromFile(secureSubdomainClientSecretFile);
         if (StringUtils.hasText(fromFile)) {
-                        logResolvedSecret("file", fromFile);
+            logResolvedSecret("file", fromFile);
             return fromFile;
         }
 
-                logResolvedSecret("env", secureSubdomainClientSecret);
+        logResolvedSecret("env", secureSubdomainClientSecret);
         return secureSubdomainClientSecret;
     }
 
@@ -301,25 +300,24 @@ public class DataInitializer {
         }
     }
 
-        private void logResolvedSecret(String source, String rawSecret) {
-                if (!diagnosticsEnabled) {
-                        return;
-                }
-                if (!StringUtils.hasText(rawSecret)) {
-                        log.warn(
-                                        "[diag] secure-subdomain-client secret resolved from {} but was empty",
-                                        source);
-                        return;
-                }
-
-                log.debug(
-                                "[diag] secure-subdomain-client secret resolved source={} masked={} sha256={} len={}",
-                                source,
-                                MaskingUtils.maskKeepEnds(
-                                                rawSecret, diagnosticsMaskKeepFirst, diagnosticsMaskKeepLast),
-                                MaskingUtils.sha256Hex(rawSecret),
-                                rawSecret.length());
+    private void logResolvedSecret(String source, String rawSecret) {
+        if (!diagnosticsEnabled) {
+            return;
         }
+        if (!StringUtils.hasText(rawSecret)) {
+            log.warn(
+                    "[diag] secure-subdomain-client secret resolved from {} but was empty", source);
+            return;
+        }
+
+        log.debug(
+                "[diag] secure-subdomain-client secret resolved source={} masked={} sha256={} len={}",
+                source,
+                MaskingUtils.maskKeepEnds(
+                        rawSecret, diagnosticsMaskKeepFirst, diagnosticsMaskKeepLast),
+                MaskingUtils.sha256Hex(rawSecret),
+                rawSecret.length());
+    }
 
     private void registerOrUpdateClient(
             RegisteredClientRepository repository,

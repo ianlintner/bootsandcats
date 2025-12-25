@@ -1,12 +1,11 @@
 package com.bootsandcats.oauth2.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.stereotype.Service;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.bootsandcats.oauth2.model.ClientMetadataEntity;
 import com.bootsandcats.oauth2.repository.ClientMetadataRepository;
@@ -21,7 +20,8 @@ import com.bootsandcats.oauth2.repository.ClientMetadataRepository;
 @Primary
 public class FilteringRegisteredClientRepository implements RegisteredClientRepository {
 
-    private static final Logger log = LoggerFactory.getLogger(FilteringRegisteredClientRepository.class);
+    private static final Logger log =
+            LoggerFactory.getLogger(FilteringRegisteredClientRepository.class);
 
     private final JpaRegisteredClientRepository delegate;
     private final ClientMetadataRepository clientMetadataRepository;
@@ -55,7 +55,9 @@ public class FilteringRegisteredClientRepository implements RegisteredClientRepo
         }
         boolean enabled = isEnabled(client.getClientId());
         if (!enabled) {
-            log.debug("Registered client '{}' is present but disabled via metadata; returning null (invalid_client)", clientId);
+            log.debug(
+                    "Registered client '{}' is present but disabled via metadata; returning null (invalid_client)",
+                    clientId);
         }
         return enabled ? client : null;
     }

@@ -96,20 +96,20 @@ public class AuthorizationServerConfig {
     @Value("${oauth2.form-login.demo-users-enabled:true}")
     private boolean formLoginDemoUsersEnabled;
 
-        /**
-         * Enables additional diagnostic logging around OAuth2 endpoints.
-         *
-         * <p>When enabled, logs will include masked secrets/tokens (first/last N characters) and
-         * request metadata to help troubleshoot Envoy/SDS/client authentication issues.
-         */
-        @Value("${oauth2.diagnostics.enabled:false}")
-        private boolean diagnosticsEnabled;
+    /**
+     * Enables additional diagnostic logging around OAuth2 endpoints.
+     *
+     * <p>When enabled, logs will include masked secrets/tokens (first/last N characters) and
+     * request metadata to help troubleshoot Envoy/SDS/client authentication issues.
+     */
+    @Value("${oauth2.diagnostics.enabled:false}")
+    private boolean diagnosticsEnabled;
 
-        @Value("${oauth2.diagnostics.mask.keep-first:3}")
-        private int diagnosticsMaskKeepFirst;
+    @Value("${oauth2.diagnostics.mask.keep-first:3}")
+    private int diagnosticsMaskKeepFirst;
 
-        @Value("${oauth2.diagnostics.mask.keep-last:4}")
-        private int diagnosticsMaskKeepLast;
+    @Value("${oauth2.diagnostics.mask.keep-last:4}")
+    private int diagnosticsMaskKeepLast;
 
     /**
      * Security filter chain for OAuth2 Authorization Server endpoints.
@@ -192,16 +192,12 @@ public class AuthorizationServerConfig {
 
         http.addFilterBefore(
                 new AuthorizationDiagnosticsFilter(
-                        diagnosticsEnabled,
-                        diagnosticsMaskKeepFirst,
-                        diagnosticsMaskKeepLast),
+                        diagnosticsEnabled, diagnosticsMaskKeepFirst, diagnosticsMaskKeepLast),
                 SecurityContextHolderFilter.class);
 
         http.addFilterBefore(
                 new TokenDiagnosticsFilter(
-                        diagnosticsEnabled,
-                        diagnosticsMaskKeepFirst,
-                        diagnosticsMaskKeepLast),
+                        diagnosticsEnabled, diagnosticsMaskKeepFirst, diagnosticsMaskKeepLast),
                 SecurityContextHolderFilter.class);
 
         securityHeadersConfig.configureSecurityHeaders(http);

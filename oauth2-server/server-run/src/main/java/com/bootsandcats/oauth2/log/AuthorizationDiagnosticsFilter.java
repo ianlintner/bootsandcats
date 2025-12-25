@@ -61,7 +61,10 @@ public class AuthorizationDiagnosticsFilter extends OncePerRequestFilter {
                         .collect(
                                 Collectors.toMap(
                                         Map.Entry::getKey,
-                        e -> maskParam(e.getKey(), String.join(",", e.getValue()))));
+                                        e ->
+                                                maskParam(
+                                                        e.getKey(),
+                                                        String.join(",", e.getValue()))));
 
         log.debug(
                 "[authorize] method={} uri={} status(presend)=? principal={} params={} sessionId={}",
