@@ -1,9 +1,0 @@
-###################################################################################################
-# DEPRECATED / NO-OP
-#
-# This ConfigMap was used by the legacy Envoy oauth2 filter + SDS approach.
-# The current approach uses oauth2-proxy + gateway Lua and no longer requires any Envoy SDS config.
-###################################################################################################
-apiVersion: v1
-kind: List
-items: []

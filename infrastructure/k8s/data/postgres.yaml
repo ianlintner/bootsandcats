@@ -61,7 +61,7 @@ spec:
   # strict mTLS is enabled). Keep sidecar injection disabled for CNPG-managed PostgreSQL pods.
   inheritedMetadata:
     annotations:
-      sidecar.istio.io/inject: "true"
+      sidecar.istio.io/inject: "false"
 
   # Bootstrap from scratch with initial database
   bootstrap:
