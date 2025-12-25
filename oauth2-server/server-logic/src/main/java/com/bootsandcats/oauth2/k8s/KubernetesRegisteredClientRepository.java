@@ -163,16 +163,13 @@ public class KubernetesRegisteredClientRepository implements ClientStore {
 
         try {
             Secret secret =
-                    kubernetesClient
-                            .secrets()
-                            .inNamespace(namespace)
-                            .withName(ref.getName())
-                            .get();
+                    kubernetesClient.secrets().inNamespace(namespace).withName(ref.getName()).get();
             if (secret == null) {
                 return null;
             }
 
-            // Prefer stringData when present (typically only during creation), otherwise decode data.
+            // Prefer stringData when present (typically only during creation), otherwise decode
+            // data.
             if (secret.getStringData() != null) {
                 String v = secret.getStringData().get(ref.getKey());
                 if (StringUtils.hasText(v)) {
