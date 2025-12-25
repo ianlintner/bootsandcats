@@ -1,5 +1,11 @@
 # OAuth2 Sidecar Secret Mount Issue - Root Cause Analysis
 
+**Status**: ⚠️ **LEGACY**
+
+This document primarily covers the older per-service Envoy oauth2 + sidecar secret mount (SDS files under `/etc/istio/oauth2`) approach.
+
+The current recommended setup for `*.cat-herding.net` is **oauth2-proxy + gateway Lua**; see `docs/SECURE_SUBDOMAIN_OAUTH2.md`.
+
 ## Problem Summary
 Profile-service OAuth2 flow fails with 404 at `/oauth2/authorize` due to volume name mismatch between init container and Istio sidecar mount.
 
@@ -249,8 +255,8 @@ See `docs/SECURE_SUBDOMAIN_OAUTH2.md` for the current authoritative setup.
 
 ## Related Files
 - `infrastructure/k8s/istio/envoyfilter-secure-subdomain-oauth2.yaml` (gateway OAuth2 enforcement)
-- `infrastructure/k8s/istio/envoy-oauth2-sds-configmap-secure-subdomain.yaml` (SDS config)
-- `infrastructure/k8s/aks-istio-ingress/secure-subdomain-oauth-sds-renderer.yaml` (renders SDS secrets)
+- `infrastructure/k8s/istio/envoy-oauth2-sds-configmap-secure-subdomain.yaml` (**deprecated/no-op**; legacy SDS config)
+- `infrastructure/k8s/aks-istio-ingress/secure-subdomain-oauth-sds-renderer.yaml` (**deprecated/no-op**; legacy SDS renderer)
 
 Legacy per-service OAuth2 exchange EnvoyFilters are deprecated and are no longer deployed by Kustomize.
 

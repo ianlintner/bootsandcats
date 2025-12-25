@@ -1,24 +1,14 @@
-# Template patch: mount the rendered SDS Secret into the ingress gateway.
+###################################################################################################
+# DEPRECATED / NO-OP
 #
-# NOTE: The AKS-managed Istio ingress gateway Deployment name can differ.
-# Update metadata.name if needed.
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  # NOTE: On AKS addon-managed Istio, the Deployment name includes the revision.
-  # You can discover it with: kubectl -n aks-istio-ingress get deploy
-  name: aks-istio-ingressgateway-external-asm-1-27
-  namespace: aks-istio-ingress
-spec:
-  template:
-    spec:
-      volumes:
-        - name: secure-subdomain-oauth-sds
-          secret:
-            secretName: secure-subdomain-oauth-sds
-      containers:
-        - name: istio-proxy
-          volumeMounts:
-            - name: secure-subdomain-oauth-sds
-              mountPath: /etc/istio/oauth2
-              readOnly: true
+# This repo previously used Envoy's oauth2 filter with a file-based SDS secret mounted into the
+# AKS Istio ingress gateway at /etc/istio/oauth2.
+#
+# The current approach is oauth2-proxy + gateway Lua (auth_request), so there is no longer any
+# SDS secret mount on the gateway.
+#
+# This file is intentionally a no-op to prevent accidental re-introduction of the legacy mount.
+###################################################################################################
+apiVersion: v1
+kind: List
+items: []
