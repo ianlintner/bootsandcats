@@ -312,7 +312,7 @@ public class DataInitializer {
                         return;
                 }
 
-                log.info(
+                log.debug(
                                 "[diag] secure-subdomain-client secret resolved source={} masked={} sha256={} len={}",
                                 source,
                                 MaskingUtils.maskKeepEnds(

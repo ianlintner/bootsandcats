@@ -92,7 +92,7 @@ public class TokenDiagnosticsFilter extends OncePerRequestFilter {
 
         String grantType = safeParam(request, "grant_type");
 
-        log.info(
+        log.debug(
                 "[token] method={} uri={} clientId={} grantType={} auth=basic?{} secret={} params={} remote={} xff={} ua={} reqId={} traceparent={}",
                 request.getMethod(),
                 request.getRequestURI(),
@@ -131,7 +131,7 @@ public class TokenDiagnosticsFilter extends OncePerRequestFilter {
                     StringUtils.hasText(grantType) ? grantType : "(n/a)",
                     flattenedParams);
         } else {
-            log.info(
+            log.debug(
                     "[token] response status={} uri={} clientId={} grantType={}",
                     response.getStatus(),
                     request.getRequestURI(),

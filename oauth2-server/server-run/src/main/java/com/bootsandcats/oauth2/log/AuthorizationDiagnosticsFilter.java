@@ -63,7 +63,7 @@ public class AuthorizationDiagnosticsFilter extends OncePerRequestFilter {
                                         Map.Entry::getKey,
                         e -> maskParam(e.getKey(), String.join(",", e.getValue()))));
 
-        log.info(
+        log.debug(
                 "[authorize] method={} uri={} status(presend)=? principal={} params={} sessionId={}",
                 request.getMethod(),
                 request.getRequestURI(),
@@ -81,7 +81,7 @@ public class AuthorizationDiagnosticsFilter extends OncePerRequestFilter {
                     ex);
             throw ex;
         }
-        log.info(
+        log.debug(
                 "[authorize] response status={} location={} sessionId={}",
                 response.getStatus(),
                 response.getHeader("Location"),
