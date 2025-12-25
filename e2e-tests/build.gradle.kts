@@ -14,9 +14,9 @@ dependencies {
     testImplementation("org.jsoup:jsoup:1.17.2")
     testImplementation("com.fasterxml.jackson.core:jackson-databind")
     testImplementation("org.slf4j:slf4j-api:2.0.16")
-    testImplementation("org.apache.logging.log4j:log4j-api:2.23.1")
-    testImplementation("org.apache.logging.log4j:log4j-core:2.23.1")
-    testImplementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.23.1")
+    testImplementation("org.apache.logging.log4j:log4j-api:2.25.3")
+    testImplementation("org.apache.logging.log4j:log4j-core:2.25.3")
+    testImplementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.25.3")
 }
 
 tasks.test {
