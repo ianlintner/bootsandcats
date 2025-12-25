@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.jackson2.SecurityJackson2Modules;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
@@ -24,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 @Service
+@ConditionalOnProperty(prefix = "oauth2.clients", name = "store", havingValue = "jpa", matchIfMissing = true)
 public class JpaRegisteredClientRepository implements ClientStore {
 
     private final RegisteredClientJpaRepository registeredClientJpaRepository;

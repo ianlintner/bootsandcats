@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
@@ -35,6 +36,7 @@ import com.bootsandcats.oauth2.service.SecurityAuditService;
 import jakarta.servlet.http.HttpServletRequest;
 
 @Service
+@ConditionalOnProperty(prefix = "oauth2.clients", name = "store", havingValue = "jpa", matchIfMissing = true)
 public class AdminClientService {
 
     private final JpaRegisteredClientRepository jpaRegisteredClientRepository;

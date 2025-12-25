@@ -2,6 +2,7 @@ package com.bootsandcats.oauth2.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Primary;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
@@ -18,6 +19,7 @@ import com.bootsandcats.oauth2.repository.ClientMetadataRepository;
  */
 @Service
 @Primary
+@ConditionalOnProperty(prefix = "oauth2.clients", name = "store", havingValue = "jpa", matchIfMissing = true)
 public class FilteringRegisteredClientRepository implements RegisteredClientRepository {
 
     private static final Logger log =
