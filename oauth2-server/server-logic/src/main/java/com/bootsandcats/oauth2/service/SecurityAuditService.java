@@ -675,7 +675,8 @@ public class SecurityAuditService {
         if (repo == null) {
             return emptyPage(pageable);
         }
-        return repo.findByEventTimestampBetweenOrderByEventTimestampDesc(startTime, endTime, pageable);
+        return repo.findByEventTimestampBetweenOrderByEventTimestampDesc(
+                startTime, endTime, pageable);
     }
 
     /**
@@ -718,7 +719,8 @@ public class SecurityAuditService {
         if (repo == null) {
             return emptyPage(pageable);
         }
-        return repo.searchAuditEvents(principal, clientId, eventCategory, result, startTime, endTime, pageable);
+        return repo.searchAuditEvents(
+                principal, clientId, eventCategory, result, startTime, endTime, pageable);
     }
 
     private static Page<SecurityAuditEvent> emptyPage(Pageable pageable) {

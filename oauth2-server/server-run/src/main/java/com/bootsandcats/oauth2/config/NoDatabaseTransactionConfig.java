@@ -9,10 +9,10 @@ import org.springframework.transaction.PlatformTransactionManager;
 /**
  * Provides a no-op transaction manager when running without a database.
  *
- * <p>Several services use {@code @Transactional} for JPA-backed implementations. In the
- * {@code prod-no-db} profile we intentionally disable DataSource/JPA/Flyway.
- * Spring still needs a {@link PlatformTransactionManager} for transactional advice; this
- * resourceless manager satisfies that requirement without requiring a database.
+ * <p>Several services use {@code @Transactional} for JPA-backed implementations. In the {@code
+ * prod-no-db} profile we intentionally disable DataSource/JPA/Flyway. Spring still needs a {@link
+ * PlatformTransactionManager} for transactional advice; this resourceless manager satisfies that
+ * requirement without requiring a database.
  */
 @Configuration
 @Profile("prod-no-db")
