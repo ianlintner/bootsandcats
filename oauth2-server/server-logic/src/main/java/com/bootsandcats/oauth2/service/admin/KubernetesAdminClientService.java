@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
@@ -20,46 +21,48 @@ import org.springframework.util.StringUtils;
 
 import com.bootsandcats.oauth2.dto.admin.AdminClientSummary;
 import com.bootsandcats.oauth2.dto.admin.AdminClientUpsertRequest;
+import com.bootsandcats.oauth2.k8s.KubernetesRegisteredClientMapper;
+import com.bootsandcats.oauth2.k8s.OAuth2Client;
+import com.bootsandcats.oauth2.k8s.OAuth2ClientList;
+import com.bootsandcats.oauth2.k8s.OAuth2ClientSpec;
 import com.bootsandcats.oauth2.model.AuditEventResult;
 import com.bootsandcats.oauth2.model.AuditEventType;
-import com.bootsandcats.oauth2.model.ClientMetadataEntity;
 import com.bootsandcats.oauth2.model.ClientScopeEntity;
 import com.bootsandcats.oauth2.model.ClientScopeId;
 import com.bootsandcats.oauth2.model.ScopeEntity;
-import com.bootsandcats.oauth2.repository.ClientMetadataRepository;
 import com.bootsandcats.oauth2.repository.ClientScopeRepository;
-import com.bootsandcats.oauth2.repository.RegisteredClientJpaRepository;
 import com.bootsandcats.oauth2.repository.ScopeRepository;
-import com.bootsandcats.oauth2.service.JpaRegisteredClientRepository;
 import com.bootsandcats.oauth2.service.SecurityAuditService;
 
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 
 @Service
-@ConditionalOnProperty(
-        prefix = "oauth2.clients",
-        name = "store",
-        havingValue = "jpa",
-        matchIfMissing = true)
-public class AdminClientService implements AdminClientOperations {
+@ConditionalOnProperty(prefix = "oauth2.clients", name = "store", havingValue = "kubernetes")
+public class KubernetesAdminClientService implements AdminClientOperations {
 
-    private final JpaRegisteredClientRepository jpaRegisteredClientRepository;
-    private final RegisteredClientJpaRepository registeredClientJpaRepository;
-    private final ClientMetadataRepository clientMetadataRepository;
+    private final MixedOperation<OAuth2Client, OAuth2ClientList, Resource<OAuth2Client>> crdClient;
+    private final KubernetesRegisteredClientMapper mapper = new KubernetesRegisteredClientMapper();
+    private final String namespace;
     private final ScopeRepository scopeRepository;
     private final ClientScopeRepository clientScopeRepository;
     private final SecurityAuditService securityAuditService;
 
-    public AdminClientService(
-            JpaRegisteredClientRepository jpaRegisteredClientRepository,
-            RegisteredClientJpaRepository registeredClientJpaRepository,
-            ClientMetadataRepository clientMetadataRepository,
+    public KubernetesAdminClientService(
+            KubernetesClient kubernetesClient,
+            @Value("${oauth2.clients.kubernetes.namespace:}") String configuredNamespace,
             ScopeRepository scopeRepository,
             ClientScopeRepository clientScopeRepository,
             SecurityAuditService securityAuditService) {
-        this.jpaRegisteredClientRepository = jpaRegisteredClientRepository;
-        this.registeredClientJpaRepository = registeredClientJpaRepository;
-        this.clientMetadataRepository = clientMetadataRepository;
+        this.crdClient = kubernetesClient.resources(OAuth2Client.class, OAuth2ClientList.class);
+        this.namespace =
+                resolveNamespace(
+                        configuredNamespace,
+                        kubernetesClient.getNamespace() != null
+                                ? kubernetesClient.getNamespace()
+                                : null);
         this.scopeRepository = scopeRepository;
         this.clientScopeRepository = clientScopeRepository;
         this.securityAuditService = securityAuditService;
@@ -67,32 +70,42 @@ public class AdminClientService implements AdminClientOperations {
 
     @Transactional(readOnly = true)
     public List<AdminClientSummary> listClients() {
-        return registeredClientJpaRepository.findAll().stream()
-                .map(e -> jpaRegisteredClientRepository.findById(e.getId()))
-                .filter(rc -> rc != null)
+        return crdClient.inNamespace(namespace).list().getItems().stream()
                 .map(this::toSummary)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public AdminClientSummary getClient(String clientId) {
-        RegisteredClient rc = jpaRegisteredClientRepository.findByClientId(clientId);
-        if (rc == null) {
+        OAuth2Client resource =
+                crdClient.inNamespace(namespace)
+                        .withLabels(mapper.selectorForClientId(clientId))
+                        .list()
+                        .getItems()
+                        .stream()
+                        .findFirst()
+                        .orElse(null);
+        if (resource == null) {
             throw new AdminResourceNotFoundException("Client not found: " + clientId);
         }
-        return toSummary(rc);
+        return toSummary(resource);
     }
 
     @Transactional
     public AdminClientSummary upsertClient(
             AdminClientUpsertRequest request, String actor, HttpServletRequest httpRequest) {
-        RegisteredClient existing =
-                jpaRegisteredClientRepository.findByClientId(request.clientId());
-        ClientMetadataEntity metadata =
-                clientMetadataRepository.findById(request.clientId()).orElse(null);
+        OAuth2Client existing =
+                crdClient.inNamespace(namespace)
+                        .withLabels(mapper.selectorForClientId(request.clientId()))
+                        .list()
+                        .getItems()
+                        .stream()
+                        .findFirst()
+                        .orElse(null);
 
-        boolean creating = (existing == null);
-        if (!creating && metadata != null && metadata.isSystem()) {
+        boolean creating = existing == null;
+        OAuth2ClientSpec existingSpec = existing != null ? existing.getSpec() : null;
+        if (!creating && existingSpec != null && Boolean.TRUE.equals(existingSpec.getSystem())) {
             throw new AdminOperationNotAllowedException(
                     "System client cannot be modified: " + request.clientId());
         }
@@ -100,21 +113,29 @@ public class AdminClientService implements AdminClientOperations {
         ensureScopesExist(request.scopes(), actor);
         syncClientScopeMapping(request.clientId(), request.scopes());
 
-        boolean rotateSecret = StringUtils.hasText(request.clientSecret());
-
-        RegisteredClient toSave =
+        RegisteredClient base =
                 creating
                         ? buildNewRegisteredClient(request)
-                        : buildUpdatedRegisteredClient(existing, request);
+                        : buildUpdatedRegisteredClient(mapper.toRegisteredClient(existing), request);
 
-        jpaRegisteredClientRepository.save(toSave);
+        OAuth2Client desired = mapper.toResource(base, namespace);
+        OAuth2ClientSpec desiredSpec = desired.getSpec();
+        desiredSpec.setEnabled(request.enabled());
+        desiredSpec.setSystem(existingSpec != null ? existingSpec.getSystem() : Boolean.FALSE);
+        desiredSpec.setNotes(StringUtils.hasText(request.notes()) ? request.notes().trim() : null);
 
-        ClientMetadataEntity savedMeta = upsertMetadata(metadata, request, actor, creating);
+        if (existing != null) {
+            desired.getMetadata().setName(existing.getMetadata().getName());
+            desired.getMetadata().setResourceVersion(existing.getMetadata().getResourceVersion());
+        }
+
+        OAuth2Client saved =
+                crdClient.inNamespace(namespace).resource(desired).createOrReplace();
 
         AuditEventType eventType;
         if (creating) {
             eventType = AuditEventType.CLIENT_REGISTERED;
-        } else if (rotateSecret) {
+        } else if (StringUtils.hasText(request.clientSecret())) {
             eventType = AuditEventType.CLIENT_SECRET_ROTATED;
         } else {
             eventType = AuditEventType.CLIENT_UPDATED;
@@ -125,26 +146,31 @@ public class AdminClientService implements AdminClientOperations {
                 AuditEventResult.SUCCESS,
                 actor,
                 httpRequest,
-                clientDetails(request.clientId(), savedMeta));
+                clientDetails(request.clientId(), desiredSpec));
 
-        return toSummary(jpaRegisteredClientRepository.findByClientId(request.clientId()));
+        return toSummary(saved);
     }
 
     @Transactional
     public void deleteClient(String clientId, String actor, HttpServletRequest httpRequest) {
-        ClientMetadataEntity metadata = clientMetadataRepository.findById(clientId).orElse(null);
-        if (metadata != null && metadata.isSystem()) {
+        OAuth2Client resource =
+                crdClient.inNamespace(namespace)
+                        .withLabels(mapper.selectorForClientId(clientId))
+                        .list()
+                        .getItems()
+                        .stream()
+                        .findFirst()
+                        .orElse(null);
+        if (resource == null) {
+            throw new AdminResourceNotFoundException("Client not found: " + clientId);
+        }
+        if (Boolean.TRUE.equals(resource.getSpec().getSystem())) {
             throw new AdminOperationNotAllowedException(
                     "System client cannot be deleted: " + clientId);
         }
 
-        if (!registeredClientJpaRepository.findByClientId(clientId).isPresent()) {
-            throw new AdminResourceNotFoundException("Client not found: " + clientId);
-        }
-
         clientScopeRepository.deleteByIdClientId(clientId);
-        clientMetadataRepository.deleteById(clientId);
-        registeredClientJpaRepository.deleteByClientId(clientId);
+        crdClient.inNamespace(namespace).withName(resource.getMetadata().getName()).delete();
 
         Map<String, Object> details = new HashMap<>();
         details.put("clientId", clientId);
@@ -159,24 +185,25 @@ public class AdminClientService implements AdminClientOperations {
     @Transactional
     public AdminClientSummary setEnabled(
             String clientId, boolean enabled, String actor, HttpServletRequest httpRequest) {
-        ClientMetadataEntity meta = clientMetadataRepository.findById(clientId).orElse(null);
-        if (meta == null) {
-            // Allow enabling/disabling clients created before metadata existed.
-            meta = new ClientMetadataEntity();
-            meta.setClientId(clientId);
-            meta.setSystem(false);
-            meta.setCreatedAt(Instant.now());
-            meta.setCreatedBy(actor);
+        OAuth2Client resource =
+                crdClient.inNamespace(namespace)
+                        .withLabels(mapper.selectorForClientId(clientId))
+                        .list()
+                        .getItems()
+                        .stream()
+                        .findFirst()
+                        .orElse(null);
+        if (resource == null) {
+            throw new AdminResourceNotFoundException("Client not found: " + clientId);
         }
-
-        if (meta.isSystem()) {
+        if (Boolean.TRUE.equals(resource.getSpec().getSystem())) {
             throw new AdminOperationNotAllowedException(
                     "System client cannot be disabled/enabled: " + clientId);
         }
 
-        meta.setEnabled(enabled);
-        meta.setUpdatedAt(Instant.now());
-        clientMetadataRepository.save(meta);
+        resource.getSpec().setEnabled(enabled);
+        OAuth2Client updated =
+                crdClient.inNamespace(namespace).resource(resource).createOrReplace();
 
         Map<String, Object> details = new HashMap<>();
         details.put("clientId", clientId);
@@ -189,14 +216,14 @@ public class AdminClientService implements AdminClientOperations {
                 httpRequest,
                 details);
 
-        return getClient(clientId);
+        return toSummary(updated);
     }
 
-    private AdminClientSummary toSummary(RegisteredClient rc) {
-        ClientMetadataEntity meta =
-                clientMetadataRepository.findById(rc.getClientId()).orElse(null);
-        boolean enabled = meta == null || meta.isEnabled();
-        boolean system = meta != null && meta.isSystem();
+    private AdminClientSummary toSummary(OAuth2Client resource) {
+        RegisteredClient rc = mapper.toRegisteredClient(resource);
+        OAuth2ClientSpec spec = resource.getSpec();
+        boolean enabled = spec.getEnabled() == null || spec.getEnabled();
+        boolean system = spec.getSystem() != null && spec.getSystem();
 
         ClientSettings clientSettings = rc.getClientSettings();
         boolean requireProofKey = clientSettings.isRequireProofKey();
@@ -208,9 +235,7 @@ public class AdminClientService implements AdminClientOperations {
                 enabled,
                 system,
                 List.copyOf(rc.getScopes()),
-                rc.getAuthorizationGrantTypes().stream()
-                        .map(AuthorizationGrantType::getValue)
-                        .toList(),
+                rc.getAuthorizationGrantTypes().stream().map(AuthorizationGrantType::getValue).toList(),
                 rc.getClientAuthenticationMethods().stream()
                         .map(ClientAuthenticationMethod::getValue)
                         .toList(),
@@ -218,7 +243,7 @@ public class AdminClientService implements AdminClientOperations {
                 List.copyOf(rc.getPostLogoutRedirectUris()),
                 requireProofKey,
                 requireConsent,
-                meta != null ? meta.getNotes() : null);
+                spec.getNotes());
     }
 
     private RegisteredClient buildNewRegisteredClient(AdminClientUpsertRequest request) {
@@ -332,34 +357,6 @@ public class AdminClientService implements AdminClientOperations {
         return builder.build();
     }
 
-    private ClientMetadataEntity upsertMetadata(
-            ClientMetadataEntity existing,
-            AdminClientUpsertRequest request,
-            String actor,
-            boolean creating) {
-        Instant now = Instant.now();
-        ClientMetadataEntity meta = existing;
-        if (meta == null) {
-            meta = new ClientMetadataEntity();
-            meta.setClientId(request.clientId());
-            meta.setSystem(false);
-            meta.setCreatedAt(now);
-            meta.setCreatedBy(actor);
-        }
-
-        meta.setEnabled(request.enabled());
-        meta.setNotes(StringUtils.hasText(request.notes()) ? request.notes().trim() : null);
-        meta.setUpdatedAt(now);
-
-        // For safety: when updating a pre-seeded record that was marked system=true,
-        // we keep that protection.
-        if (creating) {
-            meta.setSystem(false);
-        }
-
-        return clientMetadataRepository.save(meta);
-    }
-
     private void ensureScopesExist(List<String> scopes, String actor) {
         Instant now = Instant.now();
         for (String scope : scopes) {
@@ -434,16 +431,30 @@ public class AdminClientService implements AdminClientOperations {
         return new ClientAuthenticationMethod(v);
     }
 
-    private static Map<String, Object> clientDetails(String clientId, ClientMetadataEntity meta) {
+    private static Map<String, Object> clientDetails(String clientId, OAuth2ClientSpec spec) {
         Map<String, Object> details = new HashMap<>();
         details.put("clientId", clientId);
-        if (meta != null) {
-            details.put("enabled", meta.isEnabled());
-            details.put("system", meta.isSystem());
-            if (StringUtils.hasText(meta.getNotes())) {
-                details.put("notes", meta.getNotes());
+        if (spec != null) {
+            details.put("enabled", spec.getEnabled());
+            details.put("system", spec.getSystem());
+            if (StringUtils.hasText(spec.getNotes())) {
+                details.put("notes", spec.getNotes());
             }
         }
         return details;
+    }
+
+    private static String resolveNamespace(String configured, String fromClient) {
+        if (StringUtils.hasText(configured)) {
+            return configured;
+        }
+        if (StringUtils.hasText(fromClient)) {
+            return fromClient;
+        }
+        String fromEnv = System.getenv("POD_NAMESPACE");
+        if (StringUtils.hasText(fromEnv)) {
+            return fromEnv;
+        }
+        return "default";
     }
 }

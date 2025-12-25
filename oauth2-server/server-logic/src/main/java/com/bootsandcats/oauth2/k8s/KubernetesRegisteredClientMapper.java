@@ -92,6 +92,9 @@ public class KubernetesRegisteredClientMapper {
     }
 
     public RegisteredClient toRegisteredClient(OAuth2Client resource) {
+        if (resource == null || resource.getSpec() == null) {
+            return null;
+        }
         OAuth2ClientSpec spec = resource.getSpec();
         String registeredClientId =
                 StringUtils.hasText(spec.getRegisteredClientId())

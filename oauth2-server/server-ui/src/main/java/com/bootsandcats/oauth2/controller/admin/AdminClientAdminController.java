@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.bootsandcats.oauth2.dto.admin.AdminClientSummary;
 import com.bootsandcats.oauth2.dto.admin.AdminClientUpsertRequest;
-import com.bootsandcats.oauth2.service.admin.AdminClientService;
+import com.bootsandcats.oauth2.service.admin.AdminClientOperations;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -28,9 +28,9 @@ import jakarta.validation.Valid;
 @Validated
 public class AdminClientAdminController {
 
-    private final AdminClientService adminClientService;
+    private final AdminClientOperations adminClientService;
 
-    public AdminClientAdminController(AdminClientService adminClientService) {
+    public AdminClientAdminController(AdminClientOperations adminClientService) {
         this.adminClientService = adminClientService;
     }
 

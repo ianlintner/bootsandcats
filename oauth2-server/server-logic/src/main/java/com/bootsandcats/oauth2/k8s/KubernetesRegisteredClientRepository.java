@@ -119,7 +119,7 @@ public class KubernetesRegisteredClientRepository implements ClientStore {
                     selector,
                     items.stream().map(c -> c.getMetadata().getName()).toList());
         }
-        return items.getFirst();
+        return items.get(0);
     }
 
     private RegisteredClient toRegisteredClient(OAuth2Client resource) {
