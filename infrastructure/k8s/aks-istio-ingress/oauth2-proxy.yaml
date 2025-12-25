@@ -35,6 +35,8 @@ spec:
     metadata:
       labels:
         app: oauth2-proxy
+      annotations:
+        sidecar.istio.io/inject: "true"
     spec:
       serviceAccountName: oauth2-proxy
       containers:
