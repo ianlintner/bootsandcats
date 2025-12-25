@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.lang.NonNull;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -61,7 +60,7 @@ public class TokenDiagnosticsFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
+    protected boolean shouldNotFilter(HttpServletRequest request) {
         if (!enabled) {
             return true;
         }
@@ -71,9 +70,9 @@ public class TokenDiagnosticsFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(
-            @NonNull HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain)
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain)
             throws ServletException, IOException {
 
         Map<String, String> flattenedParams = flattenAndMask(request.getParameterMap());
@@ -91,16 +90,27 @@ public class TokenDiagnosticsFilter extends OncePerRequestFilter {
                                 basicCredentials.secret, maskKeepFirst, maskKeepLast)
                         : null;
 
+        Integer secretLen =
+            basicCredentials != null && basicCredentials.secret != null
+                ? basicCredentials.secret.length()
+                : null;
+        String secretSha256 =
+            basicCredentials != null && basicCredentials.secret != null
+                ? MaskingUtils.sha256Hex(basicCredentials.secret)
+                : null;
+
         String grantType = safeParam(request, "grant_type");
 
         log.debug(
-                "[token] method={} uri={} clientId={} grantType={} auth=basic?{} secret={} params={} remote={} xff={} ua={} reqId={} traceparent={}",
+            "[token] method={} uri={} clientId={} grantType={} auth=basic?{} secret={} secretLen={} secretSha256={} params={} remote={} xff={} ua={} reqId={} traceparent={}",
                 request.getMethod(),
                 request.getRequestURI(),
                 StringUtils.hasText(clientId) ? clientId : "(unknown)",
                 StringUtils.hasText(grantType) ? grantType : "(n/a)",
                 basicCredentials != null,
                 maskedSecret != null ? maskedSecret : "(n/a)",
+            secretLen != null ? secretLen : -1,
+            StringUtils.hasText(secretSha256) ? secretSha256 : "-",
                 flattenedParams,
                 request.getRemoteAddr(),
                 headerOrDash(request, "X-Forwarded-For"),
@@ -181,6 +191,7 @@ public class TokenDiagnosticsFilter extends OncePerRequestFilter {
         }
         String token = authorizationHeader.substring(6).trim();
         if (!StringUtils.hasText(token)) {
+            log.debug("[token] Authorization: Basic header present but token was empty");
             return null;
         }
         try {
@@ -188,16 +199,23 @@ public class TokenDiagnosticsFilter extends OncePerRequestFilter {
             String raw = new String(decoded, StandardCharsets.UTF_8);
             int idx = raw.indexOf(':');
             if (idx <= 0) {
+                log.debug(
+                        "[token] Authorization: Basic decoded but missing ':' separator (decodedLen={})",
+                        raw.length());
                 return null;
             }
             String clientId = raw.substring(0, idx);
             String secret = raw.substring(idx + 1);
             if (!StringUtils.hasText(clientId)) {
+                log.debug("[token] Authorization: Basic decoded but clientId was blank");
                 return null;
             }
             return new BasicCredentials(clientId, secret);
         } catch (IllegalArgumentException ex) {
             // Invalid base64
+            log.debug(
+                    "[token] Authorization: Basic token was not valid base64 (len={})",
+                    token.length());
             return null;
         }
     }
