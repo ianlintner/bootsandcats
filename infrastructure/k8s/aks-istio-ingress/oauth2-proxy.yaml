@@ -68,6 +68,11 @@ spec:
         - --cookie-name=_secure_session
         - --cookie-secure=true
         - --cookie-samesite=lax
+        # Our Authorization Server's /userinfo currently returns 401 for oauth2-proxy's bearer call.
+        # Avoid the profile/userinfo fetch entirely and use the stable OIDC `sub` claim instead.
+        # (We allow any domain anyway via --email-domain=*.)
+        - --skip-claims-from-profile-url=true
+        - --oidc-email-claim=sub
         - --set-xauthrequest=true
         - --pass-user-headers=true
         - --pass-access-token=true
