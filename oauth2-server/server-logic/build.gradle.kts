@@ -15,7 +15,7 @@ dependencies {
     implementation("io.micrometer:micrometer-core")
     implementation("com.azure:azure-identity:1.15.0")
     implementation("com.azure:azure-security-keyvault-secrets:4.8.3")
-    implementation("com.nimbusds:nimbus-jose-jwt:9.40")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.0.2")
 
     testImplementation(enforcedPlatform("org.junit:junit-bom:5.10.3"))
     testImplementation("org.springframework.boot:spring-boot-starter-test")
