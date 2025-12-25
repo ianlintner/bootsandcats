@@ -16,12 +16,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.bootsandcats.oauth2.model.DenyMatchField;
 import com.bootsandcats.oauth2.model.DenyMatchType;
 import com.bootsandcats.oauth2.model.DenyRuleEntity;
-import com.bootsandcats.oauth2.repository.DenyRuleRepository;
 
 @ExtendWith(MockitoExtension.class)
 class DenyListServiceTest {
 
-    @Mock private DenyRuleRepository denyRuleRepository;
+        @Mock private DenyRuleStore denyRuleStore;
 
     @Test
     void findsEmailExactMatch_caseInsensitive_andUsesNormalizedValueWhenPresent() {
@@ -34,10 +33,10 @@ class DenyListServiceTest {
         rule.setNormalizedValue("alice@example.com");
         rule.setReason("blocked");
 
-        when(denyRuleRepository.findActiveRulesForProvider("github", DenyMatchField.EMAIL))
+        when(denyRuleStore.findActiveRulesForProvider("github", DenyMatchField.EMAIL))
                 .thenReturn(List.of(rule));
 
-        DenyListService service = new DenyListService(denyRuleRepository);
+        DenyListService service = new DenyListService(denyRuleStore);
 
         assertThat(service.findMatchingRule("github", "ALICE@EXAMPLE.COM", "alice", "123"))
                 .contains(rule);
@@ -60,12 +59,12 @@ class DenyListServiceTest {
         rule.setPattern("^bad-.*$");
         rule.setReason("nope");
 
-        when(denyRuleRepository.findActiveRulesForProvider("google", DenyMatchField.EMAIL))
+        when(denyRuleStore.findActiveRulesForProvider("google", DenyMatchField.EMAIL))
                 .thenReturn(List.of());
-        when(denyRuleRepository.findActiveRulesForProvider("google", DenyMatchField.USERNAME))
+        when(denyRuleStore.findActiveRulesForProvider("google", DenyMatchField.USERNAME))
                 .thenReturn(List.of(rule));
 
-        DenyListService service = new DenyListService(denyRuleRepository);
+        DenyListService service = new DenyListService(denyRuleStore);
 
         assertThat(service.findMatchingRule("google", "ok@example.com", "bad-user", "abc"))
                 .contains(rule);
@@ -82,32 +81,32 @@ class DenyListServiceTest {
         rule.setMatchType(DenyMatchType.REGEX);
         rule.setPattern("(");
 
-        when(denyRuleRepository.findActiveRulesForProvider("github", DenyMatchField.EMAIL))
+        when(denyRuleStore.findActiveRulesForProvider("github", DenyMatchField.EMAIL))
                 .thenReturn(List.of(rule));
-        when(denyRuleRepository.findActiveRulesForProvider("github", DenyMatchField.USERNAME))
+        when(denyRuleStore.findActiveRulesForProvider("github", DenyMatchField.USERNAME))
                 .thenReturn(List.of());
-        when(denyRuleRepository.findActiveRulesForProvider("github", DenyMatchField.PROVIDER_ID))
+        when(denyRuleStore.findActiveRulesForProvider("github", DenyMatchField.PROVIDER_ID))
                 .thenReturn(List.of());
 
-        DenyListService service = new DenyListService(denyRuleRepository);
+        DenyListService service = new DenyListService(denyRuleStore);
 
         assertThat(service.findMatchingRule("github", "x@example.com", "user", "id")).isEmpty();
     }
 
     @Test
     void nullProviderResolvesToLocal() {
-        when(denyRuleRepository.findActiveRulesForProvider("local", DenyMatchField.EMAIL))
+        when(denyRuleStore.findActiveRulesForProvider("local", DenyMatchField.EMAIL))
                 .thenReturn(List.of());
-        when(denyRuleRepository.findActiveRulesForProvider("local", DenyMatchField.USERNAME))
+        when(denyRuleStore.findActiveRulesForProvider("local", DenyMatchField.USERNAME))
                 .thenReturn(List.of());
-        when(denyRuleRepository.findActiveRulesForProvider("local", DenyMatchField.PROVIDER_ID))
+        when(denyRuleStore.findActiveRulesForProvider("local", DenyMatchField.PROVIDER_ID))
                 .thenReturn(List.of());
 
-        DenyListService service = new DenyListService(denyRuleRepository);
+        DenyListService service = new DenyListService(denyRuleStore);
         service.findMatchingRule(null, "x@example.com", "x", "y");
 
         ArgumentCaptor<String> providerCaptor = ArgumentCaptor.forClass(String.class);
-        verify(denyRuleRepository)
+        verify(denyRuleStore)
                 .findActiveRulesForProvider(
                         providerCaptor.capture(),
                         org.mockito.ArgumentMatchers.eq(DenyMatchField.EMAIL));

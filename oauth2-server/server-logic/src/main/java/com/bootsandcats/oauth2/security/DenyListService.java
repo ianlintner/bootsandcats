@@ -12,15 +12,14 @@ import org.springframework.util.StringUtils;
 import com.bootsandcats.oauth2.model.DenyMatchField;
 import com.bootsandcats.oauth2.model.DenyMatchType;
 import com.bootsandcats.oauth2.model.DenyRuleEntity;
-import com.bootsandcats.oauth2.repository.DenyRuleRepository;
 
 @Service
 public class DenyListService {
 
-    private final DenyRuleRepository denyRuleRepository;
+    private final DenyRuleStore denyRuleStore;
 
-    public DenyListService(DenyRuleRepository denyRuleRepository) {
-        this.denyRuleRepository = denyRuleRepository;
+    public DenyListService(DenyRuleStore denyRuleStore) {
+        this.denyRuleStore = denyRuleStore;
     }
 
     public Optional<DenyRuleEntity> findMatchingRule(
@@ -67,7 +66,7 @@ public class DenyListService {
         }
 
         List<DenyRuleEntity> activeRules =
-                denyRuleRepository.findActiveRulesForProvider(provider, field);
+                denyRuleStore.findActiveRulesForProvider(provider, field);
         for (DenyRuleEntity rule : activeRules) {
             if (matches(rule, normalizedCandidate, rawCandidate)) {
                 return Optional.of(rule);

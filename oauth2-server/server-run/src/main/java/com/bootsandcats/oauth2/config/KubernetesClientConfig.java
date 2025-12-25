@@ -2,7 +2,7 @@ package com.bootsandcats.oauth2.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
@@ -13,7 +13,10 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 
 @Configuration
-@ConditionalOnProperty(prefix = "oauth2.clients", name = "store", havingValue = "kubernetes")
+@ConditionalOnExpression(
+    "'${oauth2.clients.store:database}' == 'kubernetes'"
+        + " || '${oauth2.deny.store:database}' == 'kubernetes'"
+        + " || '${oauth2.audit.kubernetes-events.enabled:false}' == 'true'")
 public class KubernetesClientConfig {
 
     @Bean

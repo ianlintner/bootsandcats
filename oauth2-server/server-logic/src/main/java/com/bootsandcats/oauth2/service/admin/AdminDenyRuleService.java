@@ -16,7 +16,7 @@ import com.bootsandcats.oauth2.model.AuditEventResult;
 import com.bootsandcats.oauth2.model.AuditEventType;
 import com.bootsandcats.oauth2.model.DenyMatchType;
 import com.bootsandcats.oauth2.model.DenyRuleEntity;
-import com.bootsandcats.oauth2.repository.DenyRuleRepository;
+import com.bootsandcats.oauth2.security.DenyRuleStore;
 import com.bootsandcats.oauth2.service.SecurityAuditService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,18 +24,18 @@ import jakarta.servlet.http.HttpServletRequest;
 @Service
 public class AdminDenyRuleService {
 
-    private final DenyRuleRepository denyRuleRepository;
+    private final DenyRuleStore denyRuleStore;
     private final SecurityAuditService securityAuditService;
 
     public AdminDenyRuleService(
-            DenyRuleRepository denyRuleRepository, SecurityAuditService securityAuditService) {
-        this.denyRuleRepository = denyRuleRepository;
+            DenyRuleStore denyRuleStore, SecurityAuditService securityAuditService) {
+        this.denyRuleStore = denyRuleStore;
         this.securityAuditService = securityAuditService;
     }
 
     @Transactional(readOnly = true)
     public List<AdminDenyRuleSummary> listRules() {
-        return denyRuleRepository.findAll().stream().map(AdminDenyRuleService::toSummary).toList();
+        return denyRuleStore.findAll().stream().map(AdminDenyRuleService::toSummary).toList();
     }
 
     @Transactional
@@ -48,7 +48,7 @@ public class AdminDenyRuleService {
         entity.setCreatedBy(actor);
         apply(entity, request);
 
-        DenyRuleEntity saved = denyRuleRepository.save(entity);
+        DenyRuleEntity saved = denyRuleStore.save(entity);
 
         securityAuditService.recordGenericEvent(
                 AuditEventType.DENY_RULE_CREATED,
@@ -67,17 +67,17 @@ public class AdminDenyRuleService {
             String actor,
             HttpServletRequest httpRequest) {
         DenyRuleEntity entity =
-                denyRuleRepository
-                        .findById(id)
-                        .orElseThrow(
-                                () ->
-                                        new AdminResourceNotFoundException(
-                                                "Deny rule not found: " + id));
+            denyRuleStore
+                .findById(id)
+                .orElseThrow(
+                    () ->
+                        new AdminResourceNotFoundException(
+                            "Deny rule not found: " + id));
 
         entity.setUpdatedAt(Instant.now());
         apply(entity, request);
 
-        DenyRuleEntity saved = denyRuleRepository.save(entity);
+        DenyRuleEntity saved = denyRuleStore.save(entity);
 
         securityAuditService.recordGenericEvent(
                 AuditEventType.DENY_RULE_UPDATED,
@@ -92,13 +92,13 @@ public class AdminDenyRuleService {
     @Transactional
     public void deleteRule(long id, String actor, HttpServletRequest httpRequest) {
         DenyRuleEntity entity =
-                denyRuleRepository
-                        .findById(id)
-                        .orElseThrow(
-                                () ->
-                                        new AdminResourceNotFoundException(
-                                                "Deny rule not found: " + id));
-        denyRuleRepository.delete(entity);
+            denyRuleStore
+                .findById(id)
+                .orElseThrow(
+                    () ->
+                        new AdminResourceNotFoundException(
+                            "Deny rule not found: " + id));
+        denyRuleStore.delete(entity);
 
         Map<String, Object> details = new HashMap<>();
         details.put("id", id);
