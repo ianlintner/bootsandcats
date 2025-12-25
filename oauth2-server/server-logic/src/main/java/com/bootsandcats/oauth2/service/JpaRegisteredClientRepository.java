@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.bootsandcats.oauth2.model.RegisteredClientEntity;
-import com.bootsandcats.oauth2.service.ClientStore;
 import com.bootsandcats.oauth2.repository.RegisteredClientJpaRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.Module;
@@ -25,7 +24,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 @Service
-@ConditionalOnProperty(prefix = "oauth2.clients", name = "store", havingValue = "jpa", matchIfMissing = true)
+@ConditionalOnProperty(
+        prefix = "oauth2.clients",
+        name = "store",
+        havingValue = "jpa",
+        matchIfMissing = true)
 public class JpaRegisteredClientRepository implements ClientStore {
 
     private final RegisteredClientJpaRepository registeredClientJpaRepository;
@@ -62,9 +65,7 @@ public class JpaRegisteredClientRepository implements ClientStore {
 
     @Override
     public List<RegisteredClient> findAllClients() {
-        return this.registeredClientJpaRepository.findAll().stream()
-                .map(this::toObject)
-                .toList();
+        return this.registeredClientJpaRepository.findAll().stream().map(this::toObject).toList();
     }
 
     @Override

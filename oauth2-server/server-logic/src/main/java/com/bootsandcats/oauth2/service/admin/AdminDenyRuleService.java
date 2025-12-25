@@ -67,12 +67,12 @@ public class AdminDenyRuleService {
             String actor,
             HttpServletRequest httpRequest) {
         DenyRuleEntity entity =
-            denyRuleStore
-                .findById(id)
-                .orElseThrow(
-                    () ->
-                        new AdminResourceNotFoundException(
-                            "Deny rule not found: " + id));
+                denyRuleStore
+                        .findById(id)
+                        .orElseThrow(
+                                () ->
+                                        new AdminResourceNotFoundException(
+                                                "Deny rule not found: " + id));
 
         entity.setUpdatedAt(Instant.now());
         apply(entity, request);
@@ -92,12 +92,12 @@ public class AdminDenyRuleService {
     @Transactional
     public void deleteRule(long id, String actor, HttpServletRequest httpRequest) {
         DenyRuleEntity entity =
-            denyRuleStore
-                .findById(id)
-                .orElseThrow(
-                    () ->
-                        new AdminResourceNotFoundException(
-                            "Deny rule not found: " + id));
+                denyRuleStore
+                        .findById(id)
+                        .orElseThrow(
+                                () ->
+                                        new AdminResourceNotFoundException(
+                                                "Deny rule not found: " + id));
         denyRuleStore.delete(entity);
 
         Map<String, Object> details = new HashMap<>();

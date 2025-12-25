@@ -132,11 +132,14 @@ public class KubernetesRegisteredClientMapper {
                 });
 
         builder.redirectUris(uris -> uris.addAll(safeList(spec.getRedirectUris())));
-        builder.postLogoutRedirectUris(uris -> uris.addAll(safeList(spec.getPostLogoutRedirectUris())));
+        builder.postLogoutRedirectUris(
+                uris -> uris.addAll(safeList(spec.getPostLogoutRedirectUris())));
         builder.scopes(scopes -> scopes.addAll(new ArrayList<>(safeList(spec.getScopes()))));
 
         OAuth2ClientSettings cs =
-                spec.getClientSettings() != null ? spec.getClientSettings() : new OAuth2ClientSettings();
+                spec.getClientSettings() != null
+                        ? spec.getClientSettings()
+                        : new OAuth2ClientSettings();
         builder.clientSettings(
                 ClientSettings.builder()
                         .requireProofKey(Boolean.TRUE.equals(cs.getRequireProofKey()))
@@ -235,7 +238,8 @@ public class KubernetesRegisteredClientMapper {
         String sanitized =
                 value.toLowerCase()
                         .chars()
-                        .mapToObj(c -> Character.isLetterOrDigit(c) ? String.valueOf((char) c) : "-")
+                        .mapToObj(
+                                c -> Character.isLetterOrDigit(c) ? String.valueOf((char) c) : "-")
                         .collect(Collectors.joining());
         if (sanitized.length() > 63) {
             sanitized = sanitized.substring(0, 63);

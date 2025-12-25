@@ -23,8 +23,10 @@ public class OAuth2DenyRuleSpec {
     private String reason;
 
     private String createdBy;
+
     /** ISO-8601 instant string. */
     private String createdAt;
+
     /** ISO-8601 instant string. */
     private String updatedAt;
 }

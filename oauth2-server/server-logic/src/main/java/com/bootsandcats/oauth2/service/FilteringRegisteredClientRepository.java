@@ -19,7 +19,11 @@ import com.bootsandcats.oauth2.repository.ClientMetadataRepository;
  */
 @Service
 @Primary
-@ConditionalOnProperty(prefix = "oauth2.clients", name = "store", havingValue = "jpa", matchIfMissing = true)
+@ConditionalOnProperty(
+        prefix = "oauth2.clients",
+        name = "store",
+        havingValue = "jpa",
+        matchIfMissing = true)
 public class FilteringRegisteredClientRepository implements RegisteredClientRepository {
 
     private static final Logger log =

@@ -741,9 +741,9 @@ public class DataInitializer {
         Set<String> redirectUris = new java.util.LinkedHashSet<>();
         // Public hosts currently routed by the Istio Gateway (see
         // infrastructure/k8s/istio/virtualservices.yaml)
-                // oauth2-proxy currently uses a fixed redirect URL on the authorization server host.
-                // This host must be explicitly allowlisted here.
-                redirectUris.add("https://oauth2.cat-herding.net/_oauth2/callback");
+        // oauth2-proxy currently uses a fixed redirect URL on the authorization server host.
+        // This host must be explicitly allowlisted here.
+        redirectUris.add("https://oauth2.cat-herding.net/_oauth2/callback");
         redirectUris.add("https://profile.cat-herding.net/_oauth2/callback");
         redirectUris.add("https://gh-review.cat-herding.net/_oauth2/callback");
         redirectUris.add("https://slop-detector.cat-herding.net/_oauth2/callback");

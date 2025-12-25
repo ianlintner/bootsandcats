@@ -11,10 +11,13 @@ public class OAuth2ClientSpec {
 
     private String clientId;
     private String clientName;
+
     /** ISO-8601 instant string. */
     private String clientIdIssuedAt;
+
     /** ISO-8601 instant string. */
     private String clientSecretExpiresAt;
+
     private Boolean enabled;
     private Boolean system;
     private String notes;

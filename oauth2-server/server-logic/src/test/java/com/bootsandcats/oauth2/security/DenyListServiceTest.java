@@ -20,7 +20,7 @@ import com.bootsandcats.oauth2.model.DenyRuleEntity;
 @ExtendWith(MockitoExtension.class)
 class DenyListServiceTest {
 
-        @Mock private DenyRuleStore denyRuleStore;
+    @Mock private DenyRuleStore denyRuleStore;
 
     @Test
     void findsEmailExactMatch_caseInsensitive_andUsesNormalizedValueWhenPresent() {

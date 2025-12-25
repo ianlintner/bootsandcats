@@ -12,7 +12,11 @@ import com.bootsandcats.oauth2.repository.DenyRuleRepository;
 
 /** Database-backed deny rule store (default). */
 @Service
-@ConditionalOnProperty(prefix = "oauth2.deny", name = "store", havingValue = "database", matchIfMissing = true)
+@ConditionalOnProperty(
+        prefix = "oauth2.deny",
+        name = "store",
+        havingValue = "database",
+        matchIfMissing = true)
 public class DatabaseDenyRuleStore implements DenyRuleStore {
 
     private final DenyRuleRepository denyRuleRepository;
@@ -42,7 +46,8 @@ public class DatabaseDenyRuleStore implements DenyRuleStore {
     }
 
     @Override
-    public List<DenyRuleEntity> findActiveRulesForProvider(String provider, DenyMatchField matchField) {
+    public List<DenyRuleEntity> findActiveRulesForProvider(
+            String provider, DenyMatchField matchField) {
         return denyRuleRepository.findActiveRulesForProvider(provider, matchField);
     }
 }

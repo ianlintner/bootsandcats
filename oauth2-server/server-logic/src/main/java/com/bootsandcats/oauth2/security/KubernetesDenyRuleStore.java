@@ -71,7 +71,8 @@ public class KubernetesDenyRuleStore implements DenyRuleStore {
 
         OAuth2DenyRule desired = toResource(entity);
 
-        OAuth2DenyRule existing = crd.inNamespace(namespace).withName(desired.getMetadata().getName()).get();
+        OAuth2DenyRule existing =
+                crd.inNamespace(namespace).withName(desired.getMetadata().getName()).get();
         if (existing != null && existing.getMetadata() != null) {
             desired.getMetadata().setResourceVersion(existing.getMetadata().getResourceVersion());
         }
@@ -89,12 +90,16 @@ public class KubernetesDenyRuleStore implements DenyRuleStore {
     }
 
     @Override
-    public List<DenyRuleEntity> findActiveRulesForProvider(String provider, DenyMatchField matchField) {
+    public List<DenyRuleEntity> findActiveRulesForProvider(
+            String provider, DenyMatchField matchField) {
         String providerNorm = StringUtils.hasText(provider) ? provider.trim() : "";
 
         String labelValue = matchField.name().toLowerCase(Locale.ROOT);
         List<OAuth2DenyRule> items =
-                crd.inNamespace(namespace).withLabel(MATCH_FIELD_LABEL, labelValue).list().getItems();
+                crd.inNamespace(namespace)
+                        .withLabel(MATCH_FIELD_LABEL, labelValue)
+                        .list()
+                        .getItems();
 
         return items.stream()
                 .map(this::toEntity)
@@ -129,7 +134,9 @@ public class KubernetesDenyRuleStore implements DenyRuleStore {
             labels.put(MATCH_FIELD_LABEL, entity.getMatchField().name().toLowerCase(Locale.ROOT));
         }
         String provider = entity.getProvider();
-        labels.put(PROVIDER_LABEL, sanitizeLabelValue(StringUtils.hasText(provider) ? provider : "global"));
+        labels.put(
+                PROVIDER_LABEL,
+                sanitizeLabelValue(StringUtils.hasText(provider) ? provider : "global"));
         meta.setLabels(labels);
 
         resource.setMetadata(meta);
@@ -193,10 +200,10 @@ public class KubernetesDenyRuleStore implements DenyRuleStore {
 
     private Long nextId() {
         return crd.inNamespace(namespace).list().getItems().stream()
-                .map(r -> tryParseId(r.getMetadata()))
-                .filter(v -> v != null && v > 0)
-                .max(Comparator.naturalOrder())
-                .orElse(0L)
+                        .map(r -> tryParseId(r.getMetadata()))
+                        .filter(v -> v != null && v > 0)
+                        .max(Comparator.naturalOrder())
+                        .orElse(0L)
                 + 1;
     }
 

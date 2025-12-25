@@ -11,9 +11,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.bootsandcats.oauth2.model.SecurityAuditEvent;
 import com.bootsandcats.oauth2.model.AuditEventResult;
 import com.bootsandcats.oauth2.model.AuditEventType;
+import com.bootsandcats.oauth2.model.SecurityAuditEvent;
 
 import io.fabric8.kubernetes.api.model.Event;
 import io.fabric8.kubernetes.api.model.EventBuilder;
@@ -21,9 +21,7 @@ import io.fabric8.kubernetes.api.model.ObjectReference;
 import io.fabric8.kubernetes.api.model.ObjectReferenceBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 
-/**
- * Best-effort publisher that emits {@link SecurityAuditEvent} records as Kubernetes Events.
- */
+/** Best-effort publisher that emits {@link SecurityAuditEvent} records as Kubernetes Events. */
 @Component
 @ConditionalOnProperty(
         prefix = "oauth2.audit.kubernetes-events",
@@ -73,9 +71,9 @@ public class KubernetesAuditEventEmitter {
     private Event toKubernetesEvent(SecurityAuditEvent e) {
         String reason = toReason(e.getEventType());
         String type =
-            e.getResult() != null
-                    && (e.getResult() == AuditEventResult.FAILURE
-                        || e.getResult() == AuditEventResult.DENIED)
+                e.getResult() != null
+                                && (e.getResult() == AuditEventResult.FAILURE
+                                        || e.getResult() == AuditEventResult.DENIED)
                         ? "Warning"
                         : "Normal";
 

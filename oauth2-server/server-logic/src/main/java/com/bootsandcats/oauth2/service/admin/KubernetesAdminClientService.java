@@ -78,7 +78,8 @@ public class KubernetesAdminClientService implements AdminClientOperations {
     @Transactional(readOnly = true)
     public AdminClientSummary getClient(String clientId) {
         OAuth2Client resource =
-                crdClient.inNamespace(namespace)
+                crdClient
+                        .inNamespace(namespace)
                         .withLabels(mapper.selectorForClientId(clientId))
                         .list()
                         .getItems()
@@ -95,7 +96,8 @@ public class KubernetesAdminClientService implements AdminClientOperations {
     public AdminClientSummary upsertClient(
             AdminClientUpsertRequest request, String actor, HttpServletRequest httpRequest) {
         OAuth2Client existing =
-                crdClient.inNamespace(namespace)
+                crdClient
+                        .inNamespace(namespace)
                         .withLabels(mapper.selectorForClientId(request.clientId()))
                         .list()
                         .getItems()
@@ -116,7 +118,8 @@ public class KubernetesAdminClientService implements AdminClientOperations {
         RegisteredClient base =
                 creating
                         ? buildNewRegisteredClient(request)
-                        : buildUpdatedRegisteredClient(mapper.toRegisteredClient(existing), request);
+                        : buildUpdatedRegisteredClient(
+                                mapper.toRegisteredClient(existing), request);
 
         OAuth2Client desired = mapper.toResource(base, namespace);
         OAuth2ClientSpec desiredSpec = desired.getSpec();
@@ -129,8 +132,7 @@ public class KubernetesAdminClientService implements AdminClientOperations {
             desired.getMetadata().setResourceVersion(existing.getMetadata().getResourceVersion());
         }
 
-        OAuth2Client saved =
-                crdClient.inNamespace(namespace).resource(desired).createOrReplace();
+        OAuth2Client saved = crdClient.inNamespace(namespace).resource(desired).createOrReplace();
 
         AuditEventType eventType;
         if (creating) {
@@ -154,7 +156,8 @@ public class KubernetesAdminClientService implements AdminClientOperations {
     @Transactional
     public void deleteClient(String clientId, String actor, HttpServletRequest httpRequest) {
         OAuth2Client resource =
-                crdClient.inNamespace(namespace)
+                crdClient
+                        .inNamespace(namespace)
                         .withLabels(mapper.selectorForClientId(clientId))
                         .list()
                         .getItems()
@@ -186,7 +189,8 @@ public class KubernetesAdminClientService implements AdminClientOperations {
     public AdminClientSummary setEnabled(
             String clientId, boolean enabled, String actor, HttpServletRequest httpRequest) {
         OAuth2Client resource =
-                crdClient.inNamespace(namespace)
+                crdClient
+                        .inNamespace(namespace)
                         .withLabels(mapper.selectorForClientId(clientId))
                         .list()
                         .getItems()
@@ -235,7 +239,9 @@ public class KubernetesAdminClientService implements AdminClientOperations {
                 enabled,
                 system,
                 List.copyOf(rc.getScopes()),
-                rc.getAuthorizationGrantTypes().stream().map(AuthorizationGrantType::getValue).toList(),
+                rc.getAuthorizationGrantTypes().stream()
+                        .map(AuthorizationGrantType::getValue)
+                        .toList(),
                 rc.getClientAuthenticationMethods().stream()
                         .map(ClientAuthenticationMethod::getValue)
                         .toList(),

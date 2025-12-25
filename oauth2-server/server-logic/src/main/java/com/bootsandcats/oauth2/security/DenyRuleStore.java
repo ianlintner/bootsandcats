@@ -6,9 +6,7 @@ import java.util.Optional;
 import com.bootsandcats.oauth2.model.DenyMatchField;
 import com.bootsandcats.oauth2.model.DenyRuleEntity;
 
-/**
- * Abstraction over where deny rules are stored (database or Kubernetes CRD).
- */
+/** Abstraction over where deny rules are stored (database or Kubernetes CRD). */
 public interface DenyRuleStore {
 
     List<DenyRuleEntity> findAll();
