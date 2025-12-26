@@ -113,19 +113,19 @@ public class FederatedIdentityAuthenticationSuccessHandler
                 return;
             }
 
-                Long localUserId = null;
-                UserRepository userRepository = userRepositoryProvider.getIfAvailable();
-                if (userRepository != null) {
+            Long localUserId = null;
+            UserRepository userRepository = userRepositoryProvider.getIfAvailable();
+            if (userRepository != null) {
                 User user =
-                    userRepository
-                        .findByProviderAndProviderId(provider, providerId)
-                        .orElseGet(
-                            () -> {
-                                User newUser = new User();
-                                newUser.setProvider(provider);
-                                newUser.setProviderId(providerId);
-                                return newUser;
-                            });
+                        userRepository
+                                .findByProviderAndProviderId(provider, providerId)
+                                .orElseGet(
+                                        () -> {
+                                            User newUser = new User();
+                                            newUser.setProvider(provider);
+                                            newUser.setProviderId(providerId);
+                                            return newUser;
+                                        });
 
                 user.setEmail(email);
                 user.setName(name);
@@ -135,7 +135,7 @@ public class FederatedIdentityAuthenticationSuccessHandler
 
                 User saved = userRepository.save(user);
                 localUserId = saved.getId();
-                }
+            }
 
             // Record successful federated login for audit compliance
             Map<String, Object> auditDetails = new HashMap<>();
