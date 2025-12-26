@@ -12,6 +12,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
@@ -38,6 +40,14 @@ import io.fabric8.kubernetes.client.KubernetesClient;
             "azure.keyvault.enabled=false"
         })
 class ProdNoDbProfileIntegrationTest {
+
+    private static final String STATIC_JWK_JSON =
+            "{\"keys\":[{\"kty\":\"EC\",\"d\":\"mwhKr9BIDjuB-OajeULLA4RORdJLUL8816YenVZwlMs\",\"use\":\"sig\",\"crv\":\"P-256\",\"kid\":\"586e7c9b-a4dc-4ea9-9cf7-197c3fae5d7f\",\"x\":\"0yuOTwftybMpxjSc1liSpftWHi5-YyyqvdlYclgF4zw\",\"y\":\"qboYXttcfjXXSYFlUEMkBOVmsMMDATyRv-UN4AR8Fl0\",\"alg\":\"ES256\"}]}";
+
+    @DynamicPropertySource
+    static void configureJwk(DynamicPropertyRegistry registry) {
+        registry.add("azure.keyvault.static-jwk", () -> STATIC_JWK_JSON);
+    }
 
     @TestConfiguration
     static class KubernetesClientTestConfig {
