@@ -27,11 +27,6 @@ import com.bootsandcats.oauth2.k8s.OAuth2ClientList;
 import com.bootsandcats.oauth2.k8s.OAuth2ClientSpec;
 import com.bootsandcats.oauth2.model.AuditEventResult;
 import com.bootsandcats.oauth2.model.AuditEventType;
-import com.bootsandcats.oauth2.model.ClientScopeEntity;
-import com.bootsandcats.oauth2.model.ClientScopeId;
-import com.bootsandcats.oauth2.model.ScopeEntity;
-import com.bootsandcats.oauth2.repository.ClientScopeRepository;
-import com.bootsandcats.oauth2.repository.ScopeRepository;
 import com.bootsandcats.oauth2.service.SecurityAuditService;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -46,15 +41,11 @@ public class KubernetesAdminClientService implements AdminClientOperations {
     private final MixedOperation<OAuth2Client, OAuth2ClientList, Resource<OAuth2Client>> crdClient;
     private final KubernetesRegisteredClientMapper mapper = new KubernetesRegisteredClientMapper();
     private final String namespace;
-    private final ScopeRepository scopeRepository;
-    private final ClientScopeRepository clientScopeRepository;
     private final SecurityAuditService securityAuditService;
 
     public KubernetesAdminClientService(
             KubernetesClient kubernetesClient,
             @Value("${oauth2.clients.kubernetes.namespace:}") String configuredNamespace,
-            ScopeRepository scopeRepository,
-            ClientScopeRepository clientScopeRepository,
             SecurityAuditService securityAuditService) {
         this.crdClient = kubernetesClient.resources(OAuth2Client.class, OAuth2ClientList.class);
         this.namespace =
@@ -63,8 +54,6 @@ public class KubernetesAdminClientService implements AdminClientOperations {
                         kubernetesClient.getNamespace() != null
                                 ? kubernetesClient.getNamespace()
                                 : null);
-        this.scopeRepository = scopeRepository;
-        this.clientScopeRepository = clientScopeRepository;
         this.securityAuditService = securityAuditService;
     }
 
@@ -111,9 +100,6 @@ public class KubernetesAdminClientService implements AdminClientOperations {
             throw new AdminOperationNotAllowedException(
                     "System client cannot be modified: " + request.clientId());
         }
-
-        ensureScopesExist(request.scopes(), actor);
-        syncClientScopeMapping(request.clientId(), request.scopes());
 
         RegisteredClient base =
                 creating
@@ -172,7 +158,8 @@ public class KubernetesAdminClientService implements AdminClientOperations {
                     "System client cannot be deleted: " + clientId);
         }
 
-        clientScopeRepository.deleteByIdClientId(clientId);
+        // In Kubernetes-backed mode, client scopes are stored directly on the OAuth2Client
+        // custom resource. No database mapping tables are used.
         crdClient.inNamespace(namespace).withName(resource.getMetadata().getName()).delete();
 
         Map<String, Object> details = new HashMap<>();
@@ -361,46 +348,6 @@ public class KubernetesAdminClientService implements AdminClientOperations {
         builder.tokenSettings(existing.getTokenSettings());
 
         return builder.build();
-    }
-
-    private void ensureScopesExist(List<String> scopes, String actor) {
-        Instant now = Instant.now();
-        for (String scope : scopes) {
-            if (!StringUtils.hasText(scope)) {
-                continue;
-            }
-            String trimmed = scope.trim();
-            ScopeEntity existing = scopeRepository.findById(trimmed).orElse(null);
-            if (existing != null) {
-                continue;
-            }
-            ScopeEntity entity = new ScopeEntity();
-            entity.setScope(trimmed);
-            entity.setDescription(null);
-            entity.setEnabled(true);
-            entity.setSystem(false);
-            entity.setCreatedBy(actor);
-            entity.setCreatedAt(now);
-            entity.setUpdatedAt(now);
-            scopeRepository.save(entity);
-        }
-    }
-
-    private void syncClientScopeMapping(String clientId, List<String> scopes) {
-        clientScopeRepository.deleteByIdClientId(clientId);
-        Instant now = Instant.now();
-        for (String scope : scopes) {
-            if (!StringUtils.hasText(scope)) {
-                continue;
-            }
-            ClientScopeEntity e = new ClientScopeEntity();
-            ClientScopeId id = new ClientScopeId();
-            id.setClientId(clientId);
-            id.setScope(scope.trim());
-            e.setId(id);
-            e.setCreatedAt(now);
-            clientScopeRepository.save(e);
-        }
     }
 
     private static AuthorizationGrantType resolveAuthorizationGrantType(String value) {

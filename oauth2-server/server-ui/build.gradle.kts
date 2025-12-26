@@ -48,12 +48,15 @@ dependencies {
     implementation("org.flywaydb:flyway-core:11.2.0")
     implementation("org.flywaydb:flyway-database-postgresql:11.2.0")
     runtimeOnly("org.postgresql:postgresql")
-    runtimeOnly("com.h2database:h2")
+    // H2 is useful for local dev, but must not be on the production runtime classpath.
+    developmentOnly("com.h2database:h2")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-test")
     testImplementation("org.springframework.boot:spring-boot-test-autoconfigure")
     testImplementation("org.springframework.security:spring-security-test")
+    // Needed only for tests that mock KubernetesClient when running in db-less/kubernetes-store modes.
+    testImplementation("io.fabric8:kubernetes-client:6.9.2")
     // Testcontainers
     testImplementation("org.testcontainers:testcontainers:1.20.4")
     testImplementation("org.testcontainers:postgresql:1.20.4")

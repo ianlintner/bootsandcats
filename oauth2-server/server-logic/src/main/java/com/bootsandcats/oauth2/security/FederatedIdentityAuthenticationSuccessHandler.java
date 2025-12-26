@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -33,16 +34,16 @@ import jakarta.servlet.http.HttpServletResponse;
 public class FederatedIdentityAuthenticationSuccessHandler
         extends SavedRequestAwareAuthenticationSuccessHandler {
 
-    private final UserRepository userRepository;
+    private final ObjectProvider<UserRepository> userRepositoryProvider;
     private final SecurityAuditService securityAuditService;
     private final DenyListService denyListService;
     private final RequestCache requestCache = new HttpSessionRequestCache();
 
     public FederatedIdentityAuthenticationSuccessHandler(
-            UserRepository userRepository,
+            ObjectProvider<UserRepository> userRepositoryProvider,
             SecurityAuditService securityAuditService,
             DenyListService denyListService) {
-        this.userRepository = userRepository;
+        this.userRepositoryProvider = userRepositoryProvider;
         this.securityAuditService = securityAuditService;
         this.denyListService = denyListService;
         // Ensure we use the session-based request cache
@@ -112,24 +113,29 @@ public class FederatedIdentityAuthenticationSuccessHandler
                 return;
             }
 
-            User user =
+                Long localUserId = null;
+                UserRepository userRepository = userRepositoryProvider.getIfAvailable();
+                if (userRepository != null) {
+                User user =
                     userRepository
-                            .findByProviderAndProviderId(provider, providerId)
-                            .orElseGet(
-                                    () -> {
-                                        User newUser = new User();
-                                        newUser.setProvider(provider);
-                                        newUser.setProviderId(providerId);
-                                        return newUser;
-                                    });
+                        .findByProviderAndProviderId(provider, providerId)
+                        .orElseGet(
+                            () -> {
+                                User newUser = new User();
+                                newUser.setProvider(provider);
+                                newUser.setProviderId(providerId);
+                                return newUser;
+                            });
 
-            user.setEmail(email);
-            user.setName(name);
-            user.setPictureUrl(picture);
-            user.setUsername(username);
-            user.setLastLogin(Instant.now());
+                user.setEmail(email);
+                user.setName(name);
+                user.setPictureUrl(picture);
+                user.setUsername(username);
+                user.setLastLogin(Instant.now());
 
-            userRepository.save(user);
+                User saved = userRepository.save(user);
+                localUserId = saved.getId();
+                }
 
             // Record successful federated login for audit compliance
             Map<String, Object> auditDetails = new HashMap<>();
@@ -140,7 +146,7 @@ public class FederatedIdentityAuthenticationSuccessHandler
                     username != null ? username : email,
                     provider,
                     request,
-                    user.getId(),
+                    localUserId,
                     auditDetails);
         }
 

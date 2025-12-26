@@ -2,6 +2,7 @@ package com.bootsandcats.oauth2.controller.admin;
 
 import java.util.List;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -24,6 +25,7 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/admin/scopes")
 @Validated
+@Profile("!prod-no-db")
 public class AdminScopeAdminController {
 
     private final AdminScopeService adminScopeService;
