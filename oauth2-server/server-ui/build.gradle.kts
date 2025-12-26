@@ -57,6 +57,8 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-test")
     // Needed only for tests that mock KubernetesClient when running in db-less/kubernetes-store modes.
     testImplementation("io.fabric8:kubernetes-client:6.9.2")
+    // Tests use H2 (see src/test/resources/application-test.properties), but H2 must not be on the production runtime classpath.
+    testRuntimeOnly("com.h2database:h2")
     // Testcontainers
     testImplementation("org.testcontainers:testcontainers:1.20.4")
     testImplementation("org.testcontainers:postgresql:1.20.4")
